@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concurrent Systems — Interactive Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --surface: #141614;
+    --card: #1a1d1a;
+    --border: #252825;
+    --accent: #6be584;
+    --accent2: #e5c46b;
+    --accent3: #6baae5;
+    --text: #d4dbd4;
+    --muted: #6b776b;
+    --danger: #e56b6b;
+    --code-bg: #111311;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* LAYOUT */
+  .shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: auto 1fr;
+    min-height: 100vh;
+  }
+
+  header {
+    grid-column: 1 / -1;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header span {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .progress-bar {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .progress-track {
+    width: 120px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    border-radius: 2px;
+  }
+
+  /* SIDEBAR */
+  nav {
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 61px);
+    overflow-y: auto;
+  }
+
+  .nav-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 20px 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .nav-item:hover { color: var(--text); background: rgba(107,229,132,0.04); }
+
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(107,229,132,0.06);
+  }
+
+  .nav-item.done .dot { background: var(--accent); }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+
+  /* MAIN */
+  main {
+    overflow-y: auto;
+    height: calc(100vh - 61px);
+  }
+
+  .lesson {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .lesson.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .lesson-header {
+    padding: 40px 48px 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    margin-bottom: 0;
+  }
+
+  .lesson-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .lesson-title {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .lesson-subtitle {
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.7;
+    font-size: 13px;
+  }
+
+  .lesson-body {
+    padding: 36px 48px;
+  }
+
+  /* CONCEPT CARDS */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .concept-card h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+
+  .bad { border-color: rgba(229,107,107,0.3); }
+  .bad h3 { color: var(--danger); }
+  .good { border-color: rgba(107,229,132,0.3); }
+  .good h3 { color: var(--accent); }
+
+  /* CODE BLOCKS */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    font-size: 12px;
+    line-height: 1.8;
+    position: relative;
+  }
+
+  .code-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .kw { color: #cc99cd; }
+  .fn { color: #6be584; }
+  .st { color: #e5c46b; }
+  .cm { color: #566256; font-style: italic; }
+  .nu { color: #6baae5; }
+  .hl { background: rgba(107,229,132,0.08); display: block; margin: 0 -20px; padding: 0 20px; border-left: 2px solid var(--accent); }
+
+  /* INTERACTIVE DEMO */
+  .demo-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 24px 0;
+  }
+
+  .demo-toolbar {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .demo-toolbar strong { color: var(--text); }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); color: #0d0f0e; border-color: var(--accent); font-weight: 500; }
+  .btn.primary:hover { background: #80ed9a; border-color: #80ed9a; }
+
+  .demo-content { padding: 20px; }
+
+  /* THREAD VIZ */
+  .thread-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .thread-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .thread-label {
+    font-size: 11px;
+    width: 90px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .thread-bar {
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 40px;
+  }
+
+  .bar-waiting { background: rgba(107,170,229,0.15); color: var(--accent3); border: 1px solid rgba(107,170,229,0.3); }
+  .bar-locked { background: rgba(229,107,107,0.15); color: var(--danger); border: 1px solid rgba(229,107,107,0.3); }
+  .bar-working { background: rgba(107,229,132,0.15); color: var(--accent); border: 1px solid rgba(107,229,132,0.3); }
+  .bar-done { background: rgba(107,229,132,0.08); color: var(--muted); border: 1px solid var(--border); }
+
+  .log-box {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 11px;
+    min-height: 80px;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 12px;
+  }
+
+  .log-line { margin: 2px 0; }
+  .log-line.info { color: var(--muted); }
+  .log-line.success { color: var(--accent); }
+  .log-line.warn { color: var(--accent2); }
+  .log-line.error { color: var(--danger); }
+
+  /* QUIZ */
+  .quiz-wrap { margin: 28px 0; }
+
+  .quiz-q {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quiz-opt {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 12px;
+    text-align: left;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .quiz-opt:hover:not(.correct):not(.wrong) { border-color: var(--accent); color: var(--accent); }
+  .quiz-opt.correct { border-color: var(--accent); background: rgba(107,229,132,0.08); color: var(--accent); }
+  .quiz-opt.wrong { border-color: var(--danger); background: rgba(229,107,107,0.08); color: var(--danger); text-decoration: line-through; }
+
+  .quiz-feedback {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct { background: rgba(107,229,132,0.06); border: 1px solid rgba(107,229,132,0.2); color: var(--text); }
+  .quiz-feedback.wrong { background: rgba(229,107,107,0.06); border: 1px solid rgba(229,107,107,0.2); color: var(--text); }
+
+  /* NAV FOOTER */
+  .lesson-nav {
+    padding: 24px 48px 48px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .lesson-nav .spacer { flex: 1; }
+
+  /* CALLOUT */
+  .callout {
+    border-left: 3px solid var(--accent2);
+    background: rgba(229,196,107,0.05);
+    padding: 14px 18px;
+    border-radius: 0 6px 6px 0;
+    margin: 20px 0;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .callout strong { color: var(--accent2); }
+
+  /* CLOSURE VIZ */
+  .closure-diagram {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    font-size: 12px;
+  }
+
+  .closure-scope {
+    border: 1px dashed var(--accent2);
+    border-radius: 6px;
+    padding: 14px;
+    margin: 8px 0;
+    position: relative;
+  }
+
+  .closure-scope::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: var(--code-bg);
+    padding: 0 6px;
+    font-size: 10px;
+    color: var(--accent2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .closure-inner {
+    border: 1px dashed var(--accent3);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 10px;
+    position: relative;
+  }
+
+  .closure-inner::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: var(--code-bg);
+    padding: 0 6px;
+    font-size: 10px;
+    color: var(--accent3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .capture-arrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .arrow-line {
+    flex: 1;
+    height: 1px;
+    border-top: 1px dashed var(--muted);
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 12px;
+  }
+
+  th {
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .chip-green { background: rgba(107,229,132,0.12); color: var(--accent); }
+  .chip-yellow { background: rgba(229,196,107,0.12); color: var(--accent2); }
+
+  /* EVENT DEMO */
+  .event-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0;
+  }
+
+  .event-node {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    min-width: 100px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+
+  .event-node.active { border-color: var(--accent); color: var(--accent); background: rgba(107,229,132,0.08); }
+  .event-node.signaling { border-color: var(--accent2); color: var(--accent2); background: rgba(229,196,107,0.08); animation: pulse 0.8s ease-in-out; }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .event-wire {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .event-wire .signal {
+    position: absolute;
+    top: -1px;
+    width: 20px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent2);
+    left: -20px;
+    transition: none;
+  }
+
+  .event-wire .signal.traveling {
+    transition: left 1s linear;
+    left: 100%;
+  }
+
+  /* SECTIONS */
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 32px 0 12px;
+    letter-spacing: -0.5px;
+  }
+
+  p { margin: 12px 0; color: var(--text); line-height: 1.8; }
+  p code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* FINAL SUMMARY */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .summary-card .num {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .summary-card h3 {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .summary-card p { font-size: 11px; color: var(--muted); margin: 0; }
+
+  .complete-badge {
+    display: inline-block;
+    background: rgba(107,229,132,0.12);
+    border: 1px solid rgba(107,229,132,0.3);
+    color: var(--accent);
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <h1>Concurrent Systems</h1>
+    <span>— an interactive guide</span>
+    <div class="progress-bar">
+      <span id="progress-text">0 / 7 complete</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="nav-label">Concepts</div>
+    <div class="nav-item active" data-lesson="0" onclick="goTo(0)">
+      <span class="dot"></span> Thread Safety
+    </div>
+    <div class="nav-item" data-lesson="1" onclick="goTo(1)">
+      <span class="dot"></span> Closures
+    </div>
+    <div class="nav-item" data-lesson="2" onclick="goTo(2)">
+      <span class="dot"></span> Dependency Injection
+    </div>
+    <div class="nav-item" data-lesson="3" onclick="goTo(3)">
+      <span class="dot"></span> **kwargs Pattern
+    </div>
+    <div class="nav-item" data-lesson="4" onclick="goTo(4)">
+      <span class="dot"></span> Daemon Threads
+    </div>
+    <div class="nav-item" data-lesson="5" onclick="goTo(5)">
+      <span class="dot"></span> Event Signaling
+    </div>
+    <div class="nav-item" data-lesson="6" onclick="goTo(6)">
+      <span class="dot"></span> Review
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- LESSON 0: Thread Safety -->
+    <div class="lesson active" id="lesson-0">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 01 — Synchronization</div>
+        <div class="lesson-title">Thread Safety &amp;<br>Mutual Exclusion</div>
+        <div class="lesson-subtitle">When two threads write to the same data at the same time, things break. A Lock ensures only one thread touches shared state at once.</div>
+      </div>
+      <div class="lesson-body">
+
+        <div class="concept-grid">
+          <div class="concept-card bad">
+            <h3>🚨 The Problem</h3>
+            <p style="color:var(--muted);font-size:12px;">Thread A reads the dict.<br>Thread B writes to the dict.<br>Thread A gets corrupted data.</p>
+          </div>
+          <div class="concept-card good">
+            <h3>✓ The Solution</h3>
+            <p style="color:var(--muted);font-size:12px;">A <code style="color:var(--accent)">Lock</code> lets only one thread enter the critical section at a time.</p>
+          </div>
+        </div>
+
+        <div class="code-label">orchestrator/registry.py</div>
+        <pre><span class="kw">def</span> <span class="fn">register</span>(<span class="kw">self</span>, skill: Skill) -> <span class="kw">None</span>:
+<span class="hl">    <span class="kw">with</span> <span class="kw">self</span>._lock:              <span class="cm"># Thread A grabs the lock</span></span>
+<span class="hl">        <span class="kw">self</span>._skills[skill.name] = skill  <span class="cm"># Only Thread A can touch this</span></span>
+    <span class="cm"># Lock released — Thread B can now enter</span></pre>
+
+        <div class="callout">
+          <strong>Why <code>with</code> instead of <code>.acquire()/.release()</code>?</strong><br>
+          If your code crashes between acquire and release, the lock stays locked forever — a deadlock. <code>with</code> guarantees release even on exceptions.
+        </div>
+
+        <h2 class="section-title">Minimizing Lock Scope</h2>
+        <p>Holding a lock during slow operations (like network calls) blocks other threads. The trick: snapshot fast, then release.</p>
+
+        <div class="code-label">health_check — snapshot pattern</div>
+        <pre><span class="kw">def</span> <span class="fn">health_check</span>(<span class="kw">self</span>):
+    <span class="kw">with</span> <span class="kw">self</span>._lock:
+        snapshot = <span class="fn">list</span>(<span class="kw">self</span>._skills.items())  <span class="cm"># Fast — hold lock briefly</span>
+    <span class="cm"># Lock released here ↑</span>
+    <span class="kw">for</span> name, skill <span class="kw">in</span> snapshot:
+        httpx.<span class="fn">get</span>(...)  <span class="cm"># Slow — don't hold lock during I/O</span></pre>
+
+        <!-- INTERACTIVE DEMO -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— simulate two threads competing for a lock</span>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn" onclick="resetLock()">Reset</button>
+              <button class="btn primary" onclick="runLockDemo()">Run Simulation</button>
+            </div>
+          </div>
+          <div class="demo-content">
+            <div class="thread-container" id="thread-viz">
+              <div class="thread-row">
+                <div class="thread-label">CLI Thread</div>
+                <div class="thread-bar bar-waiting" id="bar-cli" style="width:200px">waiting</div>
+              </div>
+              <div class="thread-row">
+                <div class="thread-label">Telegram Thread</div>
+                <div class="thread-bar bar-waiting" id="bar-tg" style="width:200px">waiting</div>
+              </div>
+              <div class="thread-row" style="margin-top:4px;">
+                <div class="thread-label" style="color:var(--muted);font-size:10px;">Lock State</div>
+                <div class="thread-bar bar-waiting" id="bar-lock" style="width:120px;font-size:10px;">🔓 free</div>
+              </div>
+            </div>
+            <div class="log-box" id="lock-log"></div>
+          </div>
+        </div>
+
+        <!-- QUIZ -->
+        <div class="quiz-wrap">
+          <div class="quiz-q">Why can't we just use a boolean flag like <code>is_writing = True</code> instead of a Lock?</div>
+          <div class="quiz-options" id="quiz-0">
+            <button class="quiz-opt" onclick="answer(0, 0, false)">A flag is slower than a Lock.</button>
+            <button class="quiz-opt" onclick="answer(0, 1, true)">Checking and setting the flag is itself a multi-step operation — another thread can slip in between the check and the set.</button>
+            <button class="quiz-opt" onclick="answer(0, 2, false)">Python doesn't support boolean variables in threads.</button>
+            <button class="quiz-opt" onclick="answer(0, 3, false)">A Lock uses less memory than a boolean.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-0"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(1)">Next: Closures →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 1: Closures -->
+    <div class="lesson" id="lesson-1">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 02 — Functions</div>
+        <div class="lesson-title">Closures</div>
+        <div class="lesson-subtitle">A function that captures variables from its surrounding scope — even after that scope has finished executing.</div>
+      </div>
+      <div class="lesson-body">
+
+        <p>The Telegram library calls handlers with a fixed signature: <code>handler(update, context)</code>. But your handler needs access to <code>registry</code>. You can't change the signature.</p>
+        <p>A closure solves this: wrap the handler inside an outer function that receives <code>registry</code>. The inner function "closes over" it.</p>
+
+        <div class="closure-diagram">
+          <div class="closure-scope" data-label="Outer scope — _make_skills_handler(registry)">
+            <span style="color:var(--accent2)">registry</span> <span style="color:var(--muted)">=</span> <span style="color:var(--accent3)">my_registry</span> &nbsp;<span style="color:var(--muted);font-size:11px;">← captured here</span>
+            <div class="closure-inner" data-label="Inner scope — handler(update, context)">
+              skills = <span style="color:var(--accent2)">registry</span>.list_skills() &nbsp;<span style="color:var(--muted);font-size:11px;">← uses captured value</span>
+              <br><span style="color:var(--muted);font-size:11px;">...handler body...</span>
+            </div>
+            <div class="capture-arrow">
+              <div class="arrow-line"></div>
+              <span style="color:var(--accent)">returns handler</span>
+              <div class="arrow-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-label">integrations/telegram_bot.py</div>
+        <pre><span class="kw">def</span> <span class="fn">_make_skills_handler</span>(registry: SkillRegistry):  <span class="cm"># outer fn</span>
+<span class="hl">    <span class="kw">async def</span> <span class="fn">handler</span>(update, context):           <span class="cm"># inner fn</span></span>
+<span class="hl">        skills = registry.<span class="fn">list_skills</span>()           <span class="cm"># captures 'registry'</span></span>
+<span class="hl">        ...</span>
+    <span class="kw">return</span> handler  <span class="cm"># outer fn finishes, but registry lives on</span>
+
+<span class="cm"># Usage:</span>
+handler = <span class="fn">_make_skills_handler</span>(my_registry)
+<span class="cm"># Telegram calls: handler(update, context) later</span>
+<span class="cm"># It still has my_registry ✓</span></pre>
+
+        <!-- Interactive closure demo -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— create closures with different registries</span>
+          </div>
+          <div class="demo-content">
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Click to create handlers bound to different registries. Notice each handler remembers its own registry.</p>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <button class="btn" onclick="makeClosure('registry_A', ['skills-v1', 'auth-v2'])">make_handler(registry_A)</button>
+              <button class="btn" onclick="makeClosure('registry_B', ['ml-pipeline', 'data-sync'])">make_handler(registry_B)</button>
+              <button class="btn" onclick="makeClosure('test_registry', ['mock-skill'])">make_handler(test_registry)</button>
+            </div>
+            <div style="margin-bottom:8px;font-size:11px;color:var(--muted)">Created handlers:</div>
+            <div id="closure-handlers" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <div class="log-box" id="closure-log" style="margin-top:12px;"></div>
+          </div>
+        </div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-q">After <code>_make_skills_handler(my_registry)</code> returns, what happens to <code>my_registry</code>?</div>
+          <div class="quiz-options" id="quiz-1">
+            <button class="quiz-opt" onclick="answer(1, 0, false)">It's garbage collected immediately.</button>
+            <button class="quiz-opt" onclick="answer(1, 1, false)">It's copied into the handler as a new variable.</button>
+            <button class="quiz-opt" onclick="answer(1, 2, true)">It stays alive because the returned inner function holds a reference to it.</button>
+            <button class="quiz-opt" onclick="answer(1, 3, false)">It becomes a global variable.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-1"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(0)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(2)">Next: Dependency Injection →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 2: Dependency Injection -->
+    <div class="lesson" id="lesson-2">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 03 — Architecture</div>
+        <div class="lesson-title">Dependency Injection</div>
+        <div class="lesson-subtitle">Instead of components creating their own dependencies, you pass them in from outside. This enables sharing, testing, and flexibility.</div>
+      </div>
+      <div class="lesson-body">
+
+        <table>
+          <tr><th>Before — Tightly Coupled</th><th>After — Injected</th></tr>
+          <tr>
+            <td><span style="color:var(--danger)">telegram_bot.py creates its own SkillRegistry()</span><br><span style="color:var(--muted);font-size:11px;">Bot and CLI have separate, isolated registries</span></td>
+            <td><span style="color:var(--accent)">main.py creates it once and passes it in</span><br><span style="color:var(--muted);font-size:11px;">Both share the exact same registry object</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--danger)">Can't test the bot with a mock registry</span></td>
+            <td><span style="color:var(--accent)">Easy to swap in a test_registry</span></td>
+          </tr>
+        </table>
+
+        <div class="code-label">main.py — the injector</div>
+        <pre>registry = <span class="fn">SkillRegistry</span>()            <span class="cm"># Create ONCE</span>
+telegram_manager = <span class="fn">TelegramManager</span>()
+
+<span class="cm"># Pass the SAME registry everywhere</span>
+<span class="fn">run_agent</span>(user_input, <span class="hl">registry</span>, _telegram_manager=telegram_manager)</pre>
+
+        <div class="callout">
+          <strong>The key insight:</strong> When a component creates its own dependencies, it's locked into one behavior forever. When you inject dependencies, you control behavior from outside — swap in mocks for testing, share state across modules, or configure differently per environment.
+        </div>
+
+        <!-- DI Visual Demo -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— see shared vs isolated registries</span>
+            <div style="margin-left:auto;">
+              <button class="btn primary" onclick="runDIDemo()">Run Demo</button>
+              <button class="btn" onclick="resetDIDemo()" style="margin-left:6px;">Reset</button>
+            </div>
+          </div>
+          <div class="demo-content">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div>
+                <div style="font-size:11px;color:var(--danger);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Before DI</div>
+                <div id="di-before" style="display:flex;flex-direction:column;gap:6px;">
+                  <div class="event-node" id="di-cli-before">CLI</div>
+                  <div style="font-size:10px;color:var(--muted);padding:6px 10px;background:rgba(229,107,107,0.05);border:1px dashed rgba(229,107,107,0.2);border-radius:4px;" id="di-cli-reg">registry_1 { }</div>
+                  <div class="event-node" id="di-bot-before" style="margin-top:6px;">Telegram Bot</div>
+                  <div style="font-size:10px;color:var(--muted);padding:6px 10px;background:rgba(229,107,107,0.05);border:1px dashed rgba(229,107,107,0.2);border-radius:4px;" id="di-bot-reg">registry_2 { }</div>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:var(--danger)" id="di-before-note"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">After DI</div>
+                <div id="di-after" style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                  <div class="event-node" id="di-main">main.py</div>
+                  <div style="font-size:10px;color:var(--accent);padding:6px 10px;background:rgba(107,229,132,0.06);border:1px solid rgba(107,229,132,0.2);border-radius:4px;" id="di-shared-reg">shared_registry { }</div>
+                  <div style="display:flex;gap:8px;margin-top:4px;">
+                    <div class="event-node" id="di-cli-after">CLI</div>
+                    <div class="event-node" id="di-bot-after">Bot</div>
+                  </div>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:var(--accent)" id="di-after-note"></div>
+              </div>
+            </div>
+            <div class="log-box" id="di-log" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-q">You're writing a test for the Telegram bot. With dependency injection, how do you prevent it from making real network calls?</div>
+          <div class="quiz-options" id="quiz-2">
+            <button class="quiz-opt" onclick="answer(2, 0, false)">Disable networking in the OS.</button>
+            <button class="quiz-opt" onclick="answer(2, 1, true)">Pass in a mock_registry with fake data instead of the real SkillRegistry.</button>
+            <button class="quiz-opt" onclick="answer(2, 2, false)">Add an if-test flag inside telegram_bot.py.</button>
+            <button class="quiz-opt" onclick="answer(2, 3, false)">Create a subclass that overrides all methods.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-2"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(1)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(3)">Next: **kwargs Pattern →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 3: kwargs -->
+    <div class="lesson" id="lesson-3">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 04 — Extensibility</div>
+        <div class="lesson-title">The **kwargs<br>Extensibility Pattern</div>
+        <div class="lesson-subtitle">Design functions to accept unknown future arguments without breaking existing callers. Open for extension, closed for modification.</div>
+      </div>
+      <div class="lesson-body">
+
+        <p>As systems grow, functions need more context. But changing every call site is fragile. <code>**kwargs</code> (and <code>**extra_context</code>) lets you thread new data through without breaking anything.</p>
+
+        <div class="code-label">orchestrator/agent.py</div>
+        <pre><span class="kw">def</span> <span class="fn">run_agent</span>(user_message: str, registry: SkillRegistry, **extra_context) -> str:
+    ...
+    result = <span class="fn">handler</span>(registry=registry, **extra_context, **tool_input)</pre>
+
+        <div class="code-label">Tool handlers — each takes what it needs</div>
+        <pre><span class="cm"># This handler ignores extra — uses **kwargs to absorb it</span>
+<span class="kw">def</span> <span class="fn">handle_list_skills</span>(registry: SkillRegistry, **kwargs) -> str:
+    ...
+
+<span class="cm"># This handler uses _telegram_manager from extra_context</span>
+<span class="kw">def</span> <span class="fn">handle_start_telegram</span>(registry: SkillRegistry, _telegram_manager=<span class="kw">None</span>, **kwargs) -> str:
+    ...</pre>
+
+        <div class="callout">
+          <strong>Open/Closed Principle:</strong> The code is <em>open</em> for extension (add new context anytime) but <em>closed</em> for modification (existing handlers never break). You add a new key to <code>extra_context</code>, and only the handlers that care about it need to change.
+        </div>
+
+        <!-- kwargs simulator -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— see how kwargs flows through handlers</span>
+          </div>
+          <div class="demo-content">
+            <div style="margin-bottom:12px;font-size:12px;color:var(--muted)">Build your <code>extra_context</code> and run a handler:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;" id="kwargs-toggles">
+              <button class="btn" id="kwarg-tg" onclick="toggleKwarg('_telegram_manager')">+ _telegram_manager</button>
+              <button class="btn" id="kwarg-user" onclick="toggleKwarg('user_id')">+ user_id</button>
+              <button class="btn" id="kwarg-debug" onclick="toggleKwarg('debug_mode')">+ debug_mode</button>
+            </div>
+            <div style="margin-bottom:10px;font-size:11px;">
+              <span style="color:var(--muted)">run_agent(..., </span><span id="kwargs-display" style="color:var(--accent2)">registry=registry</span><span style="color:var(--muted)">)</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+              <button class="btn" onclick="callHandler('list_skills')">call handle_list_skills</button>
+              <button class="btn" onclick="callHandler('start_telegram')">call handle_start_telegram</button>
+              <button class="btn" onclick="callHandler('generic')">call handle_generic_tool</button>
+            </div>
+            <div class="log-box" id="kwargs-log"></div>
+          </div>
+        </div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-q">You add a new <code>audit_logger</code> to <code>extra_context</code>. How many existing handler functions need to change?</div>
+          <div class="quiz-options" id="quiz-3">
+            <button class="quiz-opt" onclick="answer(3, 0, false)">All of them — they all receive extra_context.</button>
+            <button class="quiz-opt" onclick="answer(3, 1, true)">Only the ones that want to use audit_logger. The rest absorb it silently via **kwargs.</button>
+            <button class="quiz-opt" onclick="answer(3, 2, false)">None — extra_context is filtered out before reaching handlers.</button>
+            <button class="quiz-opt" onclick="answer(3, 3, false)">Exactly two — the caller and the receiver.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-3"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(2)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(4)">Next: Daemon Threads →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 4: Daemon Threads -->
+    <div class="lesson" id="lesson-4">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 05 — Threading</div>
+        <div class="lesson-title">Daemon Threads</div>
+        <div class="lesson-subtitle">Background threads that die automatically when the main program exits — so you don't leave zombie processes behind.</div>
+      </div>
+      <div class="lesson-body">
+
+        <div class="code-label">integrations/telegram_manager.py</div>
+        <pre>self._thread = threading.Thread(
+    target=start_bot,
+<span class="hl">    daemon=<span class="kw">True</span>,  <span class="cm"># ← kills this thread when main exits</span></span>
+)</pre>
+
+        <table>
+          <tr><th>daemon=True</th><th>daemon=False (default)</th></tr>
+          <tr>
+            <td><span class="chip chip-green">Background workers</span><br><span style="color:var(--muted);font-size:11px;display:block;margin-top:6px;">Telegram bot listener, health check polling, log watchers</span><br><span style="color:var(--muted);font-size:11px;">Killed automatically when main exits</span></td>
+            <td><span class="chip chip-yellow">Critical workers</span><br><span style="color:var(--muted);font-size:11px;display:block;margin-top:6px;">Database writes, file saves, payment processing</span><br><span style="color:var(--muted);font-size:11px;">Main waits for these to finish before exiting</span></td>
+          </tr>
+        </table>
+
+        <!-- Daemon demo -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— simulate main thread exiting</span>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn primary" onclick="runDaemonDemo()">Simulate Exit</button>
+              <button class="btn" onclick="resetDaemonDemo()">Reset</button>
+            </div>
+          </div>
+          <div class="demo-content">
+            <div class="thread-container">
+              <div class="thread-row">
+                <div class="thread-label">Main (CLI)</div>
+                <div class="thread-bar bar-working" id="d-main" style="width:300px;">running CLI loop</div>
+              </div>
+              <div class="thread-row">
+                <div class="thread-label" style="display:flex;align-items:center;gap:4px;font-size:10px;">Telegram<br><span style="color:var(--accent);font-size:9px;">daemon=True</span></div>
+                <div class="thread-bar bar-working" id="d-daemon" style="width:240px;">polling Telegram API</div>
+              </div>
+              <div class="thread-row">
+                <div class="thread-label" style="display:flex;align-items:center;gap:4px;font-size:10px;">DB Writer<br><span style="color:var(--accent2);font-size:9px;">daemon=False</span></div>
+                <div class="thread-bar bar-working" id="d-nondaemon" style="width:180px;">writing batch to disk</div>
+              </div>
+            </div>
+            <div class="log-box" id="daemon-log"></div>
+          </div>
+        </div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-q">Your thread saves user data to a database every few seconds. Should it be <code>daemon=True</code> or <code>daemon=False</code>?</div>
+          <div class="quiz-options" id="quiz-4">
+            <button class="quiz-opt" onclick="answer(4, 0, false)">daemon=True — it's a background task.</button>
+            <button class="quiz-opt" onclick="answer(4, 1, true)">daemon=False — data loss would occur if it's killed mid-write when main exits.</button>
+            <button class="quiz-opt" onclick="answer(4, 2, false)">Either works — daemon only affects startup behavior.</button>
+            <button class="quiz-opt" onclick="answer(4, 3, false)">daemon=True, but add a try/finally to save before dying.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-4"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(3)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(5)">Next: Event Signaling →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 5: Events -->
+    <div class="lesson" id="lesson-5">
+      <div class="lesson-header">
+        <div class="lesson-tag">Concept 06 — Coordination</div>
+        <div class="lesson-title">Event-Based Signaling</div>
+        <div class="lesson-subtitle">A thread-safe way for one thread to tell another "stop now" — without race conditions or manual locking.</div>
+      </div>
+      <div class="lesson-body">
+
+        <div class="concept-grid">
+          <div class="concept-card bad">
+            <h3>🚨 Bad: Boolean Flag</h3>
+            <pre style="background:transparent;border:none;padding:0;font-size:11px;"><span class="cm"># Race condition!</span>
+should_stop = True
+<span class="cm"># Thread might not see it</span></pre>
+          </div>
+          <div class="concept-card good">
+            <h3>✓ Good: threading.Event()</h3>
+            <pre style="background:transparent;border:none;padding:0;font-size:11px;"><span class="cm"># Thread-safe by design</span>
+stop_event.<span class="fn">set</span>()
+<span class="cm"># Guaranteed to be seen</span></pre>
+          </div>
+        </div>
+
+        <div class="code-label">The signaling pattern</div>
+        <pre><span class="cm"># Telegram thread polls:</span>
+<span class="kw">while not</span> stop_event.<span class="fn">is_set</span>():   <span class="cm"># "Should I stop?"</span>
+    <span class="kw">await</span> asyncio.<span class="fn">sleep</span>(<span class="nu">0.5</span>)
+
+<span class="cm"># CLI thread signals:</span>
+<span class="kw">self</span>._stop_event.<span class="fn">set</span>()           <span class="cm"># "Yes, stop now."</span>
+<span class="kw">self</span>._thread.<span class="fn">join</span>(timeout=<span class="nu">10</span>)   <span class="cm"># Wait for it to finish</span></pre>
+
+        <div class="callout">
+          <strong>Event.set() and Event.is_set()</strong> are thread-safe by design — they use internal locks so you don't need your own. One thread sets, all waiting threads see it.
+        </div>
+
+        <!-- Event demo -->
+        <div class="demo-box">
+          <div class="demo-toolbar">
+            <strong>Interactive Demo</strong>
+            <span>— send a stop signal across threads</span>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn primary" onclick="startEventDemo()" id="evt-start-btn">Start Bot</button>
+              <button class="btn" onclick="stopEventDemo()" id="evt-stop-btn" disabled>Signal Stop</button>
+              <button class="btn" onclick="resetEventDemo()">Reset</button>
+            </div>
+          </div>
+          <div class="demo-content">
+            <div class="event-row">
+              <div class="event-node" id="evt-cli">CLI Thread</div>
+              <div class="event-wire" id="evt-wire1"><div class="signal" id="evt-signal1"></div></div>
+              <div class="event-node" id="evt-event">stop_event<br><span style="font-size:10px" id="evt-state">🔵 clear</span></div>
+              <div class="event-wire" id="evt-wire2"><div class="signal" id="evt-signal2"></div></div>
+              <div class="event-node" id="evt-tg">Telegram Thread</div>
+            </div>
+            <div class="log-box" id="evt-log" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <div class="quiz-wrap">
+          <div class="quiz-q">After <code>stop_event.set()</code> is called, the CLI calls <code>self._thread.join(timeout=10)</code>. What does <code>join</code> do?</div>
+          <div class="quiz-options" id="quiz-5">
+            <button class="quiz-opt" onclick="answer(5, 0, false)">Immediately kills the Telegram thread.</button>
+            <button class="quiz-opt" onclick="answer(5, 1, true)">Blocks the CLI thread until the Telegram thread finishes (or 10 seconds pass).</button>
+            <button class="quiz-opt" onclick="answer(5, 2, false)">Merges both threads into one.</button>
+            <button class="quiz-opt" onclick="answer(5, 3, false)">Sets daemon=True on the thread.</button>
+          </div>
+          <div class="quiz-feedback" id="feedback-5"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(4)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn primary" onclick="goTo(6)">Final Review →</button>
+      </div>
+    </div>
+
+    <!-- LESSON 6: Review -->
+    <div class="lesson" id="lesson-6">
+      <div class="lesson-header">
+        <div class="lesson-tag">Summary</div>
+        <div class="lesson-title">The Big Picture</div>
+        <div class="lesson-subtitle">Concurrent systems all come down to one thing: managing shared state safely across threads.</div>
+      </div>
+      <div class="lesson-body">
+
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="num">①</div>
+            <h3>Thread Safety — Lock</h3>
+            <p>Protect shared state with <code>threading.Lock()</code>. Use <code>with</code> to guarantee release. Minimize lock scope.</p>
+          </div>
+          <div class="summary-card">
+            <div class="num">②</div>
+            <h3>Closures</h3>
+            <p>Return inner functions that capture outer scope variables. Avoids globals. Works with fixed callback signatures.</p>
+          </div>
+          <div class="summary-card">
+            <div class="num">③</div>
+            <h3>Dependency Injection</h3>
+            <p>Create dependencies once, pass them in. Enables sharing, testing, and flexibility.</p>
+          </div>
+          <div class="summary-card">
+            <div class="num">④</div>
+            <h3>**kwargs Pattern</h3>
+            <p>Open for extension, closed for modification. Thread new context through without breaking existing code.</p>
+          </div>
+          <div class="summary-card">
+            <div class="num">⑤</div>
+            <h3>Daemon Threads</h3>
+            <p><code>daemon=True</code> for background workers. <code>daemon=False</code> for critical workers that must finish.</p>
+          </div>
+          <div class="summary-card">
+            <div class="num">⑥</div>
+            <h3>Event Signaling</h3>
+            <p><code>threading.Event()</code> for safe cross-thread coordination. <code>set()</code> signals, <code>is_set()</code> polls, <code>join()</code> waits.</p>
+          </div>
+        </div>
+
+        <h2 class="section-title">The Four Questions</h2>
+        <p>Whenever you design a concurrent system, ask:</p>
+
+        <div class="callout">
+          <strong>1. What state is shared?</strong> — the registry, config, any mutable singleton<br>
+          <strong>2. How do you protect it?</strong> — locks, atomic operations<br>
+          <strong>3. How do you pass it around?</strong> — dependency injection, closures<br>
+          <strong>4. How do you coordinate lifecycle?</strong> — events, daemon flags, join()
+        </div>
+
+        <p style="color:var(--muted);margin-top:24px;">These patterns scale from two threads all the way up to distributed microservices. The problems are the same — the tools just get bigger.</p>
+
+        <div id="complete-section" style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border);">
+          <div id="complete-msg"></div>
+        </div>
+
+      </div>
+      <div class="lesson-nav">
+        <button class="btn" onclick="goTo(5)">← Back</button>
+        <div class="spacer"></div>
+        <button class="btn" onclick="goTo(0)">↺ Start Over</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let completed = new Set();
+let quizAnswered = [false, false, false, false, false, false];
+let currentLesson = 0;
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function goTo(n) {
+  document.getElementById(`lesson-${currentLesson}`).classList.remove('active');
+  document.getElementById(`lesson-${n}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach((el, i) => {
+    el.classList.toggle('active', i === n);
+  });
+  currentLesson = n;
+  main.scrollTop = 0;
+}
+
+const main = document.querySelector('main');
+
+function markComplete(n) {
+  completed.add(n);
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems[n].classList.add('done');
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  const pct = (completed.size / 7) * 100;
+  fill.style.width = pct + '%';
+  text.textContent = `${completed.size} / 7 complete`;
+  if (completed.size === 7) showComplete();
+}
+
+function showComplete() {
+  const el = document.getElementById('complete-msg');
+  el.innerHTML = `<div style="text-align:center;padding:24px 0;">
+    <div class="complete-badge">🎉 All Concepts Mastered</div>
+    <p style="margin-top:16px;color:var(--muted);font-size:12px;">You've learned the foundation of concurrent systems programming.</p>
+  </div>`;
+}
+
+// ── Quiz ───────────────────────────────────────────────────────────────────
+const explanations = [
+  "The check-then-set sequence isn't atomic. Thread B can read `is_writing = False` before Thread A sets it to True. Locks make this atomic at the hardware level.",
+  "Python's garbage collector uses reference counting. The inner handler function holds a reference to `registry`, keeping it alive as long as the handler exists.",
+  "That's the whole point of DI — you control what gets injected. Pass mock_registry = {'skills': []} and the bot never touches the real network.",
+  "Only handlers that explicitly name the parameter (like `_telegram_manager=None`) receive it. Others absorb it silently via `**kwargs` and ignore it completely.",
+  "daemon=False is correct here. If the main thread exits and kills a daemon mid-write, you get data corruption or partial writes. Non-daemon threads let main wait for a clean finish.",
+  "`join()` blocks the calling thread until the target thread terminates. It's how you wait for cleanup to complete. With `timeout=10`, you give it 10 seconds before giving up."
+];
+
+function answer(quizN, optN, correct) {
+  if (quizAnswered[quizN]) return;
+  quizAnswered[quizN] = true;
+
+  const opts = document.querySelectorAll(`#quiz-${quizN} .quiz-opt`);
+  opts[optN].classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    // find correct one
+    opts.forEach((o, i) => { if (o.getAttribute('onclick').includes('true')) o.classList.add('correct'); });
+  }
+  opts.forEach(o => o.style.cursor = 'default');
+
+  const fb = document.getElementById(`feedback-${quizN}`);
+  fb.textContent = explanations[quizN];
+  fb.className = `quiz-feedback show ${correct ? 'correct' : 'wrong'}`;
+
+  if (correct) markComplete(quizN);
+}
+
+// ── Lock Demo ──────────────────────────────────────────────────────────────
+let lockRunning = false;
+
+async function runLockDemo() {
+  if (lockRunning) return;
+  lockRunning = true;
+  resetLock();
+  const cli = document.getElementById('bar-cli');
+  const tg = document.getElementById('bar-tg');
+  const lock = document.getElementById('bar-lock');
+  const log = document.getElementById('lock-log');
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div');
+    d.className = `log-line ${type}`;
+    d.textContent = `[${new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${msg}`;
+    log.appendChild(d);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  cli.textContent = 'wants lock'; cli.className = 'thread-bar bar-waiting';
+  tg.textContent = 'wants lock'; tg.className = 'thread-bar bar-waiting';
+  addLog('Both threads want to write to _skills...', 'warn');
+  await delay(600);
+
+  lock.textContent = '🔒 CLI'; lock.className = 'thread-bar bar-locked';
+  cli.textContent = 'WRITING'; cli.className = 'thread-bar bar-working'; cli.style.width='250px';
+  tg.textContent = 'BLOCKED'; tg.className = 'thread-bar bar-locked';
+  addLog('CLI thread acquired lock.', 'success');
+  addLog('Telegram thread is blocked — waiting.', 'warn');
+  await delay(1800);
+
+  cli.textContent = 'done ✓'; cli.className = 'thread-bar bar-done'; cli.style.width='120px';
+  lock.textContent = '🔓 free'; lock.className = 'thread-bar bar-waiting';
+  addLog('CLI thread released lock.', 'info');
+  await delay(200);
+
+  lock.textContent = '🔒 TG'; lock.className = 'thread-bar bar-locked';
+  tg.textContent = 'WRITING'; tg.className = 'thread-bar bar-working'; tg.style.width='250px';
+  addLog('Telegram thread acquired lock — safe to write now.', 'success');
+  await delay(1500);
+
+  tg.textContent = 'done ✓'; tg.className = 'thread-bar bar-done'; tg.style.width='120px';
+  lock.textContent = '🔓 free'; lock.className = 'thread-bar bar-waiting';
+  addLog('Telegram thread released lock. No corruption!', 'success');
+  lockRunning = false;
+  markComplete(0);
+}
+
+function resetLock() {
+  document.getElementById('bar-cli').className = 'thread-bar bar-waiting';
+  document.getElementById('bar-cli').textContent = 'waiting'; document.getElementById('bar-cli').style.width='200px';
+  document.getElementById('bar-tg').className = 'thread-bar bar-waiting';
+  document.getElementById('bar-tg').textContent = 'waiting'; document.getElementById('bar-tg').style.width='200px';
+  document.getElementById('bar-lock').className = 'thread-bar bar-waiting';
+  document.getElementById('bar-lock').textContent = '🔓 free';
+  document.getElementById('lock-log').innerHTML = '';
+}
+
+// ── Closure Demo ───────────────────────────────────────────────────────────
+let closureHandlers = [];
+
+function makeClosure(regName, skills) {
+  const id = closureHandlers.length;
+  closureHandlers.push({ regName, skills, id });
+  const container = document.getElementById('closure-handlers');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  row.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);width:20px;">#${id}</div>
+    <div style="padding:6px 12px;background:var(--code-bg);border:1px solid var(--border);border-radius:4px;font-size:11px;">
+      <span style="color:var(--accent3)">handler</span> <span style="color:var(--muted)">closed over</span> <span style="color:var(--accent2)">${regName}</span>
+    </div>
+    <button class="btn" onclick="invokeHandler(${id})" style="font-size:10px;padding:4px 10px;">invoke()</button>
+  `;
+  container.appendChild(row);
+  addClosureLog(`Created handler #${id} bound to ${regName}`, 'success');
+  markComplete(1);
+}
+
+function invokeHandler(id) {
+  const h = closureHandlers[id];
+  addClosureLog(`handler #${id} called — reads from captured ${h.regName}`, 'info');
+  addClosureLog(`  → skills: [${h.skills.join(', ')}]`, 'success');
+}
+
+function addClosureLog(msg, type='info') {
+  const log = document.getElementById('closure-log');
+  const d = document.createElement('div'); d.className = `log-line ${type}`; d.textContent = msg;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+
+// ── DI Demo ───────────────────────────────────────────────────────────────
+let diRunning = false;
+
+async function runDIDemo() {
+  if (diRunning) return; diRunning = true;
+  const log = document.getElementById('di-log');
+  log.innerHTML = '';
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div'); d.className = `log-line ${type}`; d.textContent = msg;
+    log.appendChild(d); log.scrollTop = log.scrollHeight;
+  }
+
+  // Before
+  addLog('=== BEFORE: Each creates its own registry ===', 'warn');
+  document.getElementById('di-cli-reg').textContent = 'registry_1 { skills: [] }';
+  document.getElementById('di-cli-reg').style.borderColor = 'rgba(229,107,107,0.4)';
+  await delay(600);
+  addLog('CLI registers skill: "list-files"', 'info');
+  document.getElementById('di-cli-reg').textContent = 'registry_1 { skills: ["list-files"] }';
+  await delay(600);
+  addLog('Bot checks skills...', 'info');
+  document.getElementById('di-bot-reg').textContent = 'registry_2 { skills: [] }';
+  await delay(400);
+  addLog('Bot sees: [] — empty! registries are SEPARATE.', 'error');
+  document.getElementById('di-before-note').textContent = '⚠ Out of sync';
+  await delay(1000);
+
+  // After
+  addLog('=== AFTER: Shared registry via DI ===', 'success');
+  const shared = document.getElementById('di-shared-reg');
+  shared.textContent = 'shared_registry { skills: [] }';
+  await delay(600);
+  addLog('main.py passes same registry to both CLI and Bot...', 'info');
+  document.getElementById('di-cli-after').classList.add('active');
+  document.getElementById('di-bot-after').classList.add('active');
+  await delay(600);
+  addLog('CLI registers skill: "list-files"', 'info');
+  shared.textContent = 'shared_registry { skills: ["list-files"] }';
+  await delay(500);
+  addLog('Bot checks skills...', 'info');
+  await delay(400);
+  addLog('Bot sees: ["list-files"] ✓ — same object!', 'success');
+  document.getElementById('di-after-note').textContent = '✓ Always in sync';
+  diRunning = false;
+  markComplete(2);
+}
+
+function resetDIDemo() {
+  diRunning = false;
+  document.getElementById('di-cli-reg').textContent = 'registry_1 { }';
+  document.getElementById('di-cli-reg').style.borderColor = '';
+  document.getElementById('di-bot-reg').textContent = 'registry_2 { }';
+  document.getElementById('di-shared-reg').textContent = 'shared_registry { }';
+  document.getElementById('di-before-note').textContent = '';
+  document.getElementById('di-after-note').textContent = '';
+  document.getElementById('di-cli-after').classList.remove('active');
+  document.getElementById('di-bot-after').classList.remove('active');
+  document.getElementById('di-log').innerHTML = '';
+}
+
+// ── kwargs Demo ────────────────────────────────────────────────────────────
+let activeKwargs = new Set(['registry']);
+
+function toggleKwarg(key) {
+  const btn = document.getElementById(`kwarg-${key.replace('_','').replace('_','')}`);
+  if (activeKwargs.has(key)) {
+    activeKwargs.delete(key);
+    btn.textContent = `+ ${key}`;
+    btn.style.color = '';
+  } else {
+    activeKwargs.add(key);
+    btn.textContent = `✓ ${key}`;
+    btn.style.color = 'var(--accent)';
+  }
+  const disp = document.getElementById('kwargs-display');
+  disp.textContent = [...activeKwargs].map(k => k === 'registry' ? 'registry=registry' : `${k}=...`).join(', ');
+}
+
+function callHandler(name) {
+  const log = document.getElementById('kwargs-log');
+  const d = document.createElement('div');
+  const ctx = [...activeKwargs];
+
+  let result = '';
+  if (name === 'list_skills') {
+    result = ctx.includes('_telegram_manager')
+      ? `handle_list_skills(registry=✓, **kwargs absorbs: [${ctx.filter(x=>x!=='registry').join(', ')}]) → returned skill list`
+      : `handle_list_skills(registry=✓) → returned skill list`;
+  } else if (name === 'start_telegram') {
+    const hasTg = ctx.includes('_telegram_manager');
+    result = hasTg
+      ? `handle_start_telegram(registry=✓, _telegram_manager=✓) → Bot started!`
+      : `handle_start_telegram(registry=✓, _telegram_manager=None) → ⚠ No manager passed, bot not started`;
+  } else {
+    result = `handle_generic_tool(registry=✓, **kwargs absorbs everything else silently)`;
+  }
+
+  d.className = 'log-line ' + (result.includes('⚠') ? 'warn' : 'success');
+  d.textContent = result;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+  markComplete(3);
+}
+
+// ── Daemon Demo ────────────────────────────────────────────────────────────
+let daemonRunning = false;
+
+async function runDaemonDemo() {
+  if (daemonRunning) return; daemonRunning = true;
+  const log = document.getElementById('daemon-log');
+  log.innerHTML = '';
+  const delay = ms => new Promise(r => setTimeout(r, ms));
+
+  function addLog(msg, type='info') {
+    const d = document.createElement('div'); d.className = `log-line ${type}`; d.textContent = msg;
+    log.appendChild(d); log.scrollTop = log.scrollHeight;
+  }
+
+  addLog('User types "exit" in CLI...', 'warn');
+  await delay(700);
+  document.getElementById('d-main').textContent = 'exiting...';
+  document.getElementById('d-main').className = 'thread-bar bar-waiting';
+  addLog('Main thread begins shutdown.', 'info');
+  await delay(800);
+  document.getElementById('d-daemon').textContent = 'killed ✗';
+  document.getElementById('d-daemon').className = 'thread-bar bar-locked';
+  addLog('Telegram thread (daemon=True) — killed immediately. No waiting.', 'warn');
+  await delay(800);
+  addLog('DB Writer thread (daemon=False) — main waits for it to finish...', 'info');
+  await delay(1200);
+  document.getElementById('d-nondaemon').textContent = 'finished ✓';
+  document.getElementById('d-nondaemon').className = 'thread-bar bar-done';
+  addLog('DB Writer completed. No data loss.', 'success');
+  await delay(400);
+  document.getElementById('d-main').textContent = 'exited ✓';
+  document.getElementById('d-main').className = 'thread-bar bar-done';
+  addLog('Program exits cleanly.', 'success');
+  daemonRunning = false;
+  markComplete(4);
+}
+
+function resetDaemonDemo() {
+  daemonRunning = false;
+  document.getElementById('d-main').textContent = 'running CLI loop';
+  document.getElementById('d-main').className = 'thread-bar bar-working';
+  document.getElementById('d-daemon').textContent = 'polling Telegram API';
+  document.getElementById('d-daemon').className = 'thread-bar bar-working';
+  document.getElementById('d-nondaemon').textContent = 'writing batch to disk';
+  document.getElementById('d-nondaemon').className = 'thread-bar bar-working';
+  document.getElementById('daemon-log').innerHTML = '';
+}
+
+// ── Event Demo ─────────────────────────────────────────────────────────────
+let evtInterval = null;
+let evtPollCount = 0;
+
+function startEventDemo() {
+  document.getElementById('evt-tg').classList.add('active');
+  document.getElementById('evt-start-btn').disabled = true;
+  document.getElementById('evt-stop-btn').disabled = false;
+  evtPollCount = 0;
+
+  evtInterval = setInterval(() => {
+    evtPollCount++;
+    addEvtLog(`[Telegram] stop_event.is_set()? → False. Polling... (tick ${evtPollCount})`, 'info');
+  }, 1000);
+  addEvtLog('[main.py] TelegramManager.start() called — thread started.', 'success');
+  markComplete(5);
+}
+
+async function stopEventDemo() {
+  document.getElementById('evt-stop-btn').disabled = true;
+  addEvtLog('[CLI] Calling stop_event.set()...', 'warn');
+  clearInterval(evtInterval);
+
+  // animate signal
+  const sig = document.getElementById('evt-signal1');
+  document.getElementById('evt-cli').classList.add('signaling');
+  sig.classList.add('traveling');
+  await new Promise(r => setTimeout(r, 1100));
+
+  document.getElementById('evt-state').textContent = '🔴 set';
+  document.getElementById('evt-event').classList.add('signaling');
+  addEvtLog('[Event] stop_event.set() — flag is now True.', 'warn');
+
+  const sig2 = document.getElementById('evt-signal2');
+  sig2.classList.add('traveling');
+  await new Promise(r => setTimeout(r, 1100));
+
+  document.getElementById('evt-tg').classList.remove('active');
+  document.getElementById('evt-tg').textContent = 'stopped ✓';
+  addEvtLog('[Telegram] is_set()? → True. Exiting loop.', 'success');
+  addEvtLog('[CLI] thread.join() — waiting for Telegram thread to finish...', 'info');
+  await new Promise(r => setTimeout(r, 800));
+  addEvtLog('[CLI] Thread joined. Shutdown complete.', 'success');
+  document.getElementById('evt-cli').classList.remove('signaling');
+}
+
+function resetEventDemo() {
+  clearInterval(evtInterval);
+  document.getElementById('evt-cli').className = 'event-node';
+  document.getElementById('evt-tg').className = 'event-node';
+  document.getElementById('evt-tg').textContent = 'Telegram Thread';
+  document.getElementById('evt-event').className = 'event-node';
+  document.getElementById('evt-state').textContent = '🔵 clear';
+  document.getElementById('evt-signal1').classList.remove('traveling');
+  document.getElementById('evt-signal2').classList.remove('traveling');
+  document.getElementById('evt-log').innerHTML = '';
+  document.getElementById('evt-start-btn').disabled = false;
+  document.getElementById('evt-stop-btn').disabled = true;
+}
+
+function addEvtLog(msg, type='info') {
+  const log = document.getElementById('evt-log');
+  const d = document.createElement('div'); d.className = `log-line ${type}`; d.textContent = msg;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+
+// Mark review complete on visit
+document.querySelector('.nav-item[data-lesson="6"]').addEventListener('click', () => markComplete(6));
+</script>
+</body>
+</html>

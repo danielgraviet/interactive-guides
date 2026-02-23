@@ -1,0 +1,23 @@
+:root {
+  --bg: #0d0f0e;
+  --surface: #141614;
+  --card: #1a1d1a;
+  --border: #252825;
+  --accent: #6be584;
+  --accent2: #e5c46b;
+  --accent3: #6baae5;
+  --text: #d4dbd4;
+  --muted: #6b776b;
+  --danger: #e56b6b;
+  --code-bg: #111311;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}

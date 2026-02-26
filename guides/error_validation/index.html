@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Error & Validation</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;1,400&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --grid: rgba(0,200,255,0.04);
+  --surface: #161b22;
+  --card: #1c2333;
+  --border: #21262d;
+  --border2: #30363d;
+  --ink: #e6edf3;
+  --ink2: #8b949e;
+  --ink3: #58a6ff;
+  --cyan: #00d4ff;
+  --cyan-dim: rgba(0,212,255,0.12);
+  --orange: #ff8c42;
+  --orange-dim: rgba(255,140,66,0.12);
+  --green: #3fb950;
+  --green-dim: rgba(63,185,80,0.1);
+  --red: #f85149;
+  --red-dim: rgba(248,81,73,0.1);
+  --yellow: #e3b341;
+  --yellow-dim: rgba(227,179,65,0.1);
+  --correct: #3fb950;
+  --wrong: #f85149;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--ink);
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ─── LAYOUT ─── */
+.shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ─── HEADER ─── */
+header {
+  margin-bottom: 44px;
+  position: relative;
+}
+
+.header-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(2.6rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+h1 .line1 { color: var(--ink); }
+h1 .line2 { color: var(--cyan); display: block; }
+
+.header-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink2);
+  margin-top: 12px;
+  letter-spacing: 0.08em;
+}
+
+.header-accent {
+  position: absolute;
+  top: 0; right: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--border2);
+  text-align: right;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  display: none;
+}
+
+@media (min-width: 600px) { .header-accent { display: block; } }
+
+/* ─── STATS ─── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.stat-box {
+  background: var(--surface);
+  padding: 14px 12px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--cyan);
+  line-height: 1;
+}
+
+.stat-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--ink2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 3px;
+}
+
+/* ─── MODE BAR ─── */
+.mode-strip {
+  display: flex;
+  border: 1px solid var(--border2);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--ink2);
+  border: none;
+  border-right: 1px solid var(--border2);
+  transition: all 0.15s;
+}
+
+.mode-btn:last-child { border-right: none; }
+.mode-btn:hover:not(.active) { background: var(--card); color: var(--ink); }
+.mode-btn.active { background: var(--cyan); color: var(--bg); font-weight: 700; }
+
+/* ─── TOPIC PILLS ─── */
+.pill-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.pill {
+  padding: 5px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--ink2);
+  border: 1px solid var(--border2);
+  transition: all 0.15s;
+}
+
+.pill:hover { border-color: var(--cyan); color: var(--cyan); }
+.pill.active { background: rgba(0,212,255,0.15); border-color: var(--cyan); color: var(--cyan); }
+
+/* ─── PROGRESS ─── */
+.prog-track {
+  height: 3px;
+  background: var(--border);
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.prog-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ─── REVIEW MODE ─── */
+.section-block { margin-bottom: 48px; }
+
+.sec-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 6px;
+  opacity: 0.7;
+}
+
+.sec-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: 20px;
+}
+
+.prose {
+  font-size: 14.5px;
+  line-height: 1.85;
+  color: #a0aab4;
+}
+
+.prose p { margin-bottom: 14px; }
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose em { color: var(--cyan); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+
+/* Formula display */
+.formula-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--cyan);
+  padding: 18px 22px;
+  margin: 18px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 2.1;
+  overflow-x: auto;
+}
+
+.formula-box .fname { color: var(--orange); font-weight: 600; }
+.formula-box .fmath { color: var(--cyan); }
+.formula-box .fcomment { color: var(--border2); font-size: 11px; font-style: italic; }
+.formula-box .fhi { color: var(--yellow); }
+.formula-box .fgreen { color: var(--green); }
+
+/* Callouts */
+.callout {
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #a0aab4;
+  border-left: 3px solid;
+}
+
+.callout strong { font-weight: 600; }
+.callout.info { background: var(--cyan-dim); border-color: var(--cyan); }
+.callout.info strong { color: var(--cyan); }
+.callout.warn { background: var(--orange-dim); border-color: var(--orange); }
+.callout.warn strong { color: var(--orange); }
+.callout.tip { background: var(--green-dim); border-color: var(--green); }
+.callout.tip strong { color: var(--green); }
+
+/* Comparison grid */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+
+.metric-card:hover { border-color: var(--cyan); }
+
+.mc-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.mc-formula {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: var(--cyan);
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.mc-desc {
+  font-size: 12.5px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+/* Table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+thead th {
+  background: var(--card);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border2);
+}
+
+tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: #a0aab4;
+  vertical-align: top;
+}
+
+tbody tr:hover td { background: var(--surface); }
+
+/* Cross-val visual */
+.cv-diagram {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cv-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.cv-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink2);
+  width: 60px;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.cv-folds {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+.cv-fold {
+  flex: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+}
+
+.cv-fold.train { background: rgba(0,212,255,0.12); border-color: rgba(0,212,255,0.3); color: var(--cyan); }
+.cv-fold.test { background: rgba(255,140,66,0.2); border-color: var(--orange); color: var(--orange); }
+
+/* Worked example */
+.worked {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.worked-head {
+  background: var(--card);
+  padding: 12px 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.worked-head::before {
+  content: '//';
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.worked-step {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.worked-step:last-child { border-bottom: none; }
+
+.ws-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--orange);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 6px;
+}
+
+.ws-body {
+  font-size: 13.5px;
+  color: #a0aab4;
+  line-height: 1.75;
+}
+
+.ws-body code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--card);
+  color: var(--cyan);
+  padding: 1px 6px;
+  font-size: 12.5px;
+  border: 1px solid var(--border2);
+}
+
+/* ─── QUIZ MODE ─── */
+.q-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 28px;
+  margin-bottom: 14px;
+  animation: fadeSlide 0.28s ease;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.q-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+}
+
+.diff-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid;
+  margin-left: 8px;
+}
+
+.diff-easy { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+.diff-med { color: var(--yellow); border-color: var(--yellow); background: var(--yellow-dim); }
+.diff-hard { color: var(--red); border-color: var(--red); background: var(--red-dim); }
+
+.q-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink2);
+}
+
+.q-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-bottom: 22px;
+  letter-spacing: 0.01em;
+}
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+
+.opt-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.15s;
+}
+
+.opt-btn:hover:not(.locked) { border-color: var(--cyan); background: var(--cyan-dim); }
+
+.opt-letter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink2);
+  min-width: 18px;
+  margin-top: 1px;
+  font-weight: 600;
+}
+
+.opt-text {
+  font-size: 13.5px;
+  color: #a0aab4;
+  line-height: 1.55;
+}
+
+.opt-btn.correct { border-color: var(--correct); background: var(--green-dim); }
+.opt-btn.correct .opt-letter { color: var(--correct); }
+.opt-btn.wrong { border-color: var(--wrong); background: var(--red-dim); }
+.opt-btn.wrong .opt-letter { color: var(--wrong); }
+.opt-btn.locked { cursor: default; }
+
+/* Explanation */
+.exp-box {
+  display: none;
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: rgba(139,93,255,0.08);
+  border-left: 3px solid #8b5cf6;
+  animation: fadeIn 0.3s ease;
+}
+
+.exp-box.show { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.exp-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 7px;
+}
+
+.exp-text {
+  font-size: 13.5px;
+  color: #a0aab4;
+  line-height: 1.75;
+}
+
+.exp-text code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--card);
+  color: var(--cyan);
+  padding: 1px 5px;
+  font-size: 12px;
+  border: 1px solid var(--border2);
+}
+
+/* Controls */
+.ctrl-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btn {
+  padding: 10px 26px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.btn-primary { background: var(--cyan); color: var(--bg); }
+.btn-primary:hover { background: #33dcff; }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--ink2); }
+.btn-ghost:hover { border-color: var(--ink2); color: var(--ink); }
+
+/* Result card */
+.result-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  padding: 56px 40px;
+  text-align: center;
+  display: none;
+}
+
+.result-wrap.show { display: block; animation: fadeSlide 0.4s ease; }
+
+.score-giant {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 90px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.score-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink2);
+  margin-top: 8px;
+  margin-bottom: 28px;
+  letter-spacing: 0.08em;
+}
+
+/* ─── FLASHCARD MODE ─── */
+.fc-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 36px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.2s;
+  position: relative;
+}
+
+.fc-card:hover { border-color: var(--cyan); }
+
+.fc-side {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink2);
+  margin-bottom: 18px;
+}
+
+.fc-content {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink);
+  line-height: 1.3;
+  max-width: 560px;
+}
+
+.fc-content.def {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14.5px;
+  font-weight: 400;
+  text-transform: none;
+  color: #a0aab4;
+  line-height: 1.8;
+  letter-spacing: 0;
+}
+
+.fc-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--border2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.fc-counter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink2);
+  margin-top: 10px;
+  letter-spacing: 0.06em;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-eyebrow">CS 270 · BYU · Dr. Quinn Snell · Midterm Prep</div>
+    <h1>
+      <span class="line1">Error &</span>
+      <span class="line2">Validation</span>
+    </h1>
+    <p class="header-sub">// L1 · SSE · MSE · RMSE · Cross-Validation · N-Fold</p>
+    <div class="header-accent">
+      UNIT_02 / ERROR_METRICS<br>
+      BUILD :: INTERACTIVE<br>
+      STATUS :: READY
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" id="stat-ans">0</div><div class="stat-key">Answered</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-cor">0</div><div class="stat-key">Correct</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-acc">—</div><div class="stat-key">Accuracy</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-str">0</div><div class="stat-key">Streak 🔥</div></div>
+  </div>
+
+  <!-- MODE BAR -->
+  <div class="mode-strip">
+    <button class="mode-btn active" onclick="setMode('review')">📖 Review</button>
+    <button class="mode-btn" onclick="setMode('quiz')">🎯 Quiz</button>
+    <button class="mode-btn" onclick="setMode('flash')">🃏 Flashcards</button>
+  </div>
+
+  <!-- ═══════════ REVIEW MODE ═══════════ -->
+  <div id="review-mode">
+
+    <!-- SECTION 1: Error Metrics Overview -->
+    <div class="section-block">
+      <div class="sec-label">Error Metrics</div>
+      <div class="sec-title">Why We Measure Error</div>
+      <div class="prose">
+        <p>An error metric quantifies the gap between a model's predictions and the true values. Choosing the <strong>right metric matters</strong> — different metrics penalize errors differently, reward different model behaviors, and lead to different optimization outcomes.</p>
+        <p>Given <em>n</em> data points with true values <em>yᵢ</em> and predicted values <em>ŷᵢ</em>, the residual for each point is <em>eᵢ = yᵢ − ŷᵢ</em>.</p>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="mc-name" style="color:var(--orange)">L1 / MAE</div>
+          <div class="mc-formula">Σ |yᵢ − ŷᵢ| / n</div>
+          <div class="mc-desc">Mean Absolute Error. Treats all errors equally. Robust to outliers.</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name" style="color:var(--cyan)">SSE / L2</div>
+          <div class="mc-formula">Σ (yᵢ − ŷᵢ)²</div>
+          <div class="mc-desc">Sum of Squared Errors. Amplifies large errors. Used as a loss function.</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name" style="color:var(--green)">MSE</div>
+          <div class="mc-formula">Σ (yᵢ − ŷᵢ)² / n</div>
+          <div class="mc-desc">Mean Squared Error. SSE normalized by n. Comparable across datasets.</div>
+        </div>
+        <div class="metric-card">
+          <div class="mc-name" style="color:var(--yellow)">RMSE</div>
+          <div class="mc-formula">√[ Σ (yᵢ − ŷᵢ)² / n ]</div>
+          <div class="mc-desc">Root MSE. Same units as y. Most interpretable squared-error metric.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: Deep Dive Each Metric -->
+    <div class="section-block">
+      <div class="sec-label">Deep Dive</div>
+      <div class="sec-title">L1 — Mean Absolute Error (MAE)</div>
+      <div class="prose">
+        <p>L1 loss takes the absolute value of each residual, then averages them. Because it doesn't square errors, <strong>large errors are not penalized disproportionately</strong>.</p>
+      </div>
+      <div class="formula-box">
+        <span class="fname">MAE</span>  =  <span class="fmath">(1/n) × Σᵢ |yᵢ − ŷᵢ|</span><br>
+        <span class="fcomment">// Every error contributes linearly — a 10-unit error counts exactly 10× a 1-unit error</span>
+      </div>
+      <div class="callout info">
+        <strong>Key property:</strong> L1 is robust to outliers. If one point has a massive error, it doesn't dominate the metric. This makes MAE a better choice when outliers are expected and you don't want to over-penalize them.
+      </div>
+      <div class="callout warn">
+        <strong>⚠ Snell trap:</strong> L1 is not differentiable at zero (there's a kink). This makes gradient-based optimization trickier. You may use subgradients or a smooth approximation.
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="sec-label">Deep Dive</div>
+      <div class="sec-title">SSE — Sum of Squared Errors (L2 Loss)</div>
+      <div class="prose">
+        <p>SSE squares each residual before summing. Squaring does two things: it makes all terms positive, and it <strong>heavily penalizes large errors</strong> relative to small ones.</p>
+      </div>
+      <div class="formula-box">
+        <span class="fname">SSE</span>  =  <span class="fmath">Σᵢ (yᵢ − ŷᵢ)²</span><br>
+        <span class="fcomment">// A 10-unit error contributes 100; a 1-unit error contributes 1 — 100× difference</span><br>
+        <span class="fcomment">// SSE grows with dataset size — hard to compare across datasets of different n</span>
+      </div>
+      <div class="callout warn">
+        <strong>⚠ Snell trap:</strong> SSE is not normalized — it scales with n. Comparing SSE between a model trained on 100 points vs 1000 points is meaningless. Use MSE for comparisons.
+      </div>
+      <div class="callout info">
+        <strong>Why use SSE?</strong> It's the natural loss function for linear regression because minimizing SSE has a clean analytical solution (the Normal Equation). It's differentiable everywhere, unlike L1.
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="sec-label">Deep Dive</div>
+      <div class="sec-title">MSE & RMSE — Normalized Squared Error</div>
+      <div class="prose">
+        <p><strong>MSE</strong> divides SSE by n, giving the average squared error per data point. This makes it comparable across datasets.</p>
+        <p><strong>RMSE</strong> takes the square root of MSE, returning the error to the <strong>same units as the original target variable y</strong>. If y is in dollars, RMSE is in dollars.</p>
+      </div>
+      <div class="formula-box">
+        <span class="fname">MSE</span>   =  <span class="fmath">SSE / n  =  (1/n) × Σᵢ (yᵢ − ŷᵢ)²</span><br>
+        <br>
+        <span class="fname">RMSE</span>  =  <span class="fmath">√MSE   =  √[ (1/n) × Σᵢ (yᵢ − ŷᵢ)² ]</span><br>
+        <span class="fcomment">// RMSE ≥ MAE always — because squaring amplifies larger errors</span><br>
+        <span class="fcomment">// If RMSE >> MAE, you likely have outliers pulling up RMSE</span>
+      </div>
+
+      <div class="callout tip">
+        <strong>Interpretability trick:</strong> RMSE can be loosely interpreted as "on average, my predictions are off by about RMSE units." This is not exactly true (it's RMS, not mean) but it's the right ballpark and a useful mental model.
+      </div>
+
+      <div class="callout warn">
+        <strong>⚠ Snell trap:</strong> RMSE is NOT the same as MAE and they are NOT interchangeable. RMSE will always be ≥ MAE for the same dataset (they're equal only if all errors are identical). A large RMSE vs MAE gap signals outliers.
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="section-block">
+      <div class="sec-label">Comparison</div>
+      <div class="sec-title">Metric Comparison at a Glance</div>
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Formula</th><th>Units</th><th>Outlier Sensitivity</th><th>Use When</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong style="color:var(--orange)">L1 / MAE</strong></td><td>Σ|eᵢ|/n</td><td>Same as y</td><td>Low</td><td>Outliers present; need robust metric</td></tr>
+          <tr><td><strong style="color:var(--cyan)">SSE</strong></td><td>Σeᵢ²</td><td>y²</td><td>Very High</td><td>Training loss for linear regression</td></tr>
+          <tr><td><strong style="color:var(--green)">MSE</strong></td><td>Σeᵢ²/n</td><td>y²</td><td>High</td><td>Comparing models across dataset sizes</td></tr>
+          <tr><td><strong style="color:var(--yellow)">RMSE</strong></td><td>√(Σeᵢ²/n)</td><td>Same as y</td><td>High</td><td>Interpretable squared-error metric</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Worked numeric example -->
+      <div class="worked">
+        <div class="worked-head">Numeric Worked Example</div>
+        <div class="worked-step">
+          <div class="ws-num">The Data</div>
+          <div class="ws-body">
+            True values: <code>y = [3, 5, 2, 8]</code>&nbsp;&nbsp;&nbsp;Predicted: <code>ŷ = [2, 6, 4, 7]</code><br>
+            Residuals: <code>e = [1, -1, -2, 1]</code>
+          </div>
+        </div>
+        <div class="worked-step">
+          <div class="ws-num">Step 1 — L1 / MAE</div>
+          <div class="ws-body">
+            |e| = [1, 1, 2, 1] → Sum = 5<br>
+            <code>MAE = 5 / 4 = 1.25</code>
+          </div>
+        </div>
+        <div class="worked-step">
+          <div class="ws-num">Step 2 — SSE</div>
+          <div class="ws-body">
+            e² = [1, 1, 4, 1] → <code>SSE = 1 + 1 + 4 + 1 = 7</code>
+          </div>
+        </div>
+        <div class="worked-step">
+          <div class="ws-num">Step 3 — MSE</div>
+          <div class="ws-body">
+            <code>MSE = SSE / n = 7 / 4 = 1.75</code>
+          </div>
+        </div>
+        <div class="worked-step">
+          <div class="ws-num">Step 4 — RMSE</div>
+          <div class="ws-body">
+            <code>RMSE = √1.75 ≈ 1.322</code><br>
+            Note: RMSE (1.322) > MAE (1.25) ✓ — always true for non-identical errors
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Cross Validation -->
+    <div class="section-block">
+      <div class="sec-label">Validation</div>
+      <div class="sec-title">Why Simple Train/Test Splits Fail</div>
+      <div class="prose">
+        <p>If you evaluate your model on a single train/test split, your performance estimate depends heavily on <strong>which data ended up in the test set by chance</strong>. A lucky split could make a bad model look great; an unlucky one could make a good model look terrible.</p>
+        <p>Cross-validation solves this by <strong>systematically rotating which data is used for testing</strong>, using every data point for evaluation exactly once.</p>
+      </div>
+      <div class="callout warn">
+        <strong>⚠ The cardinal rule:</strong> Never train on your test data. Never tune hyperparameters on your test data. Cross-validation is how you tune models without touching the test set — the test set is reserved for final evaluation only.
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="sec-label">Validation</div>
+      <div class="sec-title">N-Fold (K-Fold) Cross-Validation</div>
+      <div class="prose">
+        <p>Split the dataset into <strong>k equal folds</strong>. Run k training cycles: each time, hold out one fold as the test set and train on the remaining k−1 folds. Average the k test scores.</p>
+      </div>
+
+      <!-- Visual diagram -->
+      <div class="cv-diagram">
+        <div class="cv-row">
+          <div class="cv-label">FOLD 1</div>
+          <div class="cv-folds">
+            <div class="cv-fold test">TEST</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+          </div>
+        </div>
+        <div class="cv-row">
+          <div class="cv-label">FOLD 2</div>
+          <div class="cv-folds">
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold test">TEST</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+          </div>
+        </div>
+        <div class="cv-row">
+          <div class="cv-label">FOLD 3</div>
+          <div class="cv-folds">
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold test">TEST</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+          </div>
+        </div>
+        <div class="cv-row">
+          <div class="cv-label">FOLD 4</div>
+          <div class="cv-folds">
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold test">TEST</div>
+            <div class="cv-fold train">TRAIN</div>
+          </div>
+        </div>
+        <div class="cv-row">
+          <div class="cv-label">FOLD 5</div>
+          <div class="cv-folds">
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold train">TRAIN</div>
+            <div class="cv-fold test">TEST</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="formula-box">
+        <span class="fname">CV Score</span>  =  <span class="fmath">(1/k) × Σᵢ Score(fold i)</span><br>
+        <span class="fcomment">// Each point is tested exactly once across all k folds</span><br>
+        <span class="fcomment">// Final model is typically retrained on ALL data after CV</span>
+      </div>
+
+      <table>
+        <thead><tr><th>k Value</th><th>Bias</th><th>Variance</th><th>Compute Cost</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>k = 2</strong> (2-fold)</td><td>High</td><td>High</td><td>Low</td><td>Rarely used; very noisy estimate</td></tr>
+          <tr><td><strong>k = 5</strong></td><td>Moderate</td><td>Moderate</td><td>Moderate</td><td>Common practical choice</td></tr>
+          <tr><td><strong>k = 10</strong></td><td>Low</td><td>Low</td><td>High</td><td>Standard default in literature</td></tr>
+          <tr><td><strong>k = n</strong> (LOOCV)</td><td>Very Low</td><td>Very High</td><td>Very High</td><td>Leave-One-Out; n training runs</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout warn">
+        <strong>⚠ Snell trap — LOOCV:</strong> Leave-One-Out Cross-Validation (k = n) has very low bias but surprisingly HIGH variance in the error estimate, because each fold's training set differs by only one point — the test scores become highly correlated.
+      </div>
+      <div class="callout tip">
+        <strong>What CV does NOT do:</strong> Cross-validation estimates model performance — it does not directly prevent overfitting. It tells you <em>how much</em> your model is overfitting. To fix overfitting, you change the model, not the validation strategy.
+      </div>
+      <div class="callout info">
+        <strong>Final model retraining:</strong> After using CV to select a model/hyperparameters, you retrain on the <em>entire</em> training dataset (all k folds combined). CV was only for model selection — the final model uses all available data.
+      </div>
+    </div>
+
+  </div><!-- /review-mode -->
+
+  <!-- ═══════════ QUIZ MODE ═══════════ -->
+  <div id="quiz-mode" class="hidden">
+    <div class="pill-row" id="q-pills">
+      <button class="pill active" onclick="filterQ('all',this)">All Topics</button>
+      <button class="pill" onclick="filterQ('metrics',this)">Error Metrics</button>
+      <button class="pill" onclick="filterQ('calc',this)">Calculations</button>
+      <button class="pill" onclick="filterQ('cv',this)">Cross-Validation</button>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="q-prog" style="width:0%"></div></div>
+    <div id="q-area"></div>
+    <div class="result-wrap" id="q-result">
+      <div class="score-giant" id="q-final-pct">0%</div>
+      <div class="score-sub" id="q-final-msg"></div>
+      <button class="btn btn-primary" onclick="restartQuiz()">Restart</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ FLASHCARD MODE ═══════════ -->
+  <div id="flash-mode" class="hidden">
+    <div class="pill-row" id="f-pills">
+      <button class="pill active" onclick="filterF('all',this)">All</button>
+      <button class="pill" onclick="filterF('metrics',this)">Error Metrics</button>
+      <button class="pill" onclick="filterF('cv',this)">Cross-Validation</button>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="f-prog" style="width:0%"></div></div>
+    <div class="fc-card" id="fc" onclick="flipFC()">
+      <div class="fc-side" id="fc-side">▲ TERM</div>
+      <div class="fc-content" id="fc-content"></div>
+      <div class="fc-hint">click to flip</div>
+    </div>
+    <div class="ctrl-row" style="margin-top:14px;">
+      <button class="btn btn-ghost" onclick="prevFC()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextFC()">Next →</button>
+    </div>
+    <div class="fc-counter" id="fc-counter"></div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ──────────────────────────────────────────────
+//  QUIZ DATA
+// ──────────────────────────────────────────────
+const QS = [
+  // ERROR METRICS
+  {id:1, topic:'metrics', diff:'easy',
+   q:'Which error metric is expressed in the SAME units as the target variable y?',
+   opts:['SSE','MSE','RMSE','All of the above'],
+   ans:2,
+   exp:'SSE and MSE are in units of y² (squared), so they lose interpretability. RMSE takes the square root, returning the error to the original units of y — making it the most interpretable squared-error metric. MAE (L1) is also in the same units as y, but RMSE is the specifically correct answer here among the squared-error family.'
+  },
+  {id:2, topic:'metrics', diff:'easy',
+   q:'What is the key difference between SSE and MSE?',
+   opts:['MSE uses absolute values; SSE uses squared values','SSE sums squared errors; MSE divides that sum by n','MSE is always larger than SSE','They are mathematically identical'],
+   ans:1,
+   exp:'SSE = Σ(eᵢ²) — the raw sum. MSE = SSE / n — normalized by the number of samples. This normalization is crucial: SSE grows with dataset size, making cross-dataset comparisons meaningless. MSE is comparable across datasets of different sizes.'
+  },
+  {id:3, topic:'metrics', diff:'med',
+   q:'A model has MAE = 2.0 and RMSE = 5.8 on the same test set. What does this large gap most likely indicate?',
+   opts:['The model is underfitting','There are outliers with very large errors skewing RMSE upward','MAE was computed incorrectly','RMSE should always equal MAE'],
+   ans:1,
+   exp:'RMSE squares errors before averaging, so it is disproportionately influenced by large errors. MAE treats all errors equally. When RMSE >> MAE, a few data points have very large errors (outliers) that inflate RMSE while barely affecting MAE. If all errors were equal, MAE = RMSE.'
+  },
+  {id:4, topic:'metrics', diff:'med',
+   q:'You are building a house price predictor. One neighborhood has a few ultra-luxury homes with prices 10× the median. Which metric should you MINIMIZE to avoid your model being dominated by those few outliers?',
+   opts:['RMSE','SSE','MSE','MAE (L1)'],
+   ans:3,
+   exp:'MAE/L1 treats each error linearly — a $1M error counts 10× a $100K error, not 100× like squared metrics would. By contrast, minimizing MSE/RMSE/SSE squares the errors, causing the optimizer to disproportionately chase those massive outlier errors. L1 gives a more robust, balanced fit.'
+  },
+  {id:5, topic:'metrics', diff:'hard',
+   q:'Which of the following is a TRUE statement about L1 (MAE) vs L2 (SSE/MSE) loss?',
+   opts:[
+     'L1 is differentiable everywhere; L2 has a kink at zero',
+     'Minimizing L2 loss in linear regression has no closed-form solution',
+     'L1 is NOT differentiable at zero; L2 is differentiable everywhere',
+     'L1 and L2 always produce the same optimal model parameters'
+   ],
+   ans:2,
+   exp:'L1 (|e|) has a kink at e=0 — the derivative is undefined there (it jumps from -1 to +1). This is why L1 requires subgradient methods or smooth approximations for gradient-based optimization. L2 (e²) is smooth and differentiable everywhere, which is why it\'s preferred as a loss function for gradient descent and has a clean closed-form normal equation solution.'
+  },
+  {id:6, topic:'metrics', diff:'hard',
+   q:'For the same dataset, which inequality is ALWAYS true?',
+   opts:['MAE > RMSE','RMSE > MAE','RMSE = MAE','SSE < MSE'],
+   ans:1,
+   exp:'RMSE ≥ MAE always. This follows from the Cauchy-Schwarz inequality (or QM-AM inequality). RMSE = √(mean of e²) ≥ mean of |e| = MAE. They are equal only when all |eᵢ| are identical. Since RMSE penalizes large errors more, it is always pushed higher than MAE unless all errors are the same size. Note also that SSE < MSE is false — SSE = n×MSE, so SSE > MSE when n > 1.'
+  },
+
+  // CALCULATIONS
+  {id:7, topic:'calc', diff:'easy',
+   q:'True values are [4, 7] and predicted values are [2, 10]. What is the SSE?',
+   opts:['5','13','√13','25'],
+   ans:1,
+   exp:'Residuals: e₁ = 4−2 = 2, e₂ = 7−10 = −3. Squared: 4, 9. SSE = 4 + 9 = 13. Common mistake: confusing SSE (sum of squared errors) with SAE (sum of absolute errors = 2+3 = 5).'
+  },
+  {id:8, topic:'calc', diff:'med',
+   q:'Using the same data [4,7] predicted as [2,10], what is the RMSE?',
+   opts:['√13','√(13/2)','13/2','(2+3)/2'],
+   ans:1,
+   exp:'MSE = SSE/n = 13/2 = 6.5. RMSE = √6.5 = √(13/2). The answer is NOT √13 (that would be √SSE, not √MSE). Always remember: RMSE = √(SSE/n), not √SSE.'
+  },
+  {id:9, topic:'calc', diff:'med',
+   q:'A model has SSE = 100 on a dataset of n=25 points. What is the MSE?',
+   opts:['100','4','10','2500'],
+   ans:1,
+   exp:'MSE = SSE / n = 100 / 25 = 4. The RMSE would be √4 = 2. If the answer were 10, you divided by 10 instead of 25. If the answer were 2500, you multiplied instead of divided.'
+  },
+  {id:10, topic:'calc', diff:'hard',
+   q:'Model A has RMSE=3 on 100 test points. Model B has SSE=800 on 50 test points. Which model performs better?',
+   opts:[
+     'Model A, because RMSE=3 is lower',
+     'Model B, because SSE=800 is lower than Model A\'s SSE',
+     'Model A, because its MSE (9) is lower than Model B\'s MSE (16)',
+     'Cannot compare — different metrics on different sized datasets'
+   ],
+   ans:2,
+   exp:'You must normalize before comparing. Model A: RMSE=3 → MSE=9. Model B: SSE=800, n=50 → MSE=800/50=16. Model A has lower MSE (9 < 16), so it performs better. The trap: Model B\'s SSE=800 is meaningless compared to Model A\'s SSE (which would be RMSE²×n = 9×100 = 900). Never compare raw SSE across datasets of different sizes.'
+  },
+  {id:11, topic:'calc', diff:'hard',
+   q:'If you double every residual (all errors become 2× as large), by what factor does RMSE increase?',
+   opts:['2×','4×','√2 ×','It depends on the data'],
+   ans:0,
+   exp:'RMSE = √(Σeᵢ²/n). If every eᵢ → 2eᵢ, then eᵢ² → 4eᵢ². So Σ(4eᵢ²)/n = 4×MSE. Then RMSE = √(4×MSE) = 2×√MSE = 2×original RMSE. Doubling all errors doubles RMSE. Note: SSE and MSE would both increase by 4× (not 2×) because squaring is involved — RMSE recovers the 2× factor by taking the square root.'
+  },
+
+  // CROSS-VALIDATION
+  {id:12, topic:'cv', diff:'easy',
+   q:'In 5-fold cross-validation on a dataset of 100 points, how many points are in the test set for each fold?',
+   opts:['5','10','20','50'],
+   ans:2,
+   exp:'The data is split into 5 equal folds of 100/5 = 20 points each. In each of the 5 training runs, one fold (20 points) is the test set and the remaining 4 folds (80 points) are the training set. Each data point is tested exactly once across all 5 folds.'
+  },
+  {id:13, topic:'cv', diff:'med',
+   q:'After completing 5-fold cross-validation to choose your model, what should you do before deployment?',
+   opts:[
+     'Use the best fold\'s model as-is for deployment',
+     'Retrain the final model on ALL available training data using the selected configuration',
+     'Use the average of all 5 models for predictions',
+     'Select the fold with the lowest test error and use that fold\'s test set as the final test'
+   ],
+   ans:1,
+   exp:'CV is used for model/hyperparameter selection — not to produce the final model. After CV tells you which configuration is best, you retrain from scratch using ALL your training data (all k folds combined). More training data generally produces a better model. The CV folds were never meant to be the final train/test split.'
+  },
+  {id:14, topic:'cv', diff:'med',
+   q:'What is Leave-One-Out Cross-Validation (LOOCV) equivalent to?',
+   opts:['2-fold cross-validation','k-fold where k = number of features','k-fold where k = number of training samples (k=n)','Randomly sampling 1% of data as the test set'],
+   ans:2,
+   exp:'LOOCV = k-fold where k = n (the number of training samples). Each "fold" is a single data point. You train n models, each leaving out exactly one point for testing. This is maximally unbiased (training sets differ by only 1 point from the full dataset) but computationally expensive and produces high-variance error estimates due to highly correlated training sets.'
+  },
+  {id:15, topic:'cv', diff:'hard',
+   q:'LOOCV has very low bias but high variance in its error estimate. Why?',
+   opts:[
+     'Because each fold uses more data, overfitting occurs',
+     'Because each training fold differs from the others by only one point, making the n test scores highly correlated — the estimate doesn\'t average out well',
+     'Because leaving out only one point means the test error is always 0 or 1',
+     'Because LOOCV is equivalent to training on the full dataset'
+   ],
+   ans:1,
+   exp:'The variance of an average depends on how correlated the terms being averaged are. In LOOCV, adjacent training sets share n-1 of n points — they\'re nearly identical. This causes the n test scores to be highly correlated. Averaging highly correlated values doesn\'t reduce variance much. In contrast, 5-fold or 10-fold CV has more distinct training sets, giving less-correlated (lower variance) score estimates.'
+  },
+  {id:16, topic:'cv', diff:'hard',
+   q:'A student uses 10-fold CV to tune hyperparameters and reports the best CV score as the final model performance. What is wrong with this?',
+   opts:[
+     'Nothing — CV score is the correct final performance metric',
+     'The model was not retrained on all data before reporting',
+     'CV score is optimistically biased because hyperparameters were selected to maximize it on the same CV folds',
+     'The student should have used LOOCV instead'
+   ],
+   ans:2,
+   exp:'This is "peeking" — the CV score used to select hyperparameters is now optimistically biased. You tried many hyperparameter configurations and picked the one that looked best on those CV folds. The reported score will be too optimistic because the hyperparameter selection overfits to the CV folds. The correct approach: use an outer test set (or nested CV) that was never involved in hyperparameter tuning to get an unbiased final estimate.'
+  },
+  {id:17, topic:'cv', diff:'hard',
+   q:'Which statement BEST describes what cross-validation accomplishes?',
+   opts:[
+     'It prevents overfitting by exposing the model to more data configurations',
+     'It gives a less-biased estimate of generalization error and helps with model selection — but does not itself prevent overfitting',
+     'It eliminates the need for a held-out test set',
+     'It guarantees the model will generalize well to new data'
+   ],
+   ans:1,
+   exp:'CV is an evaluation and selection tool — it estimates how well a model generalizes and lets you compare configurations. It does NOT prevent overfitting in the model itself (that requires regularization, simpler architectures, more data, etc.). It also does NOT replace the test set — you still need a final held-out set for unbiased evaluation. And it provides no guarantees — it\'s a statistical estimate, not a proof.'
+  }
+];
+
+// ──────────────────────────────────────────────
+//  FLASHCARD DATA
+// ──────────────────────────────────────────────
+const FCS = [
+  {topic:'metrics', term:'L1 / MAE', def:'Mean Absolute Error = (1/n)Σ|yᵢ−ŷᵢ|. Linear penalty — every unit of error counts equally. Robust to outliers. Not differentiable at zero.'},
+  {topic:'metrics', term:'SSE (L2 Loss)', def:'Sum of Squared Errors = Σ(yᵢ−ŷᵢ)². Squares each residual — large errors penalized heavily. Scales with n, so not comparable across datasets of different sizes.'},
+  {topic:'metrics', term:'MSE', def:'Mean Squared Error = SSE/n. Normalizes SSE by the number of data points. Comparable across datasets. Units are y² (squared), not original units.'},
+  {topic:'metrics', term:'RMSE', def:'Root Mean Squared Error = √MSE. Returns error to the same units as y. RMSE ≥ MAE always. A large RMSE-MAE gap signals outliers.'},
+  {topic:'metrics', term:'RMSE vs MAE', def:'RMSE ≥ MAE always (QM-AM inequality). Equal only when all errors are identical. Large gap → outliers are skewing RMSE. Use MAE when outlier-robustness matters; RMSE when large errors should be penalized more.'},
+  {topic:'metrics', term:'When SSE Fails', def:'SSE is not normalized — it grows with n. Never compare SSE between models trained on different-sized datasets. Use MSE or RMSE for cross-dataset comparisons.'},
+  {topic:'metrics', term:'L1 Differentiability', def:'L1 (|e|) is NOT differentiable at e=0 — the derivative jumps from −1 to +1 (a "kink"). Requires subgradients for optimization. L2 (e²) is smooth and differentiable everywhere.'},
+  {topic:'cv', term:'Cross-Validation Purpose', def:'Provides a less-biased estimate of generalization error than a single train/test split. Used for model selection and hyperparameter tuning. Does NOT itself prevent overfitting.'},
+  {topic:'cv', term:'K-Fold CV Procedure', def:'1) Split data into k equal folds. 2) For each fold i: train on the other k−1 folds, test on fold i. 3) Average the k test scores. 4) Retrain final model on ALL data with best config.'},
+  {topic:'cv', term:'After K-Fold CV', def:'CV selects the best model configuration. Then retrain from scratch on ALL training data using that configuration. CV folds are not the final model — more data means better generalization.'},
+  {topic:'cv', term:'LOOCV', def:'Leave-One-Out CV: k = n. Each fold leaves out exactly 1 point. Very low bias (training sets are nearly the full dataset). Very HIGH variance in error estimate. Computationally expensive.'},
+  {topic:'cv', term:'Why LOOCV Has High Variance', def:'Each training set differs from others by only 1 point, so the n test scores are highly correlated. Averaging correlated values doesn\'t reduce variance well — unlike 5-fold or 10-fold where training sets are more distinct.'},
+  {topic:'cv', term:'CV and Hyperparameter Tuning', def:'If you use CV to select hyperparameters, the CV score is optimistically biased as a final metric — you "peeked." Use a separate outer test set (or nested CV) to get an unbiased estimate of final performance.'},
+  {topic:'cv', term:'K=5 vs K=10 Trade-off', def:'Higher k → lower bias, lower variance, but more compute. k=10 is standard in literature. k=5 is a practical compromise. k=2 is rarely used — high bias and high variance in error estimate.'},
+];
+
+// ──────────────────────────────────────────────
+//  STATE
+// ──────────────────────────────────────────────
+let mode = 'review';
+let qIdx = 0, qAnswered = 0, qCorrect = 0, streak = 0;
+let filtQs = [...QS];
+let qDone = false;
+let fIdx = 0, fFlipped = false;
+let filtFs = [...FCS];
+
+// ──────────────────────────────────────────────
+//  CORE
+// ──────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  ['review','quiz','flash'].forEach((id,i) => {
+    document.getElementById(id+'-mode').classList.toggle('hidden', m !== id);
+    document.querySelectorAll('.mode-btn')[i].classList.toggle('active', m === id);
+  });
+  if (m==='quiz') renderQ();
+  if (m==='flash') renderFC();
+}
+
+// ──────────────────────────────────────────────
+//  QUIZ
+// ──────────────────────────────────────────────
+function filterQ(topic, btn) {
+  document.querySelectorAll('#q-pills .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filtQs = topic==='all' ? [...QS] : QS.filter(q=>q.topic===topic);
+  qIdx=0; qAnswered=0; qCorrect=0; streak=0; qDone=false;
+  updateStats();
+  document.getElementById('q-result').classList.remove('show');
+  renderQ();
+}
+
+function renderQ() {
+  if (qIdx >= filtQs.length) { showResult(); return; }
+  const q = filtQs[qIdx];
+  qDone = false;
+  document.getElementById('q-prog').style.width = (qIdx/filtQs.length*100)+'%';
+  const dMap = {easy:'diff-easy',med:'diff-med',hard:'diff-hard'};
+  const dLbl = {easy:'Easy',med:'Medium',hard:'Hard'};
+  const tLbl = {metrics:'Error Metrics',calc:'Calculations',cv:'Cross-Validation'};
+  document.getElementById('q-area').innerHTML = `
+    <div class="q-card">
+      <div class="q-header">
+        <span class="q-tag">${tLbl[q.topic]}<span class="diff-badge ${dMap[q.diff]}">${dLbl[q.diff]}</span></span>
+        <span class="q-counter">${qIdx+1} / ${filtQs.length}</span>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i)=>`
+          <button class="opt-btn" id="o${i}" onclick="pickAnswer(${i},${q.ans})">
+            <span class="opt-letter">${String.fromCharCode(65+i)}.</span>
+            <span class="opt-text">${o}</span>
+          </button>`).join('')}
+      </div>
+      <div class="exp-box" id="exp">
+        <div class="exp-tag">▶ Explanation</div>
+        <div class="exp-text">${q.exp}</div>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <button class="btn btn-primary" id="nxt" onclick="nextQ()" style="display:none">Next →</button>
+    </div>`;
+}
+
+function pickAnswer(sel, correct) {
+  if (qDone) return;
+  qDone = true; qAnswered++;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.add('locked'));
+  if (sel===correct) { document.getElementById('o'+sel).classList.add('correct'); qCorrect++; streak++; }
+  else { document.getElementById('o'+sel).classList.add('wrong'); document.getElementById('o'+correct).classList.add('correct'); streak=0; }
+  document.getElementById('exp').classList.add('show');
+  document.getElementById('nxt').style.display='block';
+  updateStats();
+}
+
+function nextQ() { qIdx++; renderQ(); }
+
+function restartQuiz() {
+  qIdx=0; qAnswered=0; qCorrect=0; streak=0; qDone=false;
+  updateStats();
+  document.getElementById('q-result').classList.remove('show');
+  renderQ();
+}
+
+function showResult() {
+  document.getElementById('q-area').innerHTML='';
+  const pct = Math.round(qCorrect/filtQs.length*100);
+  const msgs = ['Keep grinding 📚','Building up 💪','Solid work 🎯','Almost there ⭐','Snell-ready 🏆'];
+  document.getElementById('q-final-pct').textContent = pct+'%';
+  document.getElementById('q-final-msg').textContent = `${qCorrect}/${filtQs.length} correct — ${msgs[Math.min(4,Math.floor(pct/20))]}`;
+  document.getElementById('q-result').classList.add('show');
+  document.getElementById('q-prog').style.width='100%';
+}
+
+function updateStats() {
+  document.getElementById('stat-ans').textContent = qAnswered;
+  document.getElementById('stat-cor').textContent = qCorrect;
+  document.getElementById('stat-acc').textContent = qAnswered>0 ? Math.round(qCorrect/qAnswered*100)+'%' : '—';
+  document.getElementById('stat-str').textContent = streak;
+}
+
+// ──────────────────────────────────────────────
+//  FLASHCARDS
+// ──────────────────────────────────────────────
+function filterF(topic, btn) {
+  document.querySelectorAll('#f-pills .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filtFs = topic==='all' ? [...FCS] : FCS.filter(f=>f.topic===topic);
+  fIdx=0; fFlipped=false;
+  renderFC();
+}
+
+function renderFC() {
+  if (!filtFs.length) return;
+  fFlipped = false;
+  const c = filtFs[fIdx];
+  document.getElementById('fc-side').textContent = '▲ TERM';
+  document.getElementById('fc-content').className = 'fc-content';
+  document.getElementById('fc-content').textContent = c.term;
+  document.getElementById('fc-counter').textContent = `Card ${fIdx+1} of ${filtFs.length}`;
+  document.getElementById('f-prog').style.width = ((fIdx+1)/filtFs.length*100)+'%';
+}
+
+function flipFC() {
+  fFlipped = !fFlipped;
+  const c = filtFs[fIdx];
+  if (fFlipped) {
+    document.getElementById('fc-side').textContent = '▼ DEFINITION';
+    document.getElementById('fc-content').className = 'fc-content def';
+    document.getElementById('fc-content').textContent = c.def;
+  } else {
+    document.getElementById('fc-side').textContent = '▲ TERM';
+    document.getElementById('fc-content').className = 'fc-content';
+    document.getElementById('fc-content').textContent = c.term;
+  }
+}
+
+function nextFC() { fIdx=(fIdx+1)%filtFs.length; renderFC(); }
+function prevFC() { fIdx=(fIdx-1+filtFs.length)%filtFs.length; renderFC(); }
+
+// init
+renderFC();
+</script>
+</body>
+</html>

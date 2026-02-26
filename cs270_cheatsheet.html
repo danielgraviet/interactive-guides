@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CS 270 Midterm Cheat Sheet</title>
+<style>
+/* ─── PRINT SETUP ─── */
+@page {
+  size: letter portrait;
+  margin: 0.28in;
+}
+
+@media print {
+  body { margin: 0; background: #fff; }
+  .page { box-shadow: none; margin: 0; }
+  .no-print { display: none !important; }
+  .page-break { page-break-after: always; break-after: always; }
+}
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 7pt;
+  color: #000;
+  line-height: 1.28;
+}
+
+/* ─── SCREEN WRAPPER ─── */
+@media screen {
+  body { background: #888; padding: 16px; }
+  .page {
+    background: #fff;
+    width: 8.5in;
+    min-height: 11in;
+    margin: 0 auto 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .print-bar {
+    background: #111;
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    border-radius: 6px;
+    max-width: 8.5in;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .print-btn {
+    background: #fff;
+    color: #111;
+    border: none;
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .print-btn:hover { background: #ddd; }
+}
+
+/* ─── PAGE LAYOUT ─── */
+.page {
+  padding: 0.25in;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1.5pt solid #000;
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+}
+
+.page-title {
+  font-size: 9pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.page-label {
+  font-size: 6.5pt;
+  color: #444;
+  font-style: italic;
+}
+
+/* Three-column grid */
+.cols {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+}
+
+.cols-3    { grid-template-columns: 1fr 1fr 1fr; }
+.cols-1-2  { grid-template-columns: 1fr 2fr; }
+
+.col { display: flex; flex-direction: column; gap: 5px; }
+
+/* ─── SECTION BLOCKS ─── */
+.box {
+  border: 0.75pt solid #444;
+  break-inside: avoid;
+}
+
+.box-title {
+  background: #1a1a1a;
+  color: #fff;
+  padding: 2px 5px;
+  font-size: 6.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.box-title.gray { background: #555; }
+.box-title.dark { background: #000; }
+
+.box-body {
+  padding: 3px 5px;
+}
+
+/* ─── FORMULA BLOCKS ─── */
+.formula {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 6.5pt;
+  background: #f0f0f0;
+  border-left: 2pt solid #555;
+  padding: 2px 4px;
+  margin: 2px 0;
+  white-space: pre;
+  line-height: 1.55;
+}
+
+.formula.accent { border-left-color: #000; background: #e8e8e8; }
+
+/* ─── ROW PAIRS ─── */
+.kv {
+  display: flex;
+  gap: 3px;
+  margin: 1.2px 0;
+  line-height: 1.3;
+}
+.k {
+  font-weight: bold;
+  min-width: 74px;
+  flex-shrink: 0;
+  font-size: 6.5pt;
+}
+.v { font-size: 6.5pt; }
+
+/* ─── TABLE ─── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 6pt;
+  margin: 2px 0;
+}
+th {
+  background: #ddd;
+  border: 0.5pt solid #999;
+  padding: 1.5px 3px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 6pt;
+}
+td {
+  border: 0.5pt solid #ccc;
+  padding: 1.5px 3px;
+  vertical-align: top;
+}
+tr:nth-child(even) td { background: #f8f8f8; }
+
+/* ─── CALLOUTS ─── */
+.trap {
+  background: #fff8dc;
+  border-left: 2pt solid #c8860a;
+  padding: 2px 4px;
+  margin: 2px 0;
+  font-size: 6pt;
+  line-height: 1.3;
+}
+.trap::before { content: '⚠ '; font-weight: bold; color: #c8860a; }
+
+.tip {
+  background: #eef6ff;
+  border-left: 2pt solid #2266cc;
+  padding: 2px 4px;
+  margin: 2px 0;
+  font-size: 6pt;
+  line-height: 1.3;
+}
+.tip::before { content: '→ '; font-weight: bold; color: #2266cc; }
+
+/* ─── UTILITIES ─── */
+p { margin: 1.5px 0; font-size: 6.5pt; }
+.bold { font-weight: bold; }
+.mono { font-family: 'Courier New', monospace; font-size: 6.2pt; }
+ul { padding-left: 9px; margin: 1px 0; }
+li { margin: 0.5px 0; font-size: 6.5pt; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.span-2  { grid-column: span 2; }
+.span-3  { grid-column: span 3; }
+
+.divider { border-top: 0.5pt solid #ccc; margin: 3px 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ PRINT BAR (screen only) ══════════════════════════════ -->
+<div class="no-print print-bar">
+  <strong>CS 270 Cheat Sheet</strong>
+  <span style="font-size:12px;color:#aaa;">Print at 100% · Letter · Enable background graphics</span>
+  <button class="print-btn" onclick="window.print()">🖨 Print</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════════
+     PAGE 1 — FRONT
+     ══════════════════════════════════════════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="page-header">
+    <div class="page-title">CS 270 — Intro to Machine Learning — Midterm Cheat Sheet</div>
+    <div class="page-label">FRONT · Dr. Quinn Snell · BYU</div>
+  </div>
+
+  <div class="cols cols-3">
+
+    <!-- ─── COLUMN 1 ─── -->
+    <div class="col">
+
+      <!-- KNN -->
+      <div class="box">
+        <div class="box-title">K-Nearest Neighbors (KNN) — KNOW THE MATH</div>
+        <div class="box-body">
+          <div class="formula">Euclidean: d = √Σ(xᵢ - yᵢ)²
+Manhattan:  d = Σ|xᵢ - yᵢ|
+Minkowski:  d = (Σ|xᵢ - yᵢ|ᵖ)^(1/p)</div>
+          <div class="kv"><span class="k">Classification:</span><span class="v">majority vote of k neighbors</span></div>
+          <div class="kv"><span class="k">Regression:</span><span class="v">simple average of k neighbor values</span></div>
+          <div class="kv"><span class="k">k = 1:</span><span class="v">0 training error — memorizes data, OVERFITS</span></div>
+          <div class="kv"><span class="k">Large k:</span><span class="v">↑ bias, ↓ variance (smoother boundary)</span></div>
+          <div class="kv"><span class="k">Small k:</span><span class="v">↓ bias, ↑ variance (jagged boundary)</span></div>
+          <div class="kv"><span class="k">Best k train:</span><span class="v">always k=1 — but this OVERFITS</span></div>
+          <div class="trap">NORMALIZE features — KNN is distance-based; different scales dominate distances.</div>
+          <div class="trap">Standard KNN regression = simple average, NOT distance-weighted (unless stated).</div>
+        </div>
+      </div>
+
+      <!-- ERROR METRICS -->
+      <div class="box">
+        <div class="box-title">Error Metrics — KNOW THE MATH</div>
+        <div class="box-body">
+          <div class="formula">SSE  = Σ(yᵢ - ŷᵢ)²
+MSE  = SSE / n
+RMSE = √(SSE / n)       ← SAME UNITS as y
+MAE  = Σ|yᵢ - ŷᵢ| / n  ← L1 error
+SST  = Σ(yᵢ - ȳ)²      ← total variance
+SSR  = SST - SSE        ← explained variance
+R²   = 1 - SSE/SST  =  SSR/SST</div>
+          <table>
+            <tr><th>R² value</th><th>Meaning</th></tr>
+            <tr><td>R² = 1.0</td><td>Perfect fit (SSE = 0)</td></tr>
+            <tr><td>R² = 0.0</td><td>No better than always guessing ȳ</td></tr>
+            <tr><td>R² &lt; 0</td><td>Worse than guessing the mean</td></tr>
+          </table>
+          <div class="kv" style="margin-top:2px;"><span class="k">L1 error:</span><span class="v">MAE — absolute differences</span></div>
+          <div class="kv"><span class="k">L2 error:</span><span class="v">MSE / SSE — squared differences</span></div>
+          <div class="trap">RMSE = same units as y. MSE = units². MSE penalizes large errors more.</div>
+          <div class="trap">R²=0 ≠ zero accuracy. = "model is as useful as guessing the mean."</div>
+          <div class="trap">SSE=100, SST=100 → R²=0. SSE=0 → R²=1. Don't confuse them.</div>
+        </div>
+      </div>
+
+      <!-- CROSS-VALIDATION -->
+      <div class="box">
+        <div class="box-title">Validation & Splitting</div>
+        <div class="box-body">
+          <p><span class="bold">k-fold CV:</span> split data into k folds. Train on k−1 folds, test on 1. Repeat k times. Average the k test scores.</p>
+          <p><span class="bold">N-fold (LOOCV):</span> k = n. Max data use, expensive.</p>
+          <p><span class="bold">Why CV?</span> Less biased, lower variance estimate of generalization than a single split.</p>
+          <p><span class="bold">Why train/test split?</span> Low train error ≠ good model. Must evaluate on unseen data to measure generalization.</p>
+          <div class="tip">Early stopping = stop training when validation error starts increasing, even if train error keeps falling.</div>
+        </div>
+      </div>
+
+      <!-- TYPES OF ML -->
+      <div class="box">
+        <div class="box-title">Types of Machine Learning</div>
+        <div class="box-body">
+          <table>
+            <tr><th>Type</th><th>Labels?</th><th>Examples</th></tr>
+            <tr><td><b>Supervised</b></td><td>Yes (X→Y)</td><td>Classification, Regression</td></tr>
+            <tr><td><b>Unsupervised</b></td><td>No</td><td>Clustering, PCA</td></tr>
+            <tr><td><b>Reinforcement</b></td><td>Reward signal</td><td>Game AI, robotics</td></tr>
+            <tr><td><b>Semi-supervised</b></td><td>Few labeled</td><td>Small labeled + large unlabeled</td></tr>
+          </table>
+          <div class="kv" style="margin-top:2px;"><span class="k">Classification:</span><span class="v">discrete output (spam/not, digit 0-9)</span></div>
+          <div class="kv"><span class="k">Regression:</span><span class="v">continuous output (price, temperature)</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── COLUMN 2 ─── -->
+    <div class="col">
+
+      <!-- DECISION TREES -->
+      <div class="box">
+        <div class="box-title">Decision Trees — KNOW THE MATH</div>
+        <div class="box-body">
+          <div class="formula">Entropy:   H = -Σ pᵢ log₂(pᵢ)
+Gini:      G = 1 - Σ pᵢ²
+Info Gain: IG = H(parent) - Σ[ (nᵢ/N) × H(childᵢ) ]
+             where nᵢ = child node size, N = parent size</div>
+          <table>
+            <tr><th>Node State</th><th>Entropy</th><th>Gini</th></tr>
+            <tr><td>Pure (all one class)</td><td><b>0</b></td><td><b>0</b></td></tr>
+            <tr><td>50/50 (2 classes)</td><td><b>1.0</b></td><td><b>0.5</b></td></tr>
+            <tr><td>33/33/33 (3 classes)</td><td>1.585</td><td>0.667</td></tr>
+          </table>
+          <p style="margin-top:2px;"><span class="bold">Pick split with highest IG</span> (most information gained).</p>
+          <p><span class="bold">Avoid overfit:</span> pruning, limit max depth, min samples per leaf.</p>
+          <div class="trap">Entropy of PURE node = 0. NOT 1. log₂(1) = 0.</div>
+          <div class="trap">Higher IG = BETTER split. Don't invert this.</div>
+          <div class="trap">When comparing splits: ALWAYS compute weighted entropy using child sizes — you can't just compare entropy values without weights.</div>
+          <div class="tip">IG = 0.8 − 0.4 = 0.4 (parent entropy − weighted child entropy)</div>
+        </div>
+      </div>
+
+      <!-- LINEAR REGRESSION -->
+      <div class="box">
+        <div class="box-title">Linear Regression — KNOW THE MATH</div>
+        <div class="box-body">
+          <div class="formula">Simple:   ŷ = b₀ + b₁x
+
+          Σ(xᵢ - x̄)(yᵢ - ȳ)
+b₁ =    ────────────────────
+             Σ(xᵢ - x̄)²
+
+b₀ = ȳ - b₁x̄
+
+Multiple: ŷ = b₀ + b₁x₁ + b₂x₂ + …
+Matrix:   β = (XᵀX)⁻¹Xᵀy</div>
+          <div class="trap">Regression line ALWAYS passes through (x̄, ȳ). Always. Verify: plug x=x̄ → ŷ=ȳ.</div>
+          <div class="trap">b₀ = ȳ − b₁x̄, NOT just the y-intercept you see in the plot.</div>
+          <div class="tip">Residual eᵢ = yᵢ − ŷᵢ. SSE = sum of squared residuals.</div>
+        </div>
+      </div>
+
+      <!-- LOGISTIC REGRESSION -->
+      <div class="box">
+        <div class="box-title">Logistic Regression & Sigmoid</div>
+        <div class="box-body">
+          <div class="formula">σ(x) = 1 / (1 + e^{−x})   → output ∈ (0, 1)
+σ'(x) = σ(x) · (1 − σ(x))  ← derivative from output
+
+Log-odds (logit): ln(p / (1−p))
+  logit(p) = β₀ + β₁x₁ + …
+
+Decision boundary: net = 0 → σ = 0.5</div>
+          <p><span class="bold">Why logistic?</span> Predicts probability of a binary class. Squashes any real number → (0,1).</p>
+          <p><span class="bold">Sigmoid → step function</span> as steepness k→∞ (connects to Perceptron).</p>
+          <div class="tip">σ'(x) = σ(x)·(1−σ(x)) — derivative computable from output itself → efficient backprop.</div>
+        </div>
+      </div>
+
+      <!-- PERFORMANCE METRICS -->
+      <div class="box">
+        <div class="box-title">Performance Metrics</div>
+        <div class="box-body">
+          <div class="formula">Accuracy  = (TP + TN) / (TP + TN + FP + FN)
+Precision = TP / (TP + FP)      ← of pred. pos., how many right?
+Recall    = TP / (TP + FN)      ← of actual pos., how many found?
+F1        = 2·(P·R)/(P+R) = 2TP / (2TP + FP + FN)
+FPR       = FP / (FP + TN)
+TPR       = TP / (TP + FN)      ← same as Recall</div>
+          <table>
+            <tr><th></th><th>Predicted +</th><th>Predicted −</th></tr>
+            <tr><td><b>Actual +</b></td><td>TP</td><td>FN (missed)</td></tr>
+            <tr><td><b>Actual −</b></td><td>FP (false alarm)</td><td>TN</td></tr>
+          </table>
+          <p style="margin-top:2px;"><span class="bold">ROC Curve:</span> plots TPR vs FPR across all thresholds.</p>
+          <div class="kv"><span class="k">AUC = 1.0:</span><span class="v">perfect classifier</span></div>
+          <div class="kv"><span class="k">AUC = 0.5:</span><span class="v">random guessing</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── COLUMN 3 ─── -->
+    <div class="col">
+
+      <!-- NAIVE BAYES -->
+      <div class="box">
+        <div class="box-title">Naive Bayes — KNOW THE MATH</div>
+        <div class="box-body">
+          <div class="formula">Bayes: P(A|B) = P(B|A) · P(A) / P(B)
+
+Classify: P(C|x) ∝ P(C) × Π P(xᵢ|C)
+  (pick class with highest score)
+
+Prior:      P(C) = count(C) / n_total
+
+Likelihood: P(f=v | C) = count(f=v ∩ C) / count(C)
+
+Laplace:    P(f=v | C) = (count + 1) / (count(C) + V)
+  V = number of unique values for feature f
+
+Log trick:  log P(C) + Σ log P(xᵢ|C)
+  (avoids floating-point underflow)</div>
+          <div class="kv"><span class="k">"Naive":</span><span class="v">assumes features are conditionally independent given class</span></div>
+          <div class="kv"><span class="k">Gaussian NB:</span><span class="v">P(x|μ,σ²) = (1/√2πσ²)·e^{−(x−μ)²/2σ²}</span></div>
+          <div class="trap">SKIP the denominator P(features) when classifying — it's the same for all classes and cancels out.</div>
+          <div class="trap">Laplace denominator = count(C) + V, where V = unique values. NOT count(C)+1.</div>
+          <div class="trap">Laplace example: 2 of 3 Yes have f=Sunny, f has 3 unique values → P = (2+1)/(3+3) = 0.5, NOT 2/3.</div>
+        </div>
+      </div>
+
+      <!-- REGULARIZATION -->
+      <div class="box">
+        <div class="box-title">Regularization</div>
+        <div class="box-body">
+          <div class="formula">L1 (Lasso): Loss += λ · Σ|wᵢ|
+L2 (Ridge): Loss += λ · Σwᵢ²</div>
+          <div class="kv"><span class="k">L1 (Lasso):</span><span class="v">drives irrelevant weights to exactly 0 → sparse → feature selection</span></div>
+          <div class="kv"><span class="k">L2 (Ridge):</span><span class="v">shrinks all weights toward 0, rarely zeros → smoother, more stable</span></div>
+          <div class="kv"><span class="k">Early stop:</span><span class="v">stop when validation error starts rising</span></div>
+          <div class="kv"><span class="k">Why reg?</span><span class="v">Prevent overfitting by penalizing large weights</span></div>
+          <div class="tip">Use L1 when you suspect many irrelevant features. Use L2 otherwise.</div>
+        </div>
+      </div>
+
+      <!-- SVM -->
+      <div class="box">
+        <div class="box-title">Support Vector Machines (SVM)</div>
+        <div class="box-body">
+          <p><span class="bold">Goal:</span> find maximum-margin hyperplane separating classes.</p>
+          <p><span class="bold">Support vectors:</span> training points closest to the boundary (on the margin edges).</p>
+          <div class="formula">Margin = 2 / ||w||   ← maximize this</div>
+          <div class="kv"><span class="k">Hard margin:</span><span class="v">data must be linearly separable</span></div>
+          <div class="kv"><span class="k">Soft margin:</span><span class="v">allows misclassifications via slack variables; param C controls tradeoff</span></div>
+          <div class="kv"><span class="k">Large C:</span><span class="v">small margin, fewer errors allowed (tight fit)</span></div>
+          <div class="kv"><span class="k">Small C:</span><span class="v">large margin, more errors allowed (more generalization)</span></div>
+          <div class="kv"><span class="k">Kernel trick:</span><span class="v">maps to higher dim for non-linear boundaries (RBF, polynomial)</span></div>
+          <div class="tip">Larger margin → better generalization to unseen points.</div>
+        </div>
+      </div>
+
+      <!-- QUINN TRAPS -->
+      <div class="box">
+        <div class="box-title dark">⚠ Quinn Trap Quick Reference</div>
+        <div class="box-body">
+          <table>
+            <tr><th>Question/Trap</th><th>Correct Answer</th></tr>
+            <tr><td>k=1 KNN training error?</td><td>0% — memorizes itself</td></tr>
+            <tr><td>Pure node entropy?</td><td><b>0</b>, not 1</td></tr>
+            <tr><td>Higher IG = ?</td><td><b>Better</b> split</td></tr>
+            <tr><td>R²=0 means?</td><td>As good as guessing ȳ</td></tr>
+            <tr><td>NB need P(features)?</td><td>No — same for all classes</td></tr>
+            <tr><td>RMSE units?</td><td>Same units as y</td></tr>
+            <tr><td>Regression line passes?</td><td>Always through (x̄, ȳ)</td></tr>
+            <tr><td>Delta updates when correct?</td><td>YES (if net ≠ t)</td></tr>
+            <tr><td>Perceptron updates when correct?</td><td>NO (error = 0)</td></tr>
+            <tr><td>3-4-5 triangle distance?</td><td>√(9+16) = <b>5</b></td></tr>
+            <tr><td>Decision boundary slope?</td><td>−w₁/w₂ (NOT just w₁)</td></tr>
+            <tr><td>KNN regression prediction?</td><td>Simple avg, not weighted</td></tr>
+            <tr><td>Which k minimizes train err?</td><td>k=1 always — but overfits</td></tr>
+            <tr><td>Entropy of 4A,4B node?</td><td>−0.5·log₂(0.5)×2 = <b>1.0</b></td></tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════════
+     PAGE 2 — BACK
+     ══════════════════════════════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-title">CS 270 — Intro to Machine Learning — Midterm Cheat Sheet</div>
+    <div class="page-label">BACK · Dr. Quinn Snell · BYU</div>
+  </div>
+
+  <div class="cols cols-1-2">
+
+    <!-- ─── COLUMN 1 (narrow) ─── -->
+    <div class="col">
+
+      <!-- BIAS-VARIANCE -->
+      <div class="box">
+        <div class="box-title">Bias-Variance Trade-off</div>
+        <div class="box-body">
+          <div class="formula accent">Total Error = Bias² + Variance + Noise</div>
+          <table>
+            <tr><th></th><th>Train</th><th>Test</th><th>Gap</th></tr>
+            <tr><td><b>Underfit</b></td><td>High</td><td>High</td><td>Small</td></tr>
+            <tr><td><b>Good fit</b></td><td>Low</td><td>Low</td><td>Small</td></tr>
+            <tr><td><b>Overfit</b></td><td>V.Low</td><td>High</td><td>LARGE</td></tr>
+          </table>
+          <div class="kv" style="margin-top:3px;"><span class="k">High bias:</span><span class="v">too simple → underfits both train and test</span></div>
+          <div class="kv"><span class="k">High variance:</span><span class="v">memorizes noise → fails on test only</span></div>
+          <p style="margin-top:2px;"><span class="bold">Fix overfit:</span> regularize, more data, cross-val, early stop, simpler model, pruning</p>
+          <p><span class="bold">Fix underfit:</span> more complex model, more features, reduce regularization, train longer</p>
+          <div class="kv" style="margin-top:2px;"><span class="k">KNN k=1:</span><span class="v">max variance, min bias</span></div>
+          <div class="kv"><span class="k">KNN k=n:</span><span class="v">min variance, max bias (predicts majority always)</span></div>
+          <div class="kv"><span class="k">More features (no reg):</span><span class="v">↓ bias, ↑ variance</span></div>
+          <div class="trap">Low training error ≠ good model. Always check test/validation error.</div>
+        </div>
+      </div>
+
+      <!-- CONCEPTUAL WHYs -->
+      <div class="box">
+        <div class="box-title">Conceptual "Why" Questions</div>
+        <div class="box-body">
+          <div class="kv"><span class="k">Why regularize?</span><span class="v">Prevent overfit by penalizing large weights</span></div>
+          <div class="kv"><span class="k">Why train/test?</span><span class="v">Measure generalization to unseen data</span></div>
+          <div class="kv"><span class="k">Why cross-validate?</span><span class="v">Less biased generalization estimate</span></div>
+          <div class="kv"><span class="k">Why normalize KNN?</span><span class="v">Scale differences dominate distances</span></div>
+          <div class="kv"><span class="k">Why odd k in KNN?</span><span class="v">Avoid ties in classification vote</span></div>
+          <div class="kv"><span class="k">Why log in NB?</span><span class="v">Avoid underflow from multiplying tiny probs</span></div>
+          <div class="kv"><span class="k">Why Laplace smooth?</span><span class="v">Prevent zero prob from zeroing the product</span></div>
+          <div class="kv"><span class="k">Why max margin SVM?</span><span class="v">Larger margin → better generalization</span></div>
+          <div class="kv"><span class="k">Why prune trees?</span><span class="v">Prevent memorizing noise (overfit)</span></div>
+          <div class="kv"><span class="k">Why L1 over L2?</span><span class="v">Feature selection — zeros irrelevant weights</span></div>
+        </div>
+      </div>
+
+      <!-- WORKED CALC PATTERNS -->
+      <div class="box">
+        <div class="box-title">Quick Calculation Patterns</div>
+        <div class="box-body">
+          <p class="bold" style="margin-bottom:2px;">Entropy (4A, 4B node):</p>
+          <div class="formula">H = -(0.5)log₂(0.5) - (0.5)log₂(0.5)
+  = 0.5 + 0.5 = 1.0</div>
+
+          <p class="bold" style="margin-bottom:2px;">Information Gain:</p>
+          <div class="formula">IG = H(parent) - Σ(nᵢ/N × H(cᵢ))
+e.g. parent H=0.8, children:
+  child1: n=6, H=0.3
+  child2: n=4, H=0.5  (N=10)
+IG = 0.8 - (6/10×0.3 + 4/10×0.5)
+   = 0.8 - (0.18 + 0.20) = 0.42</div>
+
+          <p class="bold" style="margin-bottom:2px;">Laplace (Naive Bayes):</p>
+          <div class="formula">3 Yes, 7 No. Feature f: 3 unique vals.
+2 of 3 Yes have f=Sunny.
+P(f=Sunny|Yes) = (2+1)/(3+3) = 0.5
+  NOT 2/3 = 0.667, NOT 3/4 = 0.75</div>
+
+          <p class="bold" style="margin-bottom:2px;">Delta Rule update:</p>
+          <div class="formula">t=0.8, net=0.6, η=0.1, x₂=2
+error = t - net = 0.8 - 0.6 = 0.2
+Δw₂  = η × error × x₂
+      = 0.1 × 0.2 × 2 = 0.04</div>
+
+          <p class="bold" style="margin-bottom:2px;">Perceptron update:</p>
+          <div class="formula">w=(0,0,0), x=(1,1), target t=1
+net = 0·1 + 0·1 + 0·1 = 0
+y = threshold(0) = 0
+error = t - y = 1 - 0 = 1
+Δw₁ = η × 1 × 1 = η (e.g. 0.5)</div>
+
+          <p class="bold" style="margin-bottom:2px;">Linear Regression (b₁):</p>
+          <div class="formula">x=[1,2,3], y=[2,4,5]
+x̄=2, ȳ=11/3≈3.67
+Σ(xᵢ-x̄)(yᵢ-ȳ) = (-1)(-1.67)+(0)(0.33)+(1)(1.33)
+               = 1.67 + 0 + 1.33 = 3.0
+Σ(xᵢ-x̄)² = 1+0+1 = 2
+b₁ = 3.0/2 = 1.5
+b₀ = 3.67 - 1.5×2 = 0.67</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── COLUMN 2 (wide) ─── -->
+    <div class="col">
+
+      <!-- DELTA vs PERCEPTRON — biggest section -->
+      <div class="box">
+        <div class="box-title dark">Delta Rule vs. Perceptron Rule — CRITICAL DISTINCTION</div>
+        <div class="box-body">
+          <p style="margin-bottom:4px;"><span class="bold">Both use the same-looking formula:</span> <span class="mono">Δwᵢ = η · (t − y) · xᵢ</span> &nbsp;—&nbsp; but <span class="bold">y means something completely different in each!</span></p>
+
+          <table>
+            <tr>
+              <th style="width:22%;">Property</th>
+              <th style="width:39%;">DELTA RULE</th>
+              <th style="width:39%;">PERCEPTRON RULE</th>
+            </tr>
+            <tr>
+              <td><b>y used in Δw</b></td>
+              <td>y = net = Σwᵢxᵢ &nbsp;(raw, continuous, no threshold)</td>
+              <td>y = threshold(net) → 0 or 1 &nbsp;(binary)</td>
+            </tr>
+            <tr>
+              <td><b>Error (t−y)</b></td>
+              <td>t − net → any real number; can be large</td>
+              <td>t − y ∈ {−1, 0, +1} only</td>
+            </tr>
+            <tr>
+              <td><b>Update when correct?</b></td>
+              <td>YES — if net ≠ t, there's still error</td>
+              <td>NO — if y=t, error=0, Δw=0</td>
+            </tr>
+            <tr>
+              <td><b>What it minimizes</b></td>
+              <td>E = ½Σ(t − net)² &nbsp;via gradient descent</td>
+              <td>Misclassifications (heuristic, NOT gradient descent)</td>
+            </tr>
+            <tr>
+              <td><b>Convergence</b></td>
+              <td>ALWAYS converges to minimum MSE</td>
+              <td>Only if data is linearly separable; otherwise oscillates forever</td>
+            </tr>
+            <tr>
+              <td><b>Non-sep. data</b></td>
+              <td>Finds best linear approximation</td>
+              <td>Never converges — bounces forever</td>
+            </tr>
+            <tr>
+              <td><b>Generalizes to backprop?</b></td>
+              <td>YES — IS gradient descent; chain rule extends it through layers</td>
+              <td>NO — hard threshold has derivative ≈ 0; can't backpropagate</td>
+            </tr>
+            <tr>
+              <td><b>Activation at update</b></td>
+              <td>BEFORE threshold (raw net)</td>
+              <td>AFTER threshold (binary output)</td>
+            </tr>
+          </table>
+
+          <div class="two-col" style="margin-top:4px; gap:5px;">
+            <div class="formula">DELTA RULE:
+net = Σ wᵢxᵢ
+y   = net          (no threshold)
+err = t − net      (continuous)
+Δwᵢ = η · (t−net) · xᵢ</div>
+            <div class="formula">PERCEPTRON RULE:
+net = Σ wᵢxᵢ
+y   = 1 if net≥θ else 0  (binary)
+err = t − y        ∈ {-1,0,+1}
+Δwᵢ = η · (t−y) · xᵢ</div>
+          </div>
+          <div class="trap">The formulas look identical. The ONLY difference is whether y is the raw net (Delta) or the thresholded binary output (Perceptron). This is the classic exam trap.</div>
+          <div class="trap">Perceptron Convergence Theorem: converges in finite steps IF AND ONLY IF data is linearly separable. On non-separable data it oscillates endlessly.</div>
+        </div>
+      </div>
+
+      <!-- DECISION BOUNDARY & SIGMOID -->
+      <div class="box">
+        <div class="box-title">Decision Boundaries, Net Input & Sigmoid</div>
+        <div class="box-body">
+          <div class="two-col">
+            <div>
+              <p class="bold">Net input (single neuron):</p>
+              <div class="formula">net = Σ wᵢxᵢ
+    = w₀·1 + w₁x₁ + w₂x₂ + …
+  (w₀ = bias weight, x₀ = 1 always)</div>
+              <p class="bold" style="margin-top:3px;">Decision boundary (2D):</p>
+              <div class="formula">w₀ + w₁x₁ + w₂x₂ = 0
+→ x₂ = −(w₁/w₂)x₁ − (w₀/w₂)
+   slope     = −w₁/w₂
+   intercept = −w₀/w₂</div>
+              <div class="trap">Slope = −w₁/w₂. Students write w₁. Solve for x₂ explicitly!</div>
+              <div class="tip">net &gt; 0 → one class. net &lt; 0 → other. Boundary is where net = 0.</div>
+            </div>
+            <div>
+              <p class="bold">Sigmoid σ(x):</p>
+              <div class="formula">σ(x) = 1 / (1 + e^{−x})
+  output ∈ (0, 1) — never exactly 0 or 1
+σ'(x) = σ(x) · (1 − σ(x))
+  computable from output itself!
+
+Generalized: σ(x) = 1/(1+e^{−k(x−x₀)})
+  k → ∞  ⟹  sigmoid → step function
+  (links Delta rule to Perceptron)</div>
+              <p class="bold" style="margin-top:3px;">Key sigmoid values:</p>
+              <table>
+                <tr><th>x</th><th>σ(x)</th></tr>
+                <tr><td>−∞</td><td>→ 0</td></tr>
+                <tr><td>0</td><td>0.5 (always)</td></tr>
+                <tr><td>+∞</td><td>→ 1</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BIAS-VARIANCE + KNN extended -->
+      <div class="box">
+        <div class="box-title">Model Complexity & Algorithm Comparison</div>
+        <div class="box-body">
+          <div class="two-col">
+            <div>
+              <p class="bold">KNN bias-variance by k:</p>
+              <table>
+                <tr><th>k</th><th>Bias</th><th>Variance</th><th>Train err</th></tr>
+                <tr><td>1</td><td>Min</td><td>Max</td><td>0</td></tr>
+                <tr><td>medium</td><td>Med</td><td>Med</td><td>Low</td></tr>
+                <tr><td>n</td><td>Max</td><td>Min</td><td>High</td></tr>
+              </table>
+
+              <p class="bold" style="margin-top:3px;">Decision tree complexity:</p>
+              <table>
+                <tr><th>Depth</th><th>Bias</th><th>Variance</th></tr>
+                <tr><td>Shallow</td><td>High</td><td>Low</td></tr>
+                <tr><td>Full (unpruned)</td><td>Low</td><td>High</td></tr>
+              </table>
+            </div>
+            <div>
+              <p class="bold">Algorithm "when to use" summary:</p>
+              <table>
+                <tr><th>Algorithm</th><th>Use when…</th></tr>
+                <tr><td>KNN</td><td>Simple, non-parametric; small datasets; no training phase</td></tr>
+                <tr><td>Naive Bayes</td><td>Text classification; fast; works well despite independence assumption</td></tr>
+                <tr><td>Lin. Reg.</td><td>Continuous output; linear relationship</td></tr>
+                <tr><td>Log. Reg.</td><td>Binary classification with probability output</td></tr>
+                <tr><td>Dec. Tree</td><td>Interpretable; handles mixed feature types</td></tr>
+                <tr><td>SVM</td><td>High-dimensional data; clear margin needed; kernel for non-linear</td></tr>
+                <tr><td>L1 reg.</td><td>Many irrelevant features; need feature selection</td></tr>
+                <tr><td>L2 reg.</td><td>All features somewhat relevant; want stability</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADDITIONAL FORMULAS ROW -->
+      <div class="box">
+        <div class="box-title">Formula Reference Card</div>
+        <div class="box-body">
+          <div class="two-col">
+            <div>
+              <p class="bold">KNN Euclidean (3-4-5 trap):</p>
+              <div class="formula">d((0,0),(3,4)) = √(3²+4²)
+             = √(9+16) = √25 = 5</div>
+              <p class="bold" style="margin-top:2px;">Gini impurity:</p>
+              <div class="formula">G = 1 - Σ pᵢ²
+50/50: G = 1-(0.5²+0.5²) = 0.5
+100%:  G = 1-(1²) = 0
+33/33/33: G = 1-3(1/3)² = 0.667</div>
+              <p class="bold" style="margin-top:2px;">R² from SSE and SST:</p>
+              <div class="formula">SSE=100, SST=100 → R²=1-1=0
+SSE=0,   SST=100 → R²=1-0=1
+SSE=50,  SST=100 → R²=0.5</div>
+            </div>
+            <div>
+              <p class="bold">Naive Bayes full example:</p>
+              <div class="formula">Classes: Yes(3), No(7). Total=10.
+P(Yes) = 3/10 = 0.3
+P(No)  = 7/10 = 0.7
+
+Feature f=Sunny (3 unique vals):
+  Sunny∩Yes=2, Sunny∩No=5
+  P(Sunny|Yes) = (2+1)/(3+3) = 0.5
+  P(Sunny|No)  = (5+1)/(7+3) = 0.6
+
+Score(Yes) = 0.3 × 0.5 × … (other feats)
+Score(No)  = 0.7 × 0.6 × …
+Pick class with higher score.</div>
+              <p class="bold" style="margin-top:2px;">SSE → RMSE chain:</p>
+              <div class="formula">y=[3,5,2,8], ŷ=[2.5,4,3,7]
+residuals: 0.5, 1, -1, 1
+SSE = 0.25+1+1+1 = 3.25
+MSE = 3.25/4 = 0.8125
+RMSE = √0.8125 ≈ 0.9014</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

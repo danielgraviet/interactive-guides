@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Naive Bayes Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --surface: #f0ebe1;
+  --card: #ffffff;
+  --border: #ddd6c8;
+  --ink: #1a1510;
+  --ink2: #4a4035;
+  --muted: #9a8f82;
+  --accent: #c0392b;
+  --accent2: #2c6e8a;
+  --accent3: #d4761a;
+  --correct: #2d7a4f;
+  --wrong: #c0392b;
+  --correct-bg: #edf7f1;
+  --wrong-bg: #fdf0ee;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  background-image: 
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(180,160,130,0.08) 27px, rgba(180,160,130,0.08) 28px);
+}
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 52px 28px;
+}
+
+header {
+  margin-bottom: 48px;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 32px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.course-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.header-desc {
+  font-size: 14px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  gap: 0;
+  margin-bottom: 36px;
+  border: 1.5px solid var(--border);
+}
+
+.stat-card {
+  flex: 1;
+  padding: 16px 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+}
+.stat-card:last-child { border-right: none; }
+
+.stat-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  color: var(--accent2);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+
+/* Mode bar */
+.mode-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 36px;
+  border: 1.5px solid var(--ink);
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 11px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--bg);
+  color: var(--muted);
+  border-right: 1px solid var(--ink);
+  transition: all 0.18s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mode-btn:last-child { border-right: none; }
+.mode-btn:hover:not(.active) { background: var(--surface); color: var(--ink); }
+.mode-btn.active { background: var(--ink); color: var(--bg); }
+
+/* Topic filter */
+.topics {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.topic-btn {
+  padding: 6px 16px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.topic-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.topic-btn.active { background: var(--accent2); border-color: var(--accent2); color: white; }
+
+/* Progress */
+.progress-wrap {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  margin-bottom: 28px;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+
+/* ---- REVIEW MODE ---- */
+.review-section { margin-bottom: 40px; }
+
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--ink);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose {
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--ink2);
+}
+
+.prose p { margin-bottom: 14px; }
+.prose strong { color: var(--ink); font-weight: 600; }
+.prose em { color: var(--accent); font-style: italic; }
+
+.callout {
+  background: var(--surface);
+  border-left: 3px solid var(--accent2);
+  padding: 16px 20px;
+  margin: 18px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink2);
+}
+
+.callout-warn {
+  background: #fff8f0;
+  border-left: 3px solid var(--accent3);
+}
+
+.callout-key {
+  background: #f0f6fa;
+  border-left: 3px solid var(--accent2);
+}
+
+.formula-block {
+  background: var(--ink);
+  color: #f0ebe1;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  padding: 20px 24px;
+  margin: 18px 0;
+  line-height: 2;
+  overflow-x: auto;
+}
+
+.formula-block .comment {
+  color: #9a8f82;
+  font-size: 12px;
+}
+
+.formula-block .highlight { color: #e8a87c; }
+.formula-block .highlight2 { color: #7ec8e3; }
+.formula-block .highlight3 { color: #90d4a0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13.5px;
+}
+th {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+td {
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  color: var(--ink2);
+  background: var(--card);
+}
+tr:nth-child(even) td { background: var(--surface); }
+
+/* Step-by-step worked example */
+.worked-example {
+  border: 1.5px solid var(--border);
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.we-header {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 14px 20px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+}
+
+.we-step {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  background: var(--card);
+}
+.we-step:last-child { border-bottom: none; }
+
+.step-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.step-content {
+  font-size: 14px;
+  color: var(--ink2);
+  line-height: 1.7;
+}
+
+.step-content code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--surface);
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--accent2);
+}
+
+/* ---- QUIZ MODE ---- */
+.question-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  padding: 32px;
+  margin-bottom: 16px;
+  animation: fadeUp 0.3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.q-topic-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent2);
+}
+
+.difficulty {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 3px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: 8px;
+}
+.diff-easy { background: #edf7f1; color: var(--correct); border: 1px solid #b8e0ca; }
+.diff-med { background: #fff3e0; color: var(--accent3); border: 1px solid #fcd09a; }
+.diff-hard { background: var(--wrong-bg); color: var(--wrong); border: 1px solid #f0b8b0; }
+
+.q-counter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.question-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 26px;
+}
+
+.options { display: flex; flex-direction: column; gap: 9px; }
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 18px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.18s;
+  text-align: left;
+  width: 100%;
+}
+.option:hover:not(.locked) { border-color: var(--accent2); background: #f0f6fa; }
+
+.option-letter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 18px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.option-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink2);
+}
+
+.option.correct { border-color: var(--correct); background: var(--correct-bg); }
+.option.correct .option-letter { color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+.option.wrong .option-letter { color: var(--wrong); }
+.option.locked { cursor: default; }
+
+.explanation {
+  display: none;
+  margin-top: 20px;
+  padding: 18px 22px;
+  background: #f5f0ff;
+  border-left: 3px solid #6b4fbb;
+  animation: fadeIn 0.3s ease;
+}
+.explanation.show { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.exp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: #6b4fbb;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+}
+.exp-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink2);
+}
+.exp-text code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: #ede8ff;
+  padding: 1px 5px;
+  font-size: 13px;
+  color: #4a2f99;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 11px 28px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.btn-primary { background: var(--ink); color: var(--bg); }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+/* Result */
+.result-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  padding: 56px 40px;
+  text-align: center;
+  display: none;
+}
+.result-card.show { display: block; animation: fadeUp 0.4s ease; }
+.score-big {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px;
+  color: var(--accent2);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.score-msg {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+/* ---- FLASHCARD MODE ---- */
+.flashcard {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  padding: 52px 40px;
+  text-align: center;
+  cursor: pointer;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.flashcard:hover { border-color: var(--accent2); box-shadow: 4px 4px 0 var(--border); }
+
+.card-side {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.card-content {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 540px;
+}
+
+.card-content.answer {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.8;
+  color: var(--ink2);
+}
+
+.flip-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 18px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.flash-counter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-top">
+      <div>
+        <div class="course-tag">CS 270 — Intro to Machine Learning</div>
+        <h1>Naïve <em>Bayes</em></h1>
+        <p class="header-desc">// Bayes' theorem · conditional probability · likelihood computation</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="stat-answered">0</div><div class="stat-label">Answered</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-correct">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-score">—</div><div class="stat-label">Accuracy</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">Streak 🔥</div></div>
+  </div>
+
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setMode('review')">📖 Review</button>
+    <button class="mode-btn" onclick="setMode('quiz')">🎯 Quiz</button>
+    <button class="mode-btn" onclick="setMode('flashcard')">🃏 Flashcards</button>
+  </div>
+
+  <!-- ===================== REVIEW MODE ===================== -->
+  <div id="review-mode">
+
+    <!-- Section 1: Bayes Theorem -->
+    <div class="review-section">
+      <div class="section-label">Foundation</div>
+      <div class="section-title">Bayes' Theorem</div>
+      <div class="prose">
+        <p>Bayes' Theorem is a formula for updating your belief in a hypothesis after seeing new evidence. It answers: <strong>"Given that I observed X, what is the probability that Y is true?"</strong></p>
+      </div>
+
+      <div class="formula-block">
+        <span class="highlight">P(Y | X)</span>  =  <span class="highlight2">P(X | Y)</span>  ×  <span class="highlight3">P(Y)</span>  /  P(X)<br>
+        <br>
+        <span class="comment">// P(Y | X)   → Posterior  : probability of class Y given evidence X</span><br>
+        <span class="comment">// P(X | Y)   → Likelihood : probability of seeing X if class is Y</span><br>
+        <span class="comment">// P(Y)       → Prior      : probability of class Y before seeing X</span><br>
+        <span class="comment">// P(X)       → Evidence   : total probability of X (normalizing constant)</span>
+      </div>
+
+      <div class="callout callout-key">
+        <strong>Intuition:</strong> You start with a prior belief P(Y). When you observe evidence X, you multiply by how likely that evidence is under Y, then normalize. Your updated belief is the posterior P(Y | X).
+      </div>
+
+      <div class="prose">
+        <p><strong>Classic example — spam filter:</strong> Is an email spam given it contains the word "lottery"?</p>
+      </div>
+
+      <div class="formula-block">
+        P(Spam | "lottery")  =  P("lottery" | Spam)  ×  P(Spam)  /  P("lottery")<br>
+        <br>
+        <span class="comment">// If 30% of emails are spam, "lottery" appears in 80% of spam but</span><br>
+        <span class="comment">// only 2% of ham, and 26% of all emails contain "lottery":</span><br>
+        <br>
+        =  (0.80 × 0.30)  /  0.26  ≈  <span class="highlight">0.923  → 92.3% chance it's spam</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>⚠ Tricky point:</strong> P(X) can be expanded as P(X|Y)·P(Y) + P(X|¬Y)·P(¬Y). You don't always need to compute it directly — when comparing two classes, the denominator is the same for both and cancels out.
+      </div>
+    </div>
+
+    <!-- Section 2: Naive Bayes Classifier -->
+    <div class="review-section">
+      <div class="section-label">The Classifier</div>
+      <div class="section-title">Naïve Bayes — The "Naïve" Assumption</div>
+      <div class="prose">
+        <p>Naïve Bayes extends Bayes' Theorem to work with multiple features (X₁, X₂, ..., Xₙ). The problem: computing P(X₁, X₂, ..., Xₙ | Y) is intractable for large feature sets.</p>
+        <p>The <strong>"naïve" assumption</strong> solves this by assuming <em>conditional independence</em> — given the class Y, each feature is independent of every other feature.</p>
+      </div>
+
+      <div class="formula-block">
+        <span class="comment">// Without the assumption (intractable):</span><br>
+        P(Y | X₁...Xₙ)  ∝  P(X₁, X₂, ..., Xₙ | Y) × P(Y)<br>
+        <br>
+        <span class="comment">// With the naïve assumption (conditional independence):</span><br>
+        P(Y | X₁...Xₙ)  ∝  <span class="highlight3">P(Y)</span>  ×  <span class="highlight2">∏ P(Xᵢ | Y)</span><br>
+        <br>
+        <span class="comment">// ∝ means "proportional to" — P(X) is the same for all classes</span><br>
+        <span class="comment">// so we drop it and just pick the class with the highest value</span>
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>⚠ The "naïve" assumption is almost always wrong in practice.</strong> Word frequencies in text aren't truly independent — "New" and "York" co-occur often. Despite this, Naïve Bayes works surprisingly well and is fast to train.
+      </div>
+
+      <div class="prose">
+        <p><strong>Classification rule:</strong> Pick the class with the highest posterior probability.</p>
+      </div>
+
+      <div class="formula-block">
+        ŷ  =  argmax<sub>Y</sub>  [  P(Y)  ×  ∏ P(Xᵢ | Y)  ]
+      </div>
+    </div>
+
+    <!-- Section 3: Computing Probabilities -->
+    <div class="review-section">
+      <div class="section-label">Computation</div>
+      <div class="section-title">How to Compute the Probabilities</div>
+      <div class="prose">
+        <p>All probabilities are estimated directly from the training data by counting.</p>
+      </div>
+
+      <table>
+        <tr><th>Probability</th><th>Formula</th><th>What you count</th></tr>
+        <tr><td><strong>Prior P(Y=c)</strong></td><td># examples of class c / total examples</td><td>How common is this class?</td></tr>
+        <tr><td><strong>Likelihood P(Xᵢ=v | Y=c)</strong></td><td># times feature Xᵢ=v in class c / # examples of class c</td><td>How often does this feature value appear in this class?</td></tr>
+      </table>
+
+      <!-- Worked Example -->
+      <div class="worked-example">
+        <div class="we-header">📊 Worked Example — Will Alice play tennis?</div>
+
+        <div class="we-step">
+          <div class="step-num">The Data</div>
+          <div class="step-content">
+            <table>
+              <tr><th>Outlook</th><th>Wind</th><th>Play?</th></tr>
+              <tr><td>Sunny</td><td>Weak</td><td>No</td></tr>
+              <tr><td>Sunny</td><td>Strong</td><td>No</td></tr>
+              <tr><td>Overcast</td><td>Weak</td><td>Yes</td></tr>
+              <tr><td>Rain</td><td>Weak</td><td>Yes</td></tr>
+              <tr><td>Rain</td><td>Strong</td><td>No</td></tr>
+              <tr><td>Overcast</td><td>Strong</td><td>Yes</td></tr>
+              <tr><td>Sunny</td><td>Weak</td><td>Yes</td></tr>
+              <tr><td>Rain</td><td>Weak</td><td>Yes</td></tr>
+            </table>
+            <br>
+            <strong>New instance: Outlook=Sunny, Wind=Weak. Predict Play?</strong>
+          </div>
+        </div>
+
+        <div class="we-step">
+          <div class="step-num">Step 1 — Compute Priors</div>
+          <div class="step-content">
+            Yes: 5 out of 8 → <code>P(Yes) = 5/8 = 0.625</code><br>
+            No: 3 out of 8 → <code>P(No) = 3/8 = 0.375</code>
+          </div>
+        </div>
+
+        <div class="we-step">
+          <div class="step-num">Step 2 — Compute Likelihoods</div>
+          <div class="step-content">
+            Among <strong>Yes</strong> examples (5 total):<br>
+            Sunny appears 1 time → <code>P(Sunny | Yes) = 1/5 = 0.20</code><br>
+            Weak appears 4 times → <code>P(Weak | Yes) = 4/5 = 0.80</code><br><br>
+            Among <strong>No</strong> examples (3 total):<br>
+            Sunny appears 2 times → <code>P(Sunny | No) = 2/3 = 0.667</code><br>
+            Weak appears 1 time → <code>P(Weak | No) = 1/3 = 0.333</code>
+          </div>
+        </div>
+
+        <div class="we-step">
+          <div class="step-num">Step 3 — Compute Posteriors (unnormalized)</div>
+          <div class="step-content">
+            <code>Score(Yes) = P(Yes) × P(Sunny|Yes) × P(Weak|Yes) = 0.625 × 0.20 × 0.80 = 0.100</code><br><br>
+            <code>Score(No)  = P(No)  × P(Sunny|No)  × P(Weak|No)  = 0.375 × 0.667 × 0.333 = 0.083</code>
+          </div>
+        </div>
+
+        <div class="we-step">
+          <div class="step-num">Step 4 — Predict</div>
+          <div class="step-content">
+            Score(Yes) = 0.100 > Score(No) = 0.083<br><br>
+            → <strong>Predict: Yes, Alice will play tennis.</strong><br><br>
+            To get actual probabilities: <code>P(Yes | evidence) = 0.100 / (0.100 + 0.083) ≈ 0.546</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Log Probabilities & Laplace Smoothing -->
+    <div class="review-section">
+      <div class="section-label">Important Nuances</div>
+      <div class="section-title">Log Probabilities & Laplace Smoothing</div>
+
+      <div class="prose">
+        <p><strong>The underflow problem:</strong> Multiplying many small probabilities (e.g., 0.02 × 0.01 × 0.003 × ... across hundreds of features) produces numbers so tiny they round to 0 in a computer. This is called <em>numerical underflow</em>.</p>
+        <p><strong>Solution: use log probabilities.</strong> Instead of multiplying, we take the log and add.</p>
+      </div>
+
+      <div class="formula-block">
+        <span class="comment">// Instead of multiplying:</span><br>
+        P(Y) × P(X₁|Y) × P(X₂|Y) × ...<br>
+        <br>
+        <span class="comment">// Take the log and sum (equivalent, since log is monotonic):</span><br>
+        log P(Y)  +  log P(X₁|Y)  +  log P(X₂|Y)  +  ...
+      </div>
+
+      <div class="callout callout-warn">
+        <strong>⚠ The zero-probability problem:</strong> If a feature value never appears in class c during training, then P(Xᵢ=v | Y=c) = 0, which zeros out the entire product — no matter what the other features say!
+      </div>
+
+      <div class="prose">
+        <p><strong>Solution: Laplace Smoothing (Add-1 Smoothing).</strong> Add 1 to every count so no probability is ever exactly zero.</p>
+      </div>
+
+      <div class="formula-block">
+        <span class="comment">// Without smoothing:</span><br>
+        P(Xᵢ=v | Y=c)  =  count(Xᵢ=v, Y=c)  /  count(Y=c)<br>
+        <br>
+        <span class="comment">// With Laplace smoothing (k = number of possible values for Xᵢ):</span><br>
+        P(Xᵢ=v | Y=c)  =  <span class="highlight">(count(Xᵢ=v, Y=c) + 1)  /  (count(Y=c) + k)</span>
+      </div>
+
+      <div class="callout callout-key">
+        <strong>Why divide by count(Y=c) + k?</strong> Adding 1 to each of the k possible values means you've added k counts total to the denominator, keeping the probabilities summing to 1.
+      </div>
+    </div>
+
+  </div><!-- end review mode -->
+
+  <!-- ===================== QUIZ MODE ===================== -->
+  <div id="quiz-mode" class="hidden">
+    <div class="topics" id="topic-filter">
+      <button class="topic-btn active" onclick="filterTopic('all',this)">All Topics</button>
+      <button class="topic-btn" onclick="filterTopic('bayes',this)">Bayes' Theorem</button>
+      <button class="topic-btn" onclick="filterTopic('nb',this)">Naïve Bayes</button>
+      <button class="topic-btn" onclick="filterTopic('compute',this)">Computation</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div id="question-area"></div>
+    <div class="result-card" id="result-area">
+      <div class="score-big" id="final-score">0%</div>
+      <div class="score-msg" id="final-msg"></div>
+      <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- ===================== FLASHCARD MODE ===================== -->
+  <div id="flashcard-mode" class="hidden">
+    <div class="topics" id="flash-filter">
+      <button class="topic-btn active" onclick="filterFlash('all',this)">All</button>
+      <button class="topic-btn" onclick="filterFlash('bayes',this)">Bayes' Theorem</button>
+      <button class="topic-btn" onclick="filterFlash('nb',this)">Naïve Bayes</button>
+      <button class="topic-btn" onclick="filterFlash('compute',this)">Computation</button>
+    </div>
+    <div class="progress-wrap"><div class="progress-bar" id="flash-progress" style="width:0%"></div></div>
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="card-side" id="card-side">▲ TERM</div>
+      <div class="card-content" id="card-content"></div>
+      <div class="flip-hint">click to flip</div>
+    </div>
+    <div class="controls" style="margin-top:14px;">
+      <button class="btn btn-secondary" onclick="prevCard()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+    </div>
+    <p class="flash-counter" id="flash-counter"></p>
+  </div>
+
+</div><!-- end container -->
+
+<script>
+// ==========================================================
+//  DATA
+// ==========================================================
+
+const questions = [
+  // ---- BAYES' THEOREM ----
+  {
+    id:1, topic:"bayes", difficulty:"easy",
+    q: "In Bayes' Theorem P(Y|X) = P(X|Y)·P(Y) / P(X), which term is called the 'prior'?",
+    opts: ["P(Y|X)", "P(X|Y)", "P(Y)", "P(X)"],
+    ans: 2,
+    exp: "P(Y) is the prior — your belief in class Y <em>before</em> observing any evidence. P(Y|X) is the posterior (updated belief). P(X|Y) is the likelihood. P(X) is the evidence/marginal."
+  },
+  {
+    id:2, topic:"bayes", difficulty:"med",
+    q: "A disease affects 1% of the population. A test is 95% accurate: it correctly identifies 95% of sick people and 95% of healthy people. You test positive. What is the probability you actually have the disease?",
+    opts: ["95%", "~50%", "~16%", "1%"],
+    ans: 2,
+    exp: "This is the base rate fallacy! P(Disease|+) = P(+|Disease)·P(Disease) / P(+). P(+) = 0.95×0.01 + 0.05×0.99 = 0.0095 + 0.0495 = 0.059. So P(Disease|+) = 0.0095/0.059 ≈ 16%. The low prior (1%) dominates — most positives are false positives."
+  },
+  {
+    id:3, topic:"bayes", difficulty:"hard",
+    q: "When classifying with Naïve Bayes, why is P(X) — the evidence — usually ignored in the computation?",
+    opts: [
+      "Because it equals 1 when features are independent",
+      "Because it is always equal to the prior P(Y)",
+      "Because it is the same constant for all classes and doesn't affect which class wins",
+      "Because it is too difficult to compute accurately"
+    ],
+    ans: 2,
+    exp: "When you compare P(Y₁|X) vs P(Y₂|X), both share the same denominator P(X). Dividing by the same constant doesn't change which class has the higher score, so we drop it and just compare the numerators. This is what the ∝ (proportional to) symbol means."
+  },
+  {
+    id:4, topic:"bayes", difficulty:"hard",
+    q: "P(A|B) = 0.7 and P(B|A) = 0.4. P(A) = 0.5. What is P(B)?",
+    opts: ["0.35", "0.20", "0.29", "0.50"],
+    ans: 2,
+    exp: "From Bayes': P(A|B) = P(B|A)·P(A)/P(B). Rearranging: P(B) = P(B|A)·P(A)/P(A|B) = (0.4 × 0.5) / 0.7 = 0.20 / 0.7 ≈ 0.286. Rounded ≈ 0.29."
+  },
+  {
+    id:5, topic:"bayes", difficulty:"med",
+    q: "Which of the following correctly expands P(X) — the evidence — using the law of total probability for two classes Yes and No?",
+    opts: [
+      "P(X) = P(X|Yes) + P(X|No)",
+      "P(X) = P(X|Yes)·P(X|No)",
+      "P(X) = P(X|Yes)·P(Yes) + P(X|No)·P(No)",
+      "P(X) = P(Yes)·P(No)"
+    ],
+    ans: 2,
+    exp: "The law of total probability: P(X) = Σ P(X|Y=c)·P(Y=c) over all classes. For two classes: P(X) = P(X|Yes)·P(Yes) + P(X|No)·P(No). This is what you compute when you need a normalized posterior probability."
+  },
+
+  // ---- NAIVE BAYES ----
+  {
+    id:6, topic:"nb", difficulty:"easy",
+    q: "What does the 'naïve' assumption in Naïve Bayes specifically assume?",
+    opts: [
+      "All classes are equally likely",
+      "Features are conditionally independent given the class label",
+      "The data follows a normal (Gaussian) distribution",
+      "The prior probabilities are uniform"
+    ],
+    ans: 1,
+    exp: "The naïve conditional independence assumption: given the class Y, each feature Xᵢ is independent of every other feature Xⱼ. This lets us write P(X₁...Xₙ|Y) = ∏P(Xᵢ|Y), which is the mathematical trick that makes the whole classifier tractable."
+  },
+  {
+    id:7, topic:"nb", difficulty:"med",
+    q: "A Naïve Bayes spam classifier assigns equal scores to Spam and Ham for a new email. Despite this, the model has high accuracy in tests. The most likely reason is:",
+    opts: [
+      "The model is overfitting",
+      "The model is underfitting",
+      "Naïve Bayes works well even when the independence assumption is violated",
+      "The prior probabilities must both be 0.5"
+    ],
+    ans: 2,
+    exp: "This hints at the key paradox of Naïve Bayes: the independence assumption is almost always violated in real data, but the classifier still produces good results. Researchers found it achieves competitive accuracy because even with wrong probability estimates, the argmax (which class wins) is often correct."
+  },
+  {
+    id:8, topic:"nb", difficulty:"hard",
+    q: "You train a Naïve Bayes classifier on emails. At test time, an email contains the word 'xkwyz' — a word never seen in training. Without smoothing, what happens?",
+    opts: [
+      "The word is ignored and classification proceeds normally",
+      "P('xkwyz'|Y) = 0 for all classes, making the posterior undefined or 0",
+      "The classifier defaults to the prior probability",
+      "The word is assigned a uniform probability across all classes"
+    ],
+    ans: 1,
+    exp: "Without smoothing, P('xkwyz'|Y=c) = 0 for every class because the word never appeared. Multiplying by 0 wipes out the entire product — all the evidence from other words is destroyed. The entire posterior becomes 0 for every class. Laplace smoothing fixes this by adding pseudo-counts."
+  },
+  {
+    id:9, topic:"nb", difficulty:"hard",
+    q: "Which scenario would MOST severely hurt Naïve Bayes performance compared to a model that doesn't assume independence?",
+    opts: [
+      "A dataset where all features are truly independent given the class",
+      "A text classification task where individual word frequencies determine the class",
+      "A dataset where pairs of features are highly correlated given the class (e.g., 'hot' and 'temperature')",
+      "A dataset with a very large number of classes"
+    ],
+    ans: 2,
+    exp: "Naïve Bayes suffers most when the independence assumption is badly violated — i.e., when features are strongly correlated given the class. If 'hot' and 'temperature' always appear together, Naïve Bayes double-counts that evidence, overstating its weight. A model capturing dependencies (like a Bayesian network) would handle this better."
+  },
+  {
+    id:10, topic:"nb", difficulty:"med",
+    q: "In Naïve Bayes, why do we often use log probabilities instead of raw probabilities?",
+    opts: [
+      "Log probabilities are easier for humans to interpret",
+      "Log probabilities turn the argmax into a minimization problem",
+      "Multiplying many small probabilities causes numerical underflow; adding logs avoids this",
+      "Log probabilities enforce the independence assumption"
+    ],
+    ans: 2,
+    exp: "With many features, the product P(Y)×∏P(Xᵢ|Y) involves multiplying many small decimals (e.g., 0.001 × 0.003 × ... hundreds of times). This quickly underflows to 0 in floating point. Since log is monotonic, argmax of the product = argmax of the sum of logs. Adding is numerically safe."
+  },
+
+  // ---- COMPUTATION ----
+  {
+    id:11, topic:"compute", difficulty:"easy",
+    q: "You have 100 training emails: 60 spam, 40 ham. What is P(Spam)?",
+    opts: ["0.40", "0.50", "0.60", "Cannot be determined without more information"],
+    ans: 2,
+    exp: "P(Spam) = (# spam emails) / (total emails) = 60/100 = 0.60. This is the prior — estimated directly from the class frequency in training data."
+  },
+  {
+    id:12, topic:"compute", difficulty:"med",
+    q: "In 60 spam emails, the word 'free' appears in 30 of them. In 40 ham emails, it appears in 4. What is P('free' | Spam)?",
+    opts: ["30/100 = 0.30", "30/60 = 0.50", "30/40 = 0.75", "4/40 = 0.10"],
+    ans: 1,
+    exp: "P('free'|Spam) = (# spam emails containing 'free') / (# total spam emails) = 30/60 = 0.50. A common mistake is dividing by the total number of emails (100) — but you're computing the conditional probability *given* spam, so you only look within the spam class."
+  },
+  {
+    id:13, topic:"compute", difficulty:"hard",
+    q: "Using Laplace smoothing with k=2 possible values (word present / absent), what is P('free'|Spam) if 'free' appears in 0 of 60 spam emails?",
+    opts: [
+      "0/60 = 0",
+      "(0+1)/(60+1) ≈ 0.016",
+      "(0+1)/(60+2) ≈ 0.016",
+      "(0+2)/(60+2) ≈ 0.032"
+    ],
+    ans: 2,
+    exp: "Laplace (add-1) smoothing: P(Xᵢ=v|Y=c) = (count + 1) / (class_count + k). Here count=0, class_count=60, k=2. So P = (0+1)/(60+2) = 1/62 ≈ 0.016. The denominator adds k (not 1) to account for adding 1 pseudo-count to each of the k possible values."
+  },
+  {
+    id:14, topic:"compute", difficulty:"hard",
+    q: "You compute: Score(Yes) = 0.0048, Score(No) = 0.0012. What is the normalized P(Yes | evidence)?",
+    opts: ["0.0048", "0.50", "0.80", "0.0060"],
+    ans: 2,
+    exp: "To normalize: P(Yes|evidence) = Score(Yes) / (Score(Yes) + Score(No)) = 0.0048 / (0.0048 + 0.0012) = 0.0048 / 0.006 = 0.80. Normalization is how you convert unnormalized posterior scores into actual probabilities that sum to 1."
+  },
+  {
+    id:15, topic:"compute", difficulty:"hard",
+    q: "A new email has 3 features. P(Spam)=0.6, and conditional probabilities are 0.5, 0.8, 0.2 for Spam and 0.1, 0.3, 0.9 for Ham (P(Ham)=0.4). Which class wins and why is a professor likely to trick you here?",
+    opts: [
+      "Spam wins; Score(Spam) = 0.048 > Score(Ham) = 0.0108",
+      "Ham wins; Score(Ham) = 0.108 > Score(Spam) = 0.048",
+      "Spam wins; Score(Spam) = 0.600 dominates",
+      "Cannot determine without the feature values"
+    ],
+    ans: 0,
+    exp: "Score(Spam) = 0.6 × 0.5 × 0.8 × 0.2 = 0.048. Score(Ham) = 0.4 × 0.1 × 0.3 × 0.9 = 0.0108. Spam wins. The trick: it's tempting to add probabilities or forget to multiply the prior. Always: Prior × product of all likelihoods for each class, then compare."
+  }
+];
+
+const flashcards = [
+  { topic:"bayes", term:"Bayes' Theorem", def:"P(Y|X) = P(X|Y)·P(Y) / P(X). Updates your prior belief in Y after observing evidence X to produce the posterior probability." },
+  { topic:"bayes", term:"Prior — P(Y)", def:"Your belief in class Y before observing any evidence. Estimated from training data as: (# examples of class Y) / (total examples)." },
+  { topic:"bayes", term:"Likelihood — P(X|Y)", def:"How probable is the observed evidence X if the class truly is Y? This is what you count from training data per class." },
+  { topic:"bayes", term:"Posterior — P(Y|X)", def:"Your updated belief in class Y after observing evidence X. This is what Bayes' Theorem computes and what we use to classify." },
+  { topic:"bayes", term:"Evidence — P(X)", def:"The total probability of observing X across all classes. P(X) = Σ P(X|Y=c)·P(Y=c). Acts as a normalizing constant — same for all classes, so often dropped in classification." },
+  { topic:"nb", term:"The Naïve Assumption", def:"Given the class label Y, all features X₁, X₂, ..., Xₙ are conditionally independent of each other. This lets you write P(X₁...Xₙ|Y) = ∏ P(Xᵢ|Y)." },
+  { topic:"nb", term:"Why 'Naïve'?", def:"Because the conditional independence assumption is almost always false in real data. Despite this, NB achieves strong accuracy because the argmax (which class wins) is often correct even with wrong probabilities." },
+  { topic:"nb", term:"Naïve Bayes Classification Rule", def:"ŷ = argmax over Y of [ P(Y) × ∏ P(Xᵢ|Y) ]. Pick the class that maximizes the product of the prior and all feature likelihoods." },
+  { topic:"nb", term:"Log Probabilities", def:"Instead of multiplying many small probabilities (risking underflow to 0), take the log and sum: log P(Y) + Σ log P(Xᵢ|Y). Monotonic, so argmax is preserved." },
+  { topic:"compute", term:"Laplace Smoothing", def:"Add 1 to every feature count to avoid zero probabilities. Formula: P(Xᵢ=v|Y=c) = (count + 1) / (class_count + k), where k = number of possible values for Xᵢ." },
+  { topic:"compute", term:"Zero-Probability Problem", def:"If a feature value never appears for class c in training, P(Xᵢ=v|Y=c) = 0, which zeroes out the entire posterior product. Fixed by Laplace smoothing." },
+  { topic:"compute", term:"Numerical Underflow", def:"When multiplying many small probabilities, the result becomes so tiny the computer rounds it to 0. Solved by working in log space and summing instead of multiplying." },
+  { topic:"compute", term:"Normalizing the Posterior", def:"To get a true probability: P(Y|X) = Score(Y) / Σ Score(c). Divides each class score by the total of all class scores so they sum to 1." },
+  { topic:"bayes", term:"Base Rate Fallacy", def:"Ignoring the prior probability P(Y) when interpreting test results. Even a 95%-accurate test mostly produces false positives when the disease rate is 1%, because P(Y) is very low." },
+  { topic:"nb", term:"Naïve Bayes vs. Logistic Regression", def:"NB is a generative model (models P(X|Y) and P(Y)). Logistic regression is discriminative (directly models P(Y|X)). NB trains faster and works well with small data; LR typically outperforms with large data." },
+];
+
+// ==========================================================
+//  STATE
+// ==========================================================
+let mode = 'review';
+let currentQ = 0;
+let answered = 0;
+let correct = 0;
+let streak = 0;
+let filteredQs = [...questions];
+let flashIdx = 0;
+let flashFlipped = false;
+let filteredFlash = [...flashcards];
+let questionAnswered = false;
+
+// ==========================================================
+//  INIT
+// ==========================================================
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['review','quiz','flashcard'][i] === m);
+  });
+  document.getElementById('review-mode').classList.toggle('hidden', m !== 'review');
+  document.getElementById('quiz-mode').classList.toggle('hidden', m !== 'quiz');
+  document.getElementById('flashcard-mode').classList.toggle('hidden', m !== 'flashcard');
+  if (m === 'quiz') renderQuestion();
+  if (m === 'flashcard') renderFlashcard();
+}
+
+// ==========================================================
+//  QUIZ
+// ==========================================================
+function filterTopic(topic, btn) {
+  document.querySelectorAll('#topic-filter .topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredQs = topic === 'all' ? [...questions] : questions.filter(q => q.topic === topic);
+  currentQ = 0; answered = 0; correct = 0; streak = 0; questionAnswered = false;
+  updateStats();
+  document.getElementById('result-area').classList.remove('show');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (currentQ >= filteredQs.length) { showResult(); return; }
+  const q = filteredQs[currentQ];
+  questionAnswered = false;
+  document.getElementById('progress-bar').style.width = (currentQ / filteredQs.length * 100) + '%';
+  const dMap = { easy:'diff-easy', med:'diff-med', hard:'diff-hard' };
+  const dLabel = { easy:'Easy', med:'Medium', hard:'Hard' };
+  const tMap = { bayes:"Bayes' Theorem", nb:"Naïve Bayes", compute:"Computation" };
+  document.getElementById('question-area').innerHTML = `
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-topic-tag">${tMap[q.topic]} <span class="difficulty ${dMap[q.difficulty]}">${dLabel[q.difficulty]}</span></span>
+        <span class="q-counter">${currentQ+1} / ${filteredQs.length}</span>
+      </div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i) => `
+          <button class="option" id="opt-${i}" onclick="selectAnswer(${i},${q.ans})">
+            <span class="option-letter">${String.fromCharCode(65+i)}.</span>
+            <span class="option-text">${o}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="explanation" id="explanation">
+        <div class="exp-label">▶ Explanation</div>
+        <div class="exp-text">${q.exp}</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none">Next →</button>
+    </div>
+  `;
+}
+
+function selectAnswer(sel, correct_idx) {
+  if (questionAnswered) return;
+  questionAnswered = true;
+  answered++;
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('locked'));
+  if (sel === correct_idx) { opts[sel].classList.add('correct'); correct++; streak++; }
+  else { opts[sel].classList.add('wrong'); opts[correct_idx].classList.add('correct'); streak = 0; }
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('next-btn').style.display = 'block';
+  updateStats();
+}
+
+function nextQuestion() { currentQ++; renderQuestion(); }
+
+function restartQuiz() {
+  currentQ = 0; answered = 0; correct = 0; streak = 0; questionAnswered = false;
+  updateStats();
+  document.getElementById('result-area').classList.remove('show');
+  renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('question-area').innerHTML = '';
+  const pct = Math.round(correct / filteredQs.length * 100);
+  const msgs = ['Keep reviewing! 📚','Getting there! 💪','Solid understanding! 🎯','Almost mastered! ⭐','Bayes-pilled 🏆'];
+  document.getElementById('final-score').textContent = pct + '%';
+  document.getElementById('final-msg').textContent = `${correct}/${filteredQs.length} correct — ${msgs[Math.min(4, Math.floor(pct/20))]}`;
+  document.getElementById('result-area').classList.add('show');
+  document.getElementById('progress-bar').style.width = '100%';
+}
+
+function updateStats() {
+  document.getElementById('stat-answered').textContent = answered;
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-score').textContent = answered > 0 ? Math.round(correct/answered*100)+'%' : '—';
+  document.getElementById('stat-streak').textContent = streak;
+}
+
+// ==========================================================
+//  FLASHCARDS
+// ==========================================================
+function filterFlash(topic, btn) {
+  document.querySelectorAll('#flash-filter .topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredFlash = topic === 'all' ? [...flashcards] : flashcards.filter(f => f.topic === topic);
+  flashIdx = 0; flashFlipped = false;
+  renderFlashcard();
+}
+
+function renderFlashcard() {
+  if (!filteredFlash.length) return;
+  const card = filteredFlash[flashIdx];
+  flashFlipped = false;
+  document.getElementById('card-side').textContent = '▲ TERM';
+  document.getElementById('card-content').className = 'card-content';
+  document.getElementById('card-content').textContent = card.term;
+  document.getElementById('flash-counter').textContent = `Card ${flashIdx+1} of ${filteredFlash.length}`;
+  document.getElementById('flash-progress').style.width = ((flashIdx+1)/filteredFlash.length*100)+'%';
+}
+
+function flipCard() {
+  const card = filteredFlash[flashIdx];
+  flashFlipped = !flashFlipped;
+  if (flashFlipped) {
+    document.getElementById('card-side').textContent = '▼ DEFINITION';
+    document.getElementById('card-content').className = 'card-content answer';
+    document.getElementById('card-content').textContent = card.def;
+  } else {
+    document.getElementById('card-side').textContent = '▲ TERM';
+    document.getElementById('card-content').className = 'card-content';
+    document.getElementById('card-content').textContent = card.term;
+  }
+}
+
+function nextCard() { flashIdx = (flashIdx+1) % filteredFlash.length; renderFlashcard(); }
+function prevCard() { flashIdx = (flashIdx-1+filteredFlash.length) % filteredFlash.length; renderFlashcard(); }
+
+// init flashcard
+renderFlashcard();
+</script>
+</body>
+</html>

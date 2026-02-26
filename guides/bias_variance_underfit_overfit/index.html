@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — ML Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --correct: #10b981;
+    --wrong: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(6,182,212,0.06) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    padding: 4px 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 120px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 16px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent2);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* Topic nav */
+  .topics {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+
+  .topic-btn {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .topic-btn:hover { border-color: var(--accent); color: var(--text); }
+  .topic-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  /* Mode toggle */
+  .mode-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    align-items: center;
+  }
+
+  .mode-label {
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .mode-btn {
+    padding: 6px 18px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active { background: var(--accent3); border-color: var(--accent3); color: #000; }
+
+  /* Question card */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px;
+    margin-bottom: 16px;
+    position: relative;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .q-topic {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .q-num {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+  }
+
+  .difficulty {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    padding: 2px 8px;
+    margin-left: 8px;
+    text-transform: uppercase;
+  }
+
+  .diff-easy { background: rgba(16,185,129,0.15); color: var(--correct); border: 1px solid rgba(16,185,129,0.3); }
+  .diff-med { background: rgba(245,158,11,0.15); color: var(--accent3); border: 1px solid rgba(245,158,11,0.3); }
+  .diff-hard { background: rgba(239,68,68,0.15); color: var(--wrong); border: 1px solid rgba(239,68,68,0.3); }
+
+  .question-text {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    color: #f1f5f9;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+
+  .option:hover:not(.locked) { border-color: var(--accent); background: rgba(124,58,237,0.08); }
+
+  .option-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 20px;
+    margin-top: 1px;
+  }
+
+  .option-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .option.correct { border-color: var(--correct); background: rgba(16,185,129,0.1); }
+  .option.correct .option-letter { color: var(--correct); }
+  .option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.1); }
+  .option.wrong .option-letter { color: var(--wrong); }
+  .option.locked { cursor: default; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 20px;
+    border-left: 3px solid var(--accent2);
+    background: rgba(6,182,212,0.06);
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .explanation.show { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .explanation-title {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .explanation p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #94a3b8;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 28px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6d28d9; }
+  .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* Flashcard mode */
+  .flashcard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 48px 40px;
+    text-align: center;
+    cursor: pointer;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .flashcard:hover { border-color: var(--accent); }
+
+  .flashcard::after {
+    content: 'CLICK TO FLIP';
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .card-side {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .card-content {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: #f1f5f9;
+    max-width: 600px;
+  }
+
+  .card-content.answer {
+    font-size: 15px;
+    font-weight: 400;
+    color: #94a3b8;
+    line-height: 1.8;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    margin-bottom: 32px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.5s ease;
+  }
+
+  /* Score result */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 48px;
+    text-align: center;
+    display: none;
+  }
+
+  .result-card.show { display: block; animation: slideIn 0.4s ease; }
+
+  .score-big {
+    font-size: 72px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .score-msg {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Concept cards */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 24px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+
+  .concept-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .cc-icon { font-size: 24px; margin-bottom: 12px; }
+  .cc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; color: #f1f5f9; }
+  .cc-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Accordion */
+  .accordion { margin-bottom: 32px; }
+
+  .acc-item {
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+    overflow: hidden;
+  }
+
+  .acc-header {
+    padding: 16px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    font-weight: 600;
+    font-size: 15px;
+    transition: background 0.2s;
+  }
+
+  .acc-header:hover { background: rgba(124,58,237,0.1); }
+
+  .acc-arrow { transition: transform 0.3s; color: var(--accent); font-size: 18px; }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); }
+
+  .acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    background: var(--surface);
+  }
+
+  .acc-item.open .acc-body { max-height: 1000px; }
+
+  .acc-content {
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #94a3b8;
+  }
+
+  .acc-content strong { color: var(--accent2); }
+
+  .formula {
+    display: inline-block;
+    background: rgba(124,58,237,0.15);
+    border: 1px solid rgba(124,58,237,0.3);
+    padding: 8px 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: #c4b5fd;
+    margin: 10px 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--accent2);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    color: #94a3b8;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="tag">CS 270 — Intro to Machine Learning</div>
+    <h1>ML Principles<br>Study Guide</h1>
+    <p class="subtitle">// bias-variance · overfitting · learning types</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-answered">0</div>
+      <div class="stat-label">Answered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-correct">0</div>
+      <div class="stat-label">Correct</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-score">—</div>
+      <div class="stat-label">Accuracy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-streak">0</div>
+      <div class="stat-label">Streak 🔥</div>
+    </div>
+  </div>
+
+  <!-- Mode buttons -->
+  <div class="mode-bar">
+    <span class="mode-label">Mode:</span>
+    <button class="mode-btn active" onclick="setMode('review')">📖 Review</button>
+    <button class="mode-btn" onclick="setMode('quiz')">🎯 Quiz</button>
+    <button class="mode-btn" onclick="setMode('flashcard')">🃏 Flashcards</button>
+  </div>
+
+  <!-- ===================== REVIEW MODE ===================== -->
+  <div id="review-mode">
+    <div class="accordion" id="accordion"></div>
+  </div>
+
+  <!-- ===================== QUIZ MODE ===================== -->
+  <div id="quiz-mode" class="hidden">
+    <div class="topics" id="topic-filter">
+      <button class="topic-btn active" onclick="filterTopic('all', this)">All Topics</button>
+      <button class="topic-btn" onclick="filterTopic('bias-variance', this)">Bias-Variance</button>
+      <button class="topic-btn" onclick="filterTopic('overfitting', this)">Over/Underfitting</button>
+      <button class="topic-btn" onclick="filterTopic('types', this)">ML Types</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+
+    <div id="question-area"></div>
+    <div id="result-area" class="result-card">
+      <div class="score-big" id="final-score">0%</div>
+      <div class="score-msg" id="final-msg"></div>
+      <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- ===================== FLASHCARD MODE ===================== -->
+  <div id="flashcard-mode" class="hidden">
+    <div class="topics">
+      <button class="topic-btn active" onclick="filterFlash('all', this)">All</button>
+      <button class="topic-btn" onclick="filterFlash('bias-variance', this)">Bias-Variance</button>
+      <button class="topic-btn" onclick="filterFlash('overfitting', this)">Over/Underfitting</button>
+      <button class="topic-btn" onclick="filterFlash('types', this)">ML Types</button>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar" id="flash-progress" style="width:0%"></div>
+    </div>
+
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="card-side" id="card-side">▲ TERM</div>
+      <div class="card-content" id="card-content"></div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="prevCard()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+    </div>
+    <p style="font-size:12px;font-family:'Space Mono',monospace;color:var(--muted);margin-top:12px;" id="flash-counter"></p>
+  </div>
+
+</div>
+
+<script>
+// =========================================================
+//  DATA
+// =========================================================
+const reviewData = [
+  {
+    title: "Bias-Variance Trade-off",
+    topic: "bias-variance",
+    content: `
+      <p>The <strong>bias-variance trade-off</strong> is one of the most fundamental concepts in ML. It describes the relationship between a model's ability to generalize and its flexibility.</p>
+      <br>
+      <p><strong>Bias</strong> = error from wrong assumptions in the learning algorithm. High bias → model is too simple, misses patterns.</p>
+      <p><strong>Variance</strong> = error from sensitivity to small fluctuations in the training data. High variance → model captures noise, doesn't generalize.</p>
+      <br>
+      <div class="formula">Total Error = Bias² + Variance + Irreducible Noise</div>
+      <br>
+      <table>
+        <tr><th>Property</th><th>High Bias</th><th>High Variance</th></tr>
+        <tr><td>Training Error</td><td>High</td><td>Low</td></tr>
+        <tr><td>Test Error</td><td>High</td><td>High (gap)</td></tr>
+        <tr><td>Model Complexity</td><td>Low</td><td>High</td></tr>
+        <tr><td>Example</td><td>Linear model on non-linear data</td><td>Deep decision tree on small dataset</td></tr>
+      </table>
+      <br>
+      <p><strong>Key insight:</strong> As model complexity increases, bias decreases but variance increases. The "sweet spot" minimizes total error.</p>
+    `
+  },
+  {
+    title: "Underfitting vs Overfitting",
+    topic: "overfitting",
+    content: `
+      <p><strong>Underfitting</strong> occurs when a model is too simple to capture underlying patterns — high bias problem.</p>
+      <p><strong>Overfitting</strong> occurs when a model memorizes training data including noise — high variance problem.</p>
+      <br>
+      <table>
+        <tr><th></th><th>Underfitting</th><th>Good Fit</th><th>Overfitting</th></tr>
+        <tr><td>Train Error</td><td>High</td><td>Low</td><td>Very Low</td></tr>
+        <tr><td>Test Error</td><td>High</td><td>Low</td><td>High</td></tr>
+        <tr><td>Train-Test Gap</td><td>Small</td><td>Small</td><td>Large</td></tr>
+      </table>
+      <br>
+      <p><strong>Fixes for Overfitting:</strong> Regularization (L1/L2), dropout, more training data, cross-validation, early stopping, simpler model.</p>
+      <p><strong>Fixes for Underfitting:</strong> More complex model, more features, train longer, reduce regularization.</p>
+      <br>
+      <p><strong>Watch out for:</strong> A model with low training error doesn't mean it's a good model — always evaluate on held-out test data!</p>
+    `
+  },
+  {
+    title: "Types of Machine Learning",
+    topic: "types",
+    content: `
+      <p>ML is broadly divided into three paradigms based on the nature of available training data:</p>
+      <br>
+      <table>
+        <tr><th>Type</th><th>Labels?</th><th>Goal</th><th>Examples</th></tr>
+        <tr><td><strong>Supervised</strong></td><td>Yes</td><td>Learn mapping X → Y</td><td>Classification, Regression</td></tr>
+        <tr><td><strong>Unsupervised</strong></td><td>No</td><td>Discover structure in X</td><td>Clustering, PCA, Autoencoders</td></tr>
+        <tr><td><strong>Reinforcement</strong></td><td>Reward signal</td><td>Learn optimal policy via interaction</td><td>Game playing, Robotics</td></tr>
+      </table>
+      <br>
+      <p><strong>Semi-supervised:</strong> Mix of labeled + unlabeled data. Used when labeling is expensive.</p>
+      <p><strong>Self-supervised:</strong> Labels generated from the data itself (e.g., next-word prediction in LLMs).</p>
+      <br>
+      <p><strong>Supervised sub-types:</strong></p>
+      <p>• <strong>Classification</strong>: Discrete outputs (spam/not spam, digit 0–9)</p>
+      <p>• <strong>Regression</strong>: Continuous outputs (house price, temperature)</p>
+    `
+  }
+];
+
+const questions = [
+  // BIAS-VARIANCE
+  {
+    id: 1, topic: "bias-variance", difficulty: "med",
+    q: "A model has very low training error but high test error. Which best describes this situation?",
+    opts: ["High bias, low variance", "Low bias, high variance", "Low bias, low variance", "High bias, high variance"],
+    ans: 1,
+    exp: "Low training error means the model fits training data well (low bias), but poor test performance means it fails to generalize — this is high variance (overfitting). The gap between train and test error is the key diagnostic for high variance."
+  },
+  {
+    id: 2, topic: "bias-variance", difficulty: "hard",
+    q: "A linear regression model is applied to data with a known cubic relationship. If we evaluate only on training data, what would we expect?",
+    opts: ["Low error, indicating a well-performing model", "High error, indicating underfitting", "Low error, masking poor generalization", "High error due to overfitting"],
+    ans: 1,
+    exp: "A linear model on cubic data has high bias — it fundamentally cannot capture the true pattern. Even on training data, the rigid linear form will show notable error. This is underfitting: both train and test errors are high."
+  },
+  {
+    id: 3, topic: "bias-variance", difficulty: "easy",
+    q: "According to the bias-variance decomposition, the total generalization error equals:",
+    opts: [
+      "Bias + Variance",
+      "Bias² + Variance + Irreducible Noise",
+      "Bias × Variance",
+      "Bias² − Variance + Noise"
+    ],
+    ans: 1,
+    exp: "The formal decomposition is: E[(y − ŷ)²] = Bias² + Variance + σ². The irreducible noise (σ²) cannot be eliminated regardless of model choice."
+  },
+  {
+    id: 4, topic: "bias-variance", difficulty: "hard",
+    q: "You're comparing a k-NN classifier with k=1 vs k=100 on the same dataset. Which statement is most accurate?",
+    opts: [
+      "k=1 has higher bias, k=100 has higher variance",
+      "k=1 has lower bias but higher variance than k=100",
+      "k=100 has lower bias and lower variance than k=1",
+      "Bias and variance are unaffected by the value of k"
+    ],
+    ans: 1,
+    exp: "k=1 (very flexible) memorizes each training point — extremely low bias but very high variance. k=100 averages over many neighbors — smoother decision boundary, higher bias but lower variance. This is a classic bias-variance trade-off example."
+  },
+  {
+    id: 5, topic: "bias-variance", difficulty: "hard",
+    q: "Adding more features to a model without regularization tends to:",
+    opts: [
+      "Decrease both bias and variance",
+      "Increase bias and decrease variance",
+      "Decrease bias but increase variance",
+      "Have no effect on the bias-variance trade-off"
+    ],
+    ans: 2,
+    exp: "More features increase model complexity: bias decreases (more expressive model) but variance increases (more parameters to overfit). Without regularization, the model may memorize noise in the training set."
+  },
+
+  // OVERFITTING
+  {
+    id: 6, topic: "overfitting", difficulty: "easy",
+    q: "Which of the following is NOT a common technique to reduce overfitting?",
+    opts: ["L2 Regularization", "Dropout", "Adding more training data", "Increasing model complexity"],
+    ans: 3,
+    exp: "Increasing model complexity makes overfitting worse by giving the model more capacity to memorize noise. The other three options all help combat overfitting by constraining the model or providing more signal."
+  },
+  {
+    id: 7, topic: "overfitting", difficulty: "med",
+    q: "A decision tree trained to 100% training accuracy but performs near-random on test data. The BEST first step is:",
+    opts: [
+      "Collect more features",
+      "Apply pruning or limit tree depth",
+      "Train for more iterations",
+      "Switch to logistic regression"
+    ],
+    ans: 1,
+    exp: "100% train accuracy with poor test performance is textbook overfitting. A full decision tree memorizes all training points. Pruning (reducing depth or merging leaves) directly reduces model complexity, addressing the root cause."
+  },
+  {
+    id: 8, topic: "overfitting", difficulty: "hard",
+    q: "L1 regularization (Lasso) is often preferred over L2 (Ridge) when:",
+    opts: [
+      "You want to prevent all weights from becoming zero",
+      "You suspect many features are irrelevant and want sparse solutions",
+      "You want to minimize the total magnitude of weights equally",
+      "The dataset has very few samples"
+    ],
+    ans: 1,
+    exp: "L1 regularization has the property of producing sparse weight vectors — it drives irrelevant feature weights to exactly zero, performing implicit feature selection. L2 shrinks all weights but rarely zeros them out."
+  },
+  {
+    id: 9, topic: "overfitting", difficulty: "med",
+    q: "K-fold cross-validation is primarily used to:",
+    opts: [
+      "Speed up model training",
+      "Get a less biased estimate of model generalization performance",
+      "Automatically select the best model architecture",
+      "Reduce training set size requirements"
+    ],
+    ans: 1,
+    exp: "K-fold CV trains and evaluates the model k times on different data splits, giving a more reliable estimate of how the model will perform on unseen data. It reduces the variance of the evaluation metric compared to a single train/test split."
+  },
+  {
+    id: 10, topic: "overfitting", difficulty: "hard",
+    q: "Suppose training error is 2% and test error is 3%. A colleague says the model is overfitting. You say:",
+    opts: [
+      "Agreed — any test error above training error is overfitting",
+      "Not necessarily — the gap is small and could reflect normal variance",
+      "Definitely underfitting — test error should equal training error",
+      "The model is overfitting only if training error is exactly 0%"
+    ],
+    ans: 1,
+    exp: "A tiny train/test gap (2% vs 3%) is normal and expected. Overfitting is characterized by a *large* gap — the model memorizes training data. A 1% gap likely reflects benign variance, not severe overfitting."
+  },
+
+  // ML TYPES
+  {
+    id: 11, topic: "types", difficulty: "easy",
+    q: "Which of the following is a supervised learning task?",
+    opts: ["Grouping customers by purchasing behavior", "Predicting house prices from square footage and location", "Reducing 100 features to 2 for visualization", "An agent learning to play chess through self-play"],
+    ans: 1,
+    exp: "Predicting house prices is supervised regression — we have labeled examples (house features + known sale prices) to learn from. Customer grouping is unsupervised clustering, dimensionality reduction is unsupervised, and self-play chess is reinforcement learning."
+  },
+  {
+    id: 12, topic: "types", difficulty: "med",
+    q: "In reinforcement learning, an agent learns by:",
+    opts: [
+      "Minimizing the difference between predicted and actual labeled outputs",
+      "Receiving a reward signal based on actions taken in an environment",
+      "Finding structure in unlabeled data through clustering",
+      "Using a pre-trained model and fine-tuning on a new dataset"
+    ],
+    ans: 1,
+    exp: "Reinforcement learning is characterized by an agent-environment loop: the agent takes actions, receives rewards (or penalties), and learns a policy that maximizes cumulative reward. There are no labeled examples — only a reward signal."
+  },
+  {
+    id: 13, topic: "types", difficulty: "med",
+    q: "Principal Component Analysis (PCA) is best categorized as:",
+    opts: ["Supervised classification", "Unsupervised dimensionality reduction", "Reinforcement learning", "Semi-supervised clustering"],
+    ans: 1,
+    exp: "PCA is unsupervised — it finds directions of maximum variance in data without using labels. It's used to reduce dimensionality, remove noise, and visualize high-dimensional data."
+  },
+  {
+    id: 14, topic: "types", difficulty: "hard",
+    q: "Self-supervised learning (e.g., BERT's masked language modeling) differs from unsupervised learning in that:",
+    opts: [
+      "Self-supervised requires human-labeled data",
+      "Self-supervised generates pseudo-labels automatically from the data structure itself",
+      "Unsupervised methods are faster to train",
+      "They are functionally identical — the terms are interchangeable"
+    ],
+    ans: 1,
+    exp: "In self-supervised learning, labels are automatically derived from the input data (e.g., mask a word and predict it). This creates a supervised-style training signal without human annotation, distinguishing it from purely unsupervised methods which find structure without any prediction target."
+  },
+  {
+    id: 15, topic: "types", difficulty: "hard",
+    q: "A hospital has 1000 labeled patient records and 50,000 unlabeled records. Which learning paradigm best fits this scenario?",
+    opts: ["Pure supervised learning", "Reinforcement learning", "Semi-supervised learning", "Unsupervised learning only"],
+    ans: 2,
+    exp: "Semi-supervised learning is designed exactly for this: leverage a small labeled set with a large unlabeled set. The model can learn general data structure from all 51,000 records while using the 1,000 labels for supervised fine-tuning — achieving better performance than supervised-only with 1,000 examples."
+  }
+];
+
+const flashcards = [
+  { topic: "bias-variance", term: "Bias", def: "Systematic error from incorrect assumptions in the model. A high-bias model underfits by being too simplistic, missing important patterns in both training and test data." },
+  { topic: "bias-variance", term: "Variance", def: "Error from excessive sensitivity to training data fluctuations. High-variance models overfit: they memorize noise and fail to generalize to unseen data." },
+  { topic: "bias-variance", term: "Bias-Variance Trade-off", def: "As model complexity increases, bias decreases and variance increases. The goal is to find the sweet spot that minimizes total error = Bias² + Variance + Noise." },
+  { topic: "bias-variance", term: "Irreducible Noise", def: "The component of error that cannot be eliminated regardless of the model. It comes from inherent randomness or missing variables in the data-generating process." },
+  { topic: "overfitting", term: "Overfitting", def: "When a model learns training data too well, including noise. Symptom: very low training error, high test error (large train-test gap). Causes: too complex a model, too little data." },
+  { topic: "overfitting", term: "Underfitting", def: "When a model is too simple to capture true patterns. Symptom: high error on both training AND test sets. Fix: increase model complexity or add features." },
+  { topic: "overfitting", term: "L1 Regularization (Lasso)", def: "Adds |w| penalty to the loss function. Produces sparse weight vectors — drives irrelevant feature weights to exactly 0. Good for feature selection." },
+  { topic: "overfitting", term: "L2 Regularization (Ridge)", def: "Adds w² penalty to the loss function. Shrinks all weights toward 0 but rarely zeros them. Generally smoother and more stable than L1." },
+  { topic: "overfitting", term: "K-Fold Cross-Validation", def: "Split data into k equal folds. Train on k-1 folds, test on the remaining fold, repeat k times. Average the k test scores for a robust generalization estimate." },
+  { topic: "overfitting", term: "Early Stopping", def: "Stop training when validation error starts increasing, even if training error keeps decreasing. Prevents overfitting by finding the point of best generalization." },
+  { topic: "types", term: "Supervised Learning", def: "Learn a mapping from inputs X to outputs Y using labeled training pairs (xᵢ, yᵢ). Two main tasks: Classification (discrete Y) and Regression (continuous Y)." },
+  { topic: "types", term: "Unsupervised Learning", def: "Find structure in unlabeled data X. Key tasks: Clustering (group similar points), Dimensionality Reduction (PCA, t-SNE), Density Estimation." },
+  { topic: "types", term: "Reinforcement Learning", def: "Agent learns optimal policy by taking actions in an environment and receiving reward signals. No labeled data — only trial-and-error feedback. Examples: game AI, robotics." },
+  { topic: "types", term: "Semi-Supervised Learning", def: "Uses a small labeled dataset combined with a large unlabeled dataset. Useful when labeling is expensive. Leverages structure in unlabeled data to improve supervised performance." },
+  { topic: "types", term: "Self-Supervised Learning", def: "A type of unsupervised learning where pseudo-labels are automatically generated from the data. Example: predict masked words (BERT), predict next frame (video models)." },
+];
+
+// =========================================================
+//  STATE
+// =========================================================
+let mode = 'review';
+let currentQ = 0;
+let answered = 0;
+let correct = 0;
+let streak = 0;
+let filteredQs = [...questions];
+let flashIdx = 0;
+let flashFlipped = false;
+let filteredFlash = [...flashcards];
+let questionAnswered = false;
+
+// =========================================================
+//  INIT
+// =========================================================
+function init() {
+  buildAccordion();
+  renderQuestion();
+  renderFlashcard();
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['review','quiz','flashcard'][i] === m);
+  });
+  document.getElementById('review-mode').classList.toggle('hidden', m !== 'review');
+  document.getElementById('quiz-mode').classList.toggle('hidden', m !== 'quiz');
+  document.getElementById('flashcard-mode').classList.toggle('hidden', m !== 'flashcard');
+}
+
+// =========================================================
+//  ACCORDION (Review Mode)
+// =========================================================
+function buildAccordion() {
+  const acc = document.getElementById('accordion');
+  acc.innerHTML = reviewData.map((item, i) => `
+    <div class="acc-item" id="acc-${i}">
+      <div class="acc-header" onclick="toggleAcc(${i})">
+        <span>${item.title}</span>
+        <span class="acc-arrow">▾</span>
+      </div>
+      <div class="acc-body">
+        <div class="acc-content">${item.content}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAcc(i) {
+  const item = document.getElementById(`acc-${i}`);
+  item.classList.toggle('open');
+}
+
+// =========================================================
+//  QUIZ MODE
+// =========================================================
+function filterTopic(topic, btn) {
+  document.querySelectorAll('#topic-filter .topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredQs = topic === 'all' ? [...questions] : questions.filter(q => q.topic === topic);
+  currentQ = 0;
+  answered = 0;
+  correct = 0;
+  streak = 0;
+  questionAnswered = false;
+  updateStats();
+  document.getElementById('result-area').classList.remove('show');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (currentQ >= filteredQs.length) {
+    showResult();
+    return;
+  }
+
+  const q = filteredQs[currentQ];
+  const pct = (currentQ / filteredQs.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  questionAnswered = false;
+
+  const diffClass = { easy: 'diff-easy', med: 'diff-med', hard: 'diff-hard' }[q.difficulty];
+  const diffLabel = { easy: 'Easy', med: 'Medium', hard: 'Hard' }[q.difficulty];
+
+  document.getElementById('question-area').innerHTML = `
+    <div class="question-card">
+      <div class="q-meta">
+        <span class="q-topic">${q.topic} <span class="difficulty ${diffClass}">${diffLabel}</span></span>
+        <span class="q-num">${currentQ + 1} / ${filteredQs.length}</span>
+      </div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((opt, i) => `
+          <button class="option" id="opt-${i}" onclick="selectAnswer(${i}, ${q.ans}, ${q.id})">
+            <span class="option-letter">${String.fromCharCode(65+i)}.</span>
+            <span class="option-text">${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="explanation" id="explanation">
+        <div class="explanation-title">▶ Explanation</div>
+        <p>${q.exp}</p>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none">Next Question →</button>
+    </div>
+  `;
+}
+
+function selectAnswer(selected, correct_idx, qid) {
+  if (questionAnswered) return;
+  questionAnswered = true;
+  answered++;
+
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('locked'));
+
+  if (selected === correct_idx) {
+    opts[selected].classList.add('correct');
+    correct++;
+    streak++;
+  } else {
+    opts[selected].classList.add('wrong');
+    opts[correct_idx].classList.add('correct');
+    streak = 0;
+  }
+
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('next-btn').style.display = 'block';
+  updateStats();
+}
+
+function nextQuestion() {
+  currentQ++;
+  renderQuestion();
+}
+
+function restartQuiz() {
+  currentQ = 0;
+  answered = 0;
+  correct = 0;
+  streak = 0;
+  questionAnswered = false;
+  updateStats();
+  document.getElementById('result-area').classList.remove('show');
+  renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('question-area').innerHTML = '';
+  const pct = Math.round((correct / filteredQs.length) * 100);
+  const msgs = ['Keep studying! 📚', 'Getting there! 💪', 'Solid work! 🎯', 'Almost there! ⭐', 'Professor-ready! 🏆'];
+  const msgIdx = Math.min(4, Math.floor(pct / 20));
+  document.getElementById('final-score').textContent = pct + '%';
+  document.getElementById('final-msg').textContent = `${correct}/${filteredQs.length} correct — ${msgs[msgIdx]}`;
+  document.getElementById('result-area').classList.add('show');
+  document.getElementById('progress-bar').style.width = '100%';
+}
+
+function updateStats() {
+  document.getElementById('stat-answered').textContent = answered;
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-score').textContent = answered > 0 ? Math.round((correct/answered)*100) + '%' : '—';
+  document.getElementById('stat-streak').textContent = streak;
+}
+
+// =========================================================
+//  FLASHCARD MODE
+// =========================================================
+function filterFlash(topic, btn) {
+  document.querySelectorAll('#flashcard-mode .topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filteredFlash = topic === 'all' ? [...flashcards] : flashcards.filter(f => f.topic === topic);
+  flashIdx = 0;
+  flashFlipped = false;
+  renderFlashcard();
+}
+
+function renderFlashcard() {
+  if (filteredFlash.length === 0) return;
+  const card = filteredFlash[flashIdx];
+  flashFlipped = false;
+  document.getElementById('card-side').textContent = '▲ TERM';
+  document.getElementById('card-content').textContent = card.term;
+  document.getElementById('card-content').className = 'card-content';
+  document.getElementById('flash-counter').textContent = `Card ${flashIdx + 1} of ${filteredFlash.length}`;
+  document.getElementById('flash-progress').style.width = ((flashIdx + 1) / filteredFlash.length * 100) + '%';
+}
+
+function flipCard() {
+  const card = filteredFlash[flashIdx];
+  flashFlipped = !flashFlipped;
+  if (flashFlipped) {
+    document.getElementById('card-side').textContent = '▼ DEFINITION';
+    document.getElementById('card-content').textContent = card.def;
+    document.getElementById('card-content').className = 'card-content answer';
+  } else {
+    document.getElementById('card-side').textContent = '▲ TERM';
+    document.getElementById('card-content').textContent = card.term;
+    document.getElementById('card-content').className = 'card-content';
+  }
+}
+
+function nextCard() {
+  flashIdx = (flashIdx + 1) % filteredFlash.length;
+  renderFlashcard();
+}
+
+function prevCard() {
+  flashIdx = (flashIdx - 1 + filteredFlash.length) % filteredFlash.length;
+  renderFlashcard();
+}
+
+// =========================================================
+//  START
+// =========================================================
+init();
+</script>
+</body>
+</html>

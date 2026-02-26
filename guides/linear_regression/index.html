@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --accent: #f0c060;
+    --accent2: #60c0f0;
+    --accent3: #a060f0;
+    --green: #50e0a0;
+    --red: #f06060;
+    --text: #e8ecf4;
+    --muted: #7a8499;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Lora', Georgia, serif; min-height: 100vh; line-height: 1.75; }
+
+  header {
+    padding: 44px 40px 28px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #0d0f14 0%, #141828 100%);
+    position: relative; overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute; top: -80px; right: -80px;
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(240,192,96,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  h1 { font-family: 'Syne', sans-serif; font-size: clamp(26px, 5vw, 48px); font-weight: 800; line-height: 1.1; }
+  h1 span { color: var(--accent); }
+  .header-sub { margin-top: 8px; color: var(--muted); font-size: 14px; font-style: italic; }
+
+  nav { display: flex; gap: 4px; padding: 14px 40px; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .nav-btn { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; padding: 8px 18px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+  .nav-btn:hover { color: var(--text); border-color: var(--accent); }
+  .nav-btn.active { background: var(--accent); color: #0d0f14; border-color: var(--accent); }
+
+  main { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 20px; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--accent2); margin: 20px 0 8px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 26px 30px; margin-bottom: 22px; }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .card-title .icon { width: 26px; height: 26px; background: rgba(240,192,96,0.12); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+
+  .formula { background: var(--surface2); border-left: 3px solid var(--accent2); border-radius: 0 6px 6px 0; padding: 13px 18px; margin: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent2); line-height: 1.9; }
+  .formula .dim { color: var(--muted); font-size: 11px; }
+  .big-formula { text-align: center; padding: 18px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); margin: 14px 0; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--text); }
+
+  .callout-warn { padding: 13px 18px; border-radius: 6px; margin: 12px 0; background: rgba(240,192,96,0.07); border-left: 3px solid var(--accent); color: #e0c870; font-size: 14px; }
+  .callout-info { padding: 13px 18px; border-radius: 6px; margin: 12px 0; background: rgba(96,192,240,0.07); border-left: 3px solid var(--accent2); color: #80c8e8; font-size: 14px; }
+
+  .steps { counter-reset: step; }
+  .step { counter-increment: step; display: flex; gap: 14px; margin-bottom: 14px; align-items: flex-start; }
+  .step::before { content: counter(step); min-width: 26px; height: 26px; background: var(--accent3); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; flex-shrink: 0; margin-top: 3px; }
+
+  /* Problems */
+  .problem { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 22px 26px; margin-bottom: 20px; }
+  .problem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .problem-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent3); }
+  .diff { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+  .diff-easy { background: rgba(80,224,160,0.1); color: var(--green); border: 1px solid rgba(80,224,160,0.2); }
+  .diff-med { background: rgba(240,192,96,0.1); color: var(--accent); border: 1px solid rgba(240,192,96,0.2); }
+  .diff-hard { background: rgba(240,96,96,0.1); color: var(--red); border: 1px solid rgba(240,96,96,0.2); }
+
+  p { margin-bottom: 10px; }
+
+  .data-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .data-table th { background: var(--surface); color: var(--accent); padding: 8px 14px; text-align: center; border: 1px solid var(--border); }
+  .data-table td { padding: 7px 14px; text-align: center; border: 1px solid var(--border); }
+  .data-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .answer-area { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+  .answer-row { display: flex; align-items: center; gap: 12px; }
+  .answer-lbl { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); min-width: 110px; }
+  input[type="number"] { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 8px 13px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 14px; width: 130px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent2); }
+  input.correct { border-color: var(--green); background: rgba(80,224,160,0.05); }
+  input.wrong { border-color: var(--red); background: rgba(240,96,96,0.05); }
+
+  .btn { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; padding: 9px 22px; border: none; border-radius: 5px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.4px; }
+  .btn-check { background: var(--accent3); color: #fff; }
+  .btn-check:hover { background: #b070f5; }
+  .btn-reset { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-reset:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn-reveal { background: transparent; border: 1px solid var(--border); color: var(--muted); margin-top: 10px; }
+  .btn-reveal:hover { border-color: var(--accent); color: var(--accent); }
+
+  .feedback { margin-top: 12px; padding: 13px 16px; border-radius: 6px; font-size: 14px; display: none; }
+  .fb-correct { background: rgba(80,224,160,0.08); border: 1px solid rgba(80,224,160,0.25); color: var(--green); }
+  .fb-wrong { background: rgba(240,96,96,0.08); border: 1px solid rgba(240,96,96,0.25); color: #f09090; }
+
+  .hint-toggle { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; margin-top: 8px; display: inline-block; }
+  .hint-toggle:hover { color: var(--accent2); }
+  .hint-box { display: none; margin-top: 10px; padding: 13px 16px; background: rgba(160,96,240,0.07); border: 1px solid rgba(160,96,240,0.2); border-radius: 6px; font-size: 13px; color: #c090f0; }
+  .hint-box .ws { font-family: 'JetBrains Mono', monospace; background: var(--surface); padding: 7px 12px; border-radius: 4px; margin: 5px 0; display: block; font-size: 12px; color: var(--text); }
+  .hint-box .hl { color: var(--accent); }
+
+  /* MCQ */
+  .mcq-opts { list-style: none; margin-top: 12px; }
+  .mcq-opts li { margin-bottom: 7px; }
+  .mcq-opt { display: flex; align-items: center; gap: 12px; padding: 10px 15px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+  .mcq-opt:hover { border-color: var(--accent2); background: rgba(96,192,240,0.04); }
+  .mcq-opt.sel { border-color: var(--accent2); background: rgba(96,192,240,0.07); }
+  .mcq-opt.correct-opt { border-color: var(--green); background: rgba(80,224,160,0.08); color: var(--green); pointer-events: none; }
+  .mcq-opt.wrong-opt { border-color: var(--red); background: rgba(240,96,96,0.08); color: #f09090; pointer-events: none; }
+  .mcq-opt.locked { pointer-events: none; }
+  .opt-letter { font-family: 'Syne', sans-serif; font-weight: 700; width: 24px; height: 24px; background: var(--surface); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+
+  .score-bar { display: flex; align-items: center; gap: 14px; padding: 13px 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 26px; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+  .score-num { font-size: 22px; font-weight: 600; color: var(--accent); }
+  .score-lbl { color: var(--muted); }
+  .prog-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; flex: 1; }
+  .prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+
+  .tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; margin-right: 5px; }
+  .tag-blue { background: rgba(96,192,240,0.1); color: var(--accent2); border: 1px solid rgba(96,192,240,0.18); }
+  .tag-gold { background: rgba(240,192,96,0.1); color: var(--accent); border: 1px solid rgba(240,192,96,0.18); }
+
+  .worked-step { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--surface); padding: 8px 13px; border-radius: 4px; margin: 5px 0; color: var(--text); }
+  .worked-step .hl { color: var(--accent); }
+  .solution-box { display: none; margin-top: 12px; padding: 16px 18px; background: rgba(80,224,160,0.05); border: 1px solid rgba(80,224,160,0.2); border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-tag">CS 270 · Machine Learning</div>
+  <h1>Exam Prep: <span>Linear Regression</span><br>+ Delta / Perceptron</h1>
+  <p class="header-sub">Focused on what your professor actually tests</p>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="show('concepts')">📖 Concepts</button>
+  <button class="nav-btn" onclick="show('practice-lr')">📉 Linear Regression</button>
+  <button class="nav-btn" onclick="show('practice-delta')">⚡ Delta Rule</button>
+  <button class="nav-btn" onclick="show('practice-perc')">🔵 Perceptron</button>
+  <button class="nav-btn" onclick="show('mcq')">🎯 MCQ Drill</button>
+</nav>
+
+<main>
+
+<!-- ============ CONCEPTS ============ -->
+<section class="section active" id="concepts">
+  <h2>Core Concepts</h2>
+
+  <div class="card">
+    <div class="card-title"><div class="icon">📈</div> Linear Regression — The Big Picture</div>
+    <p>We're fitting a line through data that <strong>minimizes the total squared error</strong> between our predictions and the actual values.</p>
+    <div class="big-formula">ŷ = β₀ + β₁x</div>
+    <p style="color:var(--muted); font-size:14px;">β₀ = intercept (where the line hits y-axis) &nbsp;·&nbsp; β₁ = slope (how much y changes per 1 unit of x)</p>
+    <div class="callout-info">💡 The line always passes through the point (x̄, ȳ) — the mean of x and mean of y.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="icon">📊</div> SSE, SST, SSR — What They Mean</div>
+    <p>These three numbers describe how much variance is in your data and how much your model explains.</p>
+    <div class="formula">
+      SST = Σ(yᵢ − ȳ)²  &nbsp;&nbsp;<span class="dim">← Total variance in y. How spread out is your data?</span><br>
+      SSE = Σ(yᵢ − ŷᵢ)² &nbsp;<span class="dim">← What's left unexplained. Sum of squared residuals.</span><br>
+      SSR = SST − SSE    &nbsp;&nbsp;<span class="dim">← What your model explains. SSR = SST − SSE.</span>
+    </div>
+    <p>A <strong>residual</strong> is just: actual y minus what you predicted. eᵢ = yᵢ − ŷᵢ</p>
+    <div class="callout-warn">⚠️ SSE can never be negative. If you get a negative number, you subtracted in the wrong order.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="icon">R²</div> R² — How Good Is Your Model?</div>
+    <div class="big-formula">R² = 1 − (SSE / SST) = SSR / SST</div>
+    <p>R² tells you the <strong>fraction of variance in y that your model explains</strong>.</p>
+    <div class="steps">
+      <div class="step"><div>R² = 1.0 means perfect fit — your line hits every point exactly (SSE = 0)</div></div>
+      <div class="step"><div>R² = 0.0 means your model explains nothing — no better than just guessing ȳ every time</div></div>
+      <div class="step"><div>R² = 0.85 means 85% of the variation in y is explained by x</div></div>
+    </div>
+    <div class="callout-warn">⚠️ Adding more predictors always increases R², even if they're useless. That's why adjusted R² exists — but don't worry about that formula for this class.</div>
+  </div>
+
+  <hr>
+
+  <div class="card">
+    <div class="card-title"><div class="icon">⚡</div> Delta Rule</div>
+    <p>A learning rule that updates weights to reduce error. Works with <strong>raw (continuous) outputs</strong>.</p>
+    <div class="big-formula">Δwⱼ = η · (y − ŷ) · xⱼ</div>
+    <div class="steps">
+      <div class="step"><div>Compute ŷ = sum of (weight × input) for all inputs. Bias input is always 1.</div></div>
+      <div class="step"><div>Compute error = actual y − ŷ</div></div>
+      <div class="step"><div>Update each weight: wⱼ ← wⱼ + η · error · xⱼ</div></div>
+      <div class="step"><div>Move to the next example using the <em>updated</em> weights immediately</div></div>
+    </div>
+    <div class="callout-info">💡 If an input xⱼ = 0, that weight gets no update — it didn't contribute to the error.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="icon">🔵</div> Perceptron Rule</div>
+    <p>Almost identical to the delta rule, but ŷ is forced to <strong>0 or 1</strong> using a threshold.</p>
+    <div class="big-formula">ŷ = 1 if (weighted sum &gt; 0), else 0</div>
+    <div class="steps">
+      <div class="step"><div>Compute the weighted sum (same as delta rule)</div></div>
+      <div class="step"><div>Apply threshold: if sum &gt; 0 then ŷ = 1, else ŷ = 0</div></div>
+      <div class="step"><div>Error = y − ŷ &nbsp;→ can only be <strong>−1, 0, or 1</strong></div></div>
+      <div class="step"><div>Update weights with same formula: wⱼ ← wⱼ + η · error · xⱼ</div></div>
+    </div>
+    <div class="callout-warn">⚠️ Key difference from delta rule: the error is always a clean integer. The delta rule error is a raw decimal.</div>
+  </div>
+</section>
+
+<!-- ============ LINEAR REGRESSION PRACTICE ============ -->
+<section class="section" id="practice-lr">
+  <h2>Linear Regression Practice</h2>
+  <p style="color:var(--muted); margin-bottom:24px; font-style:italic;">Work these by hand, then check your answers.</p>
+
+  <!-- LR Problem 1 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 1 · Residuals & SSE</span>
+      <span class="diff diff-easy">Easy</span>
+    </div>
+    <p>Given the regression line <strong>ŷ = 1 + 2x</strong>, compute the residuals and SSE for this dataset:</p>
+    <table class="data-table">
+      <tr><th>x</th><th>y</th></tr>
+      <tr><td>1</td><td>4</td></tr>
+      <tr><td>2</td><td>5</td></tr>
+      <tr><td>3</td><td>8</td></tr>
+    </table>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">SSE =</span><input type="number" id="lr1_sse" step="0.01" placeholder="Σeᵢ²"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_lr1')">💡 Show hint</span>
+    <div class="hint-box" id="h_lr1">
+      First compute each ŷ, then each residual eᵢ = y − ŷ, then square them.<br>
+      <span class="ws">ŷ(1) = 1 + 2(1) = 3 &nbsp;→&nbsp; e = 4−3 = 1 &nbsp;→&nbsp; e² = 1</span>
+      <span class="ws">ŷ(2) = 1 + 2(2) = 5 &nbsp;→&nbsp; e = 5−5 = 0 &nbsp;→&nbsp; e² = 0</span>
+      <span class="ws">ŷ(3) = 1 + 2(3) = 7 &nbsp;→&nbsp; e = 8−7 = 1 &nbsp;→&nbsp; e² = 1</span>
+      SSE = 1 + 0 + 1 = <span class="hl">?</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkLR1()">Check</button>
+      <button class="btn btn-reset" onclick="rstLR1()">Reset</button>
+    </div>
+    <div class="feedback" id="lr1-fb"></div>
+  </div>
+
+  <!-- LR Problem 2 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 2 · SST and R²</span>
+      <span class="diff diff-med">Medium</span>
+    </div>
+    <p>Using the same dataset above (ŷ = 1 + 2x). The mean of y is <strong>ȳ = 17/3 ≈ 5.667</strong>.</p>
+    <p>Compute SST, then compute R².</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">SST =</span><input type="number" id="lr2_sst" step="0.01" placeholder="Σ(yᵢ−ȳ)²"></div>
+      <div class="answer-row"><span class="answer-lbl">R² =</span><input type="number" id="lr2_r2" step="0.001" placeholder="0 to 1"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_lr2')">💡 Show hint</span>
+    <div class="hint-box" id="h_lr2">
+      SST = Σ(yᵢ − ȳ)². ȳ = 17/3 ≈ 5.667<br>
+      <span class="ws">(4 − 5.667)² = (−1.667)² ≈ 2.779</span>
+      <span class="ws">(5 − 5.667)² = (−0.667)² ≈ 0.444</span>
+      <span class="ws">(8 − 5.667)² = (2.333)²  ≈ 5.444</span>
+      SST ≈ 8.667<br><br>
+      R² = 1 − SSE/SST = 1 − 2/8.667 ≈ <span class="hl">?</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkLR2()">Check</button>
+      <button class="btn btn-reset" onclick="rstLR2()">Reset</button>
+    </div>
+    <div class="feedback" id="lr2-fb"></div>
+  </div>
+
+  <!-- LR Problem 3 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 3 · Full Calculation</span>
+      <span class="diff diff-hard">Hard</span>
+    </div>
+    <p>For this dataset, you are given <strong>ŷ = 0.5 + 1.6x</strong> (ȳ = 4.5):</p>
+    <table class="data-table">
+      <tr><th>x</th><th>y</th></tr>
+      <tr><td>1</td><td>2</td></tr>
+      <tr><td>2</td><td>4</td></tr>
+      <tr><td>3</td><td>5</td></tr>
+      <tr><td>4</td><td>7</td></tr>
+    </table>
+    <p>Compute SSE, SST, and R².</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">SSE =</span><input type="number" id="lr3_sse" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">SST =</span><input type="number" id="lr3_sst" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">R² =</span><input type="number" id="lr3_r2" step="0.001"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_lr3')">💡 Show hint</span>
+    <div class="hint-box" id="h_lr3">
+      For SSE: compute each ŷ, find residual, square it.<br>
+      <span class="ws">ŷ values: 2.1, 3.7, 5.3, 6.9</span>
+      <span class="ws">Residuals: −0.1, 0.3, −0.3, 0.1</span>
+      <span class="ws">Squared: 0.01, 0.09, 0.09, 0.01 → SSE = 0.20</span>
+      For SST: use ȳ = 4.5<br>
+      <span class="ws">(2−4.5)²+(4−4.5)²+(5−4.5)²+(7−4.5)² = 6.25+0.25+0.25+6.25 = 13</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkLR3()">Check</button>
+      <button class="btn btn-reset" onclick="rstLR3()">Reset</button>
+    </div>
+    <div class="feedback" id="lr3-fb"></div>
+  </div>
+</section>
+
+<!-- ============ DELTA RULE PRACTICE ============ -->
+<section class="section" id="practice-delta">
+  <h2>Delta Rule Practice</h2>
+  <p style="color:var(--muted); margin-bottom:24px; font-style:italic;">All problems start with weights = 0, η = 0.2, bias included. Update weights after each example.</p>
+
+  <!-- Delta P1 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 1 · One Example</span>
+      <span class="diff diff-easy">Easy</span>
+    </div>
+    <p>Training set (one example only). η = 0.2, all weights start at 0.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>1</td><td>0</td><td>1</td></tr>
+    </table>
+    <p>What are w₀, w₁, w₂ after processing this example?</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">w₀ =</span><input type="number" id="d1_w0" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₁ =</span><input type="number" id="d1_w1" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₂ =</span><input type="number" id="d1_w2" step="0.01"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_d1')">💡 Show hint</span>
+    <div class="hint-box" id="h_d1">
+      All weights = 0, so ŷ = 0. Error = 1 − 0 = 1.<br>
+      <span class="ws">Δw₀ = 0.2 · 1 · 1 (bias input always 1)</span>
+      <span class="ws">Δw₁ = 0.2 · 1 · x₁ = 0.2 · 1 · 1</span>
+      <span class="ws">Δw₂ = 0.2 · 1 · x₂ = 0.2 · 1 · 0 = <span class="hl">0</span> (x₂ was 0!)</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkD1()">Check</button>
+      <button class="btn btn-reset" onclick="rstD1()">Reset</button>
+    </div>
+    <div class="feedback" id="d1-fb"></div>
+  </div>
+
+  <!-- Delta P2 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 2 · Two Examples</span>
+      <span class="diff diff-med">Medium</span>
+    </div>
+    <p>η = 0.2, all weights start at 0. Process both examples in order.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td></tr>
+    </table>
+    <p>What are the final weights after one full pass?</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">w₀ =</span><input type="number" id="d2_w0" step="0.001"></div>
+      <div class="answer-row"><span class="answer-lbl">w₁ =</span><input type="number" id="d2_w1" step="0.001"></div>
+      <div class="answer-row"><span class="answer-lbl">w₂ =</span><input type="number" id="d2_w2" step="0.001"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_d2')">💡 Show hint</span>
+    <div class="hint-box" id="h_d2">
+      <strong>Example 1:</strong> ŷ = 0, error = 1. Δw all = 0.2 → weights: 0.2, 0.2, 0.2<br><br>
+      <strong>Example 2:</strong> ŷ = 0.2(1) + 0.2(1) + 0.2(0) = 0.4. Error = 0 − 0.4 = −0.4<br>
+      <span class="ws">Δw₀ = 0.2 · (−0.4) · 1 = −0.08</span>
+      <span class="ws">Δw₁ = 0.2 · (−0.4) · 1 = −0.08</span>
+      <span class="ws">Δw₂ = 0.2 · (−0.4) · 0 = 0</span>
+      New weights = old + Δw = <span class="hl">?</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkD2()">Check</button>
+      <button class="btn btn-reset" onclick="rstD2()">Reset</button>
+    </div>
+    <div class="feedback" id="d2-fb"></div>
+  </div>
+
+  <!-- Delta P3 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 3 · Generalize Novel Input</span>
+      <span class="diff diff-med">Medium</span>
+    </div>
+    <p>After training, your weights are <strong>w₀ = 0.12, w₁ = 0.12, w₂ = 0.2</strong>.</p>
+    <p>What does the model predict for the novel input <strong>(x₁=1, x₂=0.5)</strong>?</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">ŷ =</span><input type="number" id="d3_pred" step="0.001"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_d3')">💡 Show hint</span>
+    <div class="hint-box" id="h_d3">
+      ŷ = w₀·(1) + w₁·x₁ + w₂·x₂<br>
+      <span class="ws">= 0.12(1) + 0.12(1) + 0.2(0.5)</span>
+      <span class="ws">= 0.12 + 0.12 + <span class="hl">?</span></span>
+      No threshold — just the raw sum. This is the delta rule.
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkD3()">Check</button>
+      <button class="btn btn-reset" onclick="rstD3()">Reset</button>
+    </div>
+    <div class="feedback" id="d3-fb"></div>
+  </div>
+
+  <!-- Delta P4 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 4 · Three Examples</span>
+      <span class="diff diff-hard">Hard</span>
+    </div>
+    <p>η = 0.2, all weights start at 0. Process all three examples in order.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>0</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td></tr>
+    </table>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">w₀ =</span><input type="number" id="d4_w0" step="0.0001"></div>
+      <div class="answer-row"><span class="answer-lbl">w₁ =</span><input type="number" id="d4_w1" step="0.0001"></div>
+      <div class="answer-row"><span class="answer-lbl">w₂ =</span><input type="number" id="d4_w2" step="0.0001"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_d4')">💡 Show hint</span>
+    <div class="hint-box" id="h_d4">
+      <strong>Ex 1:</strong> ŷ=0, err=1. Δw₀=0.2, Δw₁=0, Δw₂=0.2 → <span class="ws">w: 0.2, 0, 0.2</span>
+      <strong>Ex 2:</strong> ŷ=0.2+0+0.2=0.4, err=0.6. Δw₀=0.12, Δw₁=0.12, Δw₂=0.12 → <span class="ws">w: 0.32, 0.12, 0.32</span>
+      <strong>Ex 3:</strong> ŷ=0.32+0.12+0=0.44, err=−0.44.<br>
+      <span class="ws">Δw₀=0.2·(−0.44)·1 = −0.088</span>
+      <span class="ws">Δw₁=0.2·(−0.44)·1 = −0.088</span>
+      <span class="ws">Δw₂=0.2·(−0.44)·0 = 0</span>
+      Final: 0.32−0.088, 0.12−0.088, 0.32+0 = <span class="hl">?</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkD4()">Check</button>
+      <button class="btn btn-reset" onclick="rstD4()">Reset</button>
+    </div>
+    <div class="feedback" id="d4-fb"></div>
+  </div>
+</section>
+
+<!-- ============ PERCEPTRON PRACTICE ============ -->
+<section class="section" id="practice-perc">
+  <h2>Perceptron Rule Practice</h2>
+  <p style="color:var(--muted); margin-bottom:24px; font-style:italic;">Same setup as delta rule, but apply threshold (sum &gt; 0 → ŷ=1, else ŷ=0) before computing error.</p>
+
+  <!-- Perc P1 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 1 · One Example</span>
+      <span class="diff diff-easy">Easy</span>
+    </div>
+    <p>η = 0.2, all weights start at 0. Threshold = 0.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+    </table>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">w₀ =</span><input type="number" id="p1_w0" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₁ =</span><input type="number" id="p1_w1" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₂ =</span><input type="number" id="p1_w2" step="0.01"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_p1')">💡 Show hint</span>
+    <div class="hint-box" id="h_p1">
+      Weighted sum = 0. Is 0 > 0? No → ŷ = 0.<br>
+      Error = 1 − 0 = 1 (clean integer!)<br>
+      <span class="ws">Δw₀ = 0.2 · 1 · 1 = 0.2</span>
+      <span class="ws">Δw₁ = 0.2 · 1 · 1 = 0.2</span>
+      <span class="ws">Δw₂ = 0.2 · 1 · 1 = 0.2</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkP1()">Check</button>
+      <button class="btn btn-reset" onclick="rstP1()">Reset</button>
+    </div>
+    <div class="feedback" id="p1-fb"></div>
+  </div>
+
+  <!-- Perc P2 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 2 · Two Examples</span>
+      <span class="diff diff-med">Medium</span>
+    </div>
+    <p>η = 0.2, all weights start at 0. Threshold = 0.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>1</td><td>1</td><td>1</td></tr>
+      <tr><td>1</td><td>0</td><td>0</td></tr>
+    </table>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">w₀ =</span><input type="number" id="p2_w0" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₁ =</span><input type="number" id="p2_w1" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl">w₂ =</span><input type="number" id="p2_w2" step="0.01"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_p2')">💡 Show hint</span>
+    <div class="hint-box" id="h_p2">
+      <strong>Example 1:</strong> sum=0, 0>0? No → ŷ=0. Error=1.<br>
+      <span class="ws">All Δw = 0.2 → weights: 0.2, 0.2, 0.2</span>
+      <strong>Example 2:</strong> sum = 0.2(1)+0.2(1)+0.2(0) = 0.4. 0.4>0? Yes → ŷ=1.<br>
+      Error = 0−1 = −1 (clean integer!)<br>
+      <span class="ws">Δw₀ = 0.2·(−1)·1 = −0.2</span>
+      <span class="ws">Δw₁ = 0.2·(−1)·1 = −0.2</span>
+      <span class="ws">Δw₂ = 0.2·(−1)·0 = 0</span>
+      Final weights = 0.2+Δw = <span class="hl">?</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkP2()">Check</button>
+      <button class="btn btn-reset" onclick="rstP2()">Reset</button>
+    </div>
+    <div class="feedback" id="p2-fb"></div>
+  </div>
+
+  <!-- Perc P3 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 3 · Generalize Novel Input</span>
+      <span class="diff diff-med">Medium</span>
+    </div>
+    <p>After training, weights are <strong>w₀=0, w₁=0, w₂=0.2</strong>. Threshold = 0.</p>
+    <p>What does the perceptron predict for <strong>(x₁=1, x₂=0.5)</strong>? Give the thresholded output (0 or 1).</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl">ŷ =</span><input type="number" id="p3_pred" step="1" min="0" max="1" placeholder="0 or 1"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_p3')">💡 Show hint</span>
+    <div class="hint-box" id="h_p3">
+      Weighted sum = 0(1) + 0(1) + 0.2(0.5) = 0.1<br>
+      Is 0.1 > 0? <span class="hl">Yes</span> → ŷ = 1<br>
+      Remember: perceptron gives 0 or 1, not the raw decimal.
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkP3()">Check</button>
+      <button class="btn btn-reset" onclick="rstP3()">Reset</button>
+    </div>
+    <div class="feedback" id="p3-fb"></div>
+  </div>
+
+  <!-- Perc P4 -->
+  <div class="problem">
+    <div class="problem-header">
+      <span class="problem-label">Problem 4 · Delta vs Perceptron Comparison</span>
+      <span class="diff diff-hard">Hard</span>
+    </div>
+    <p>η = 0.2, weights start at 0. Process this single example with <strong>both</strong> rules.</p>
+    <table class="data-table">
+      <tr><th>x₁</th><th>x₂</th><th>y</th></tr>
+      <tr><td>2</td><td>1</td><td>0</td></tr>
+    </table>
+    <p>Since all weights start at 0, ŷ = 0 for both rules. But after one update, do the weights differ?</p>
+    <p style="font-size:13px; color:var(--muted);">Enter the delta rule weights first, then perceptron weights.</p>
+    <div class="answer-area">
+      <div class="answer-row"><span class="answer-lbl" style="min-width:160px">Delta w₀ =</span><input type="number" id="p4_dw0" step="0.01"></div>
+      <div class="answer-row"><span class="answer-lbl" style="min-width:160px">Perceptron w₀ =</span><input type="number" id="p4_pw0" step="0.01"></div>
+    </div>
+    <span class="hint-toggle" onclick="tog('h_p4')">💡 Show hint</span>
+    <div class="hint-box" id="h_p4">
+      Both start at 0 so ŷ_delta = 0 (raw) and ŷ_perc = 0 (threshold: 0 not > 0).<br>
+      Error for both = 0 − 0 = 0.<br>
+      <span class="ws">If error = 0, all Δw = 0. Weights don't change!</span>
+      When the prediction is already correct, neither rule updates anything. <span class="hl">Both give w₀ = 0.</span>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button class="btn btn-check" onclick="chkP4()">Check</button>
+      <button class="btn btn-reset" onclick="rstP4()">Reset</button>
+    </div>
+    <div class="feedback" id="p4-fb"></div>
+  </div>
+</section>
+
+<!-- ============ MCQ ============ -->
+<section class="section" id="mcq">
+  <h2>MCQ Drill</h2>
+  <p style="color:var(--muted); margin-bottom:20px; font-style:italic;">Exam-style questions. Watch the phrasing carefully.</p>
+  <div class="score-bar">
+    <span class="score-num" id="sc">0</span>
+    <span class="score-lbl">/ <span id="sc-tot">0</span> answered</span>
+    <div class="prog-track"><div class="prog-fill" id="sc-bar" style="width:0%"></div></div>
+  </div>
+
+  <!-- Q1 -->
+  <div class="problem" id="q1">
+    <div class="problem-header"><span class="problem-label">Q1 · Linear Regression</span><span class="diff diff-easy">Easy</span></div>
+    <p>SSE = 10, SST = 50. What is R²?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q1',0,2)"><span class="opt-letter">A</span> 0.20</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q1',1,2)"><span class="opt-letter">B</span> 0.50</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q1',2,2)"><span class="opt-letter">C</span> 0.80</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q1',3,2)"><span class="opt-letter">D</span> 5.00</div></li>
+    </ul>
+    <div class="feedback" id="q1-fb"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="problem" id="q2">
+    <div class="problem-header"><span class="problem-label">Q2 · Linear Regression</span><span class="diff diff-easy">Easy</span></div>
+    <p>R² = 0.90. Which statement is correct?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q2',0,1)"><span class="opt-letter">A</span> 90% of data points fall on the regression line</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q2',1,1)"><span class="opt-letter">B</span> The model explains 90% of the variance in y</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q2',2,1)"><span class="opt-letter">C</span> The slope is 0.90</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q2',3,1)"><span class="opt-letter">D</span> 90% of predictions are correct</div></li>
+    </ul>
+    <div class="feedback" id="q2-fb"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="problem" id="q3">
+    <div class="problem-header"><span class="problem-label">Q3 · Delta Rule</span><span class="diff diff-med">Medium</span></div>
+    <p>In the delta rule, a weight is NOT updated when:</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q3',0,2)"><span class="opt-letter">A</span> The learning rate is 1</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q3',1,2)"><span class="opt-letter">B</span> The target y is 0</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q3',2,2)"><span class="opt-letter">C</span> That weight's input xⱼ = 0</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q3',3,2)"><span class="opt-letter">D</span> The weight is already positive</div></li>
+    </ul>
+    <div class="feedback" id="q3-fb"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="problem" id="q4">
+    <div class="problem-header"><span class="problem-label">Q4 · Delta Rule</span><span class="diff diff-med">Medium</span></div>
+    <p>You compute ŷ = 0.7 but the true label is y = 0. What is the weight update direction?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q4',0,1)"><span class="opt-letter">A</span> Weights increase — the error is positive</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q4',1,1)"><span class="opt-letter">B</span> Weights decrease — the error is negative</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q4',2,1)"><span class="opt-letter">C</span> Weights stay the same — ŷ is close enough</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q4',3,1)"><span class="opt-letter">D</span> Only the bias updates</div></li>
+    </ul>
+    <div class="feedback" id="q4-fb"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="problem" id="q5">
+    <div class="problem-header"><span class="problem-label">Q5 · Perceptron</span><span class="diff diff-med">Medium</span></div>
+    <p>The perceptron computes a weighted sum of 0.3. Threshold = 0. What is ŷ?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q5',0,2)"><span class="opt-letter">A</span> 0.3</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q5',1,2)"><span class="opt-letter">B</span> 0</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q5',2,2)"><span class="opt-letter">C</span> 1</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q5',3,2)"><span class="opt-letter">D</span> −1</div></li>
+    </ul>
+    <div class="feedback" id="q5-fb"></div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="problem" id="q6">
+    <div class="problem-header"><span class="problem-label">Q6 · Perceptron vs Delta</span><span class="diff diff-hard">Hard</span></div>
+    <p>What is the key difference between the delta rule and the perceptron rule?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q6',0,2)"><span class="opt-letter">A</span> The delta rule uses a different weight update formula</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q6',1,2)"><span class="opt-letter">B</span> The perceptron rule uses a higher learning rate</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q6',2,2)"><span class="opt-letter">C</span> The perceptron applies a threshold to get a 0/1 output before computing error; the delta rule uses the raw sum</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q6',3,2)"><span class="opt-letter">D</span> The delta rule does not include a bias weight</div></li>
+    </ul>
+    <div class="feedback" id="q6-fb"></div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="problem" id="q7">
+    <div class="problem-header"><span class="problem-label">Q7 · Delta Rule</span><span class="diff diff-hard">Hard</span></div>
+    <p>In online (sequential) learning, when do you use the updated weights?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q7',0,0)"><span class="opt-letter">A</span> Immediately — for the very next training example</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q7',1,0)"><span class="opt-letter">B</span> After processing the entire training set once</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q7',2,0)"><span class="opt-letter">C</span> Only if the error improved</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q7',3,0)"><span class="opt-letter">D</span> At the start of the next epoch</div></li>
+    </ul>
+    <div class="feedback" id="q7-fb"></div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="problem" id="q8">
+    <div class="problem-header"><span class="problem-label">Q8 · Linear Regression</span><span class="diff diff-hard">Hard</span></div>
+    <p>Model A has SSE = 5, SST = 20. Model B has SSE = 8, SST = 20. Which is better and why?</p>
+    <ul class="mcq-opts">
+      <li><div class="mcq-opt" onclick="mcq('q8',0,0)"><span class="opt-letter">A</span> Model A — lower SSE means smaller residuals, so higher R²</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q8',1,0)"><span class="opt-letter">B</span> Model B — higher SSE means the model is fitting more of the data</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q8',2,0)"><span class="opt-letter">C</span> They are equally good since they have the same SST</div></li>
+      <li><div class="mcq-opt" onclick="mcq('q8',3,0)"><span class="opt-letter">D</span> Cannot determine without knowing the number of predictors</div></li>
+    </ul>
+    <div class="feedback" id="q8-fb"></div>
+  </div>
+
+</section>
+</main>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+function tog(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+function near(a, b, t=0.05) { return Math.abs(a-b) <= t; }
+function fb(id, ok, msg) {
+  const el = document.getElementById(id+'-fb');
+  el.style.display = 'block';
+  el.className = 'feedback ' + (ok ? 'fb-correct' : 'fb-wrong');
+  el.innerHTML = (ok ? '✅ ' : '❌ ') + msg;
+}
+function setInp(id, ok) { document.getElementById(id).className = ok ? 'correct' : 'wrong'; }
+function clrInp(...ids) { ids.forEach(id => { const el=document.getElementById(id); el.className=''; el.value=''; }); }
+
+// LR
+function chkLR1() {
+  const v = parseFloat(document.getElementById('lr1_sse').value);
+  const ok = near(v, 2);
+  setInp('lr1_sse', ok);
+  fb('lr1', ok, ok ? 'Correct! e²: 1+0+1 = 2' : 'SSE = (4−3)²+(5−5)²+(8−7)² = 1+0+1 = 2');
+}
+function rstLR1() { clrInp('lr1_sse'); document.getElementById('lr1-fb').style.display='none'; }
+
+function chkLR2() {
+  const sst = parseFloat(document.getElementById('lr2_sst').value);
+  const r2  = parseFloat(document.getElementById('lr2_r2').value);
+  const sstOk = near(sst, 26/3, 0.1);
+  const r2Ok  = near(r2, 1 - 2/(26/3), 0.005);
+  setInp('lr2_sst', sstOk); setInp('lr2_r2', r2Ok);
+  if (sstOk && r2Ok) fb('lr2', true, `Great! SST ≈ 8.667, R² = 1 − 2/8.667 ≈ ${(1-2/(26/3)).toFixed(3)}`);
+  else fb('lr2', false, `SST = (4−5.667)²+(5−5.667)²+(8−5.667)² ≈ 2.78+0.44+5.44 = 8.67. R² = 1−SSE/SST = 1−2/8.67 ≈ ${(1-2/(26/3)).toFixed(3)}`);
+}
+function rstLR2() { clrInp('lr2_sst','lr2_r2'); document.getElementById('lr2-fb').style.display='none'; }
+
+function chkLR3() {
+  const sse = parseFloat(document.getElementById('lr3_sse').value);
+  const sst = parseFloat(document.getElementById('lr3_sst').value);
+  const r2  = parseFloat(document.getElementById('lr3_r2').value);
+  const sseOk = near(sse, 0.2, 0.01);
+  const sstOk = near(sst, 13, 0.1);
+  const r2Ok  = near(r2, 1-0.2/13, 0.005);
+  setInp('lr3_sse', sseOk); setInp('lr3_sst', sstOk); setInp('lr3_r2', r2Ok);
+  if (sseOk && sstOk && r2Ok) fb('lr3', true, `Perfect! SSE=0.2, SST=13, R²=${(1-0.2/13).toFixed(4)}`);
+  else fb('lr3', false, `SSE=0.2, SST=13, R²=1−0.2/13≈${(1-0.2/13).toFixed(4)}`);
+}
+function rstLR3() { clrInp('lr3_sse','lr3_sst','lr3_r2'); document.getElementById('lr3-fb').style.display='none'; }
+
+// Delta
+function chkD1() {
+  const w0=parseFloat(document.getElementById('d1_w0').value);
+  const w1=parseFloat(document.getElementById('d1_w1').value);
+  const w2=parseFloat(document.getElementById('d1_w2').value);
+  const ok = near(w0,0.2)&&near(w1,0.2)&&near(w2,0);
+  setInp('d1_w0',near(w0,0.2)); setInp('d1_w1',near(w1,0.2)); setInp('d1_w2',near(w2,0));
+  fb('d1', ok, ok ? 'Correct! Error=1, Δw₀=Δw₁=0.2, Δw₂=0 (x₂ was 0)' : 'Error=1−0=1. Δw₀=0.2·1·1=0.2, Δw₁=0.2·1·1=0.2, Δw₂=0.2·1·0=0');
+}
+function rstD1() { clrInp('d1_w0','d1_w1','d1_w2'); document.getElementById('d1-fb').style.display='none'; }
+
+function chkD2() {
+  const w0=parseFloat(document.getElementById('d2_w0').value);
+  const w1=parseFloat(document.getElementById('d2_w1').value);
+  const w2=parseFloat(document.getElementById('d2_w2').value);
+  const ok = near(w0,0.12)&&near(w1,0.12)&&near(w2,0.2);
+  setInp('d2_w0',near(w0,0.12)); setInp('d2_w1',near(w1,0.12)); setInp('d2_w2',near(w2,0.2));
+  fb('d2', ok, ok ? 'Correct! After ex2: 0.2−0.08=0.12, 0.2−0.08=0.12, 0.2+0=0.2' : 'After ex1: all=0.2. Ex2: ŷ=0.4, err=−0.4, Δw₀=Δw₁=−0.08, Δw₂=0. Final: 0.12, 0.12, 0.2');
+}
+function rstD2() { clrInp('d2_w0','d2_w1','d2_w2'); document.getElementById('d2-fb').style.display='none'; }
+
+function chkD3() {
+  const v=parseFloat(document.getElementById('d3_pred').value);
+  const ok=near(v,0.34,0.005);
+  setInp('d3_pred',ok);
+  fb('d3', ok, ok ? 'Correct! 0.12+0.12+0.2(0.5)=0.12+0.12+0.10=0.34' : 'ŷ = 0.12(1)+0.12(1)+0.2(0.5) = 0.12+0.12+0.10 = 0.34');
+}
+function rstD3() { clrInp('d3_pred'); document.getElementById('d3-fb').style.display='none'; }
+
+function chkD4() {
+  const w0=parseFloat(document.getElementById('d4_w0').value);
+  const w1=parseFloat(document.getElementById('d4_w1').value);
+  const w2=parseFloat(document.getElementById('d4_w2').value);
+  const ew0=0.32-0.088, ew1=0.12-0.088, ew2=0.32;
+  const ok=near(w0,ew0,0.005)&&near(w1,ew1,0.005)&&near(w2,ew2,0.005);
+  setInp('d4_w0',near(w0,ew0,0.005)); setInp('d4_w1',near(w1,ew1,0.005)); setInp('d4_w2',near(w2,ew2,0.005));
+  fb('d4', ok, ok ? `Correct! w₀=${ew0.toFixed(3)}, w₁=${ew1.toFixed(3)}, w₂=${ew2.toFixed(3)}` : `Ex1→(0.2,0,0.2), Ex2→(0.32,0.12,0.32), Ex3: err=−0.44, Δw₀=Δw₁=−0.088, Δw₂=0 → (${ew0.toFixed(3)},${ew1.toFixed(3)},${ew2.toFixed(3)})`);
+}
+function rstD4() { clrInp('d4_w0','d4_w1','d4_w2'); document.getElementById('d4-fb').style.display='none'; }
+
+// Perceptron
+function chkP1() {
+  const w0=parseFloat(document.getElementById('p1_w0').value);
+  const w1=parseFloat(document.getElementById('p1_w1').value);
+  const w2=parseFloat(document.getElementById('p1_w2').value);
+  const ok=near(w0,0.2)&&near(w1,0.2)&&near(w2,0.2);
+  setInp('p1_w0',near(w0,0.2)); setInp('p1_w1',near(w1,0.2)); setInp('p1_w2',near(w2,0.2));
+  fb('p1', ok, ok ? 'Correct! sum=0, not >0 → ŷ=0, err=1, all Δw=0.2' : 'Weighted sum=0. 0>0? No → ŷ=0. Error=1. Δw₀=Δw₁=Δw₂=0.2·1·1=0.2');
+}
+function rstP1() { clrInp('p1_w0','p1_w1','p1_w2'); document.getElementById('p1-fb').style.display='none'; }
+
+function chkP2() {
+  const w0=parseFloat(document.getElementById('p2_w0').value);
+  const w1=parseFloat(document.getElementById('p2_w1').value);
+  const w2=parseFloat(document.getElementById('p2_w2').value);
+  const ok=near(w0,0)&&near(w1,0)&&near(w2,0.2);
+  setInp('p2_w0',near(w0,0)); setInp('p2_w1',near(w1,0)); setInp('p2_w2',near(w2,0.2));
+  fb('p2', ok, ok ? 'Correct! Ex2: sum=0.4>0 → ŷ=1, err=−1, Δw₀=Δw₁=−0.2, so 0.2−0.2=0' : 'After ex1: 0.2,0.2,0.2. Ex2: sum=0.4>0→ŷ=1, err=−1. Δw₀=Δw₁=−0.2, Δw₂=0. Final: 0,0,0.2');
+}
+function rstP2() { clrInp('p2_w0','p2_w1','p2_w2'); document.getElementById('p2-fb').style.display='none'; }
+
+function chkP3() {
+  const v=parseFloat(document.getElementById('p3_pred').value);
+  const ok=near(v,1,0.01);
+  setInp('p3_pred',ok);
+  fb('p3', ok, ok ? 'Correct! sum=0.1>0 → threshold gives ŷ=1' : 'sum = 0(1)+0(1)+0.2(0.5)=0.1. Is 0.1>0? Yes → ŷ=1');
+}
+function rstP3() { clrInp('p3_pred'); document.getElementById('p3-fb').style.display='none'; }
+
+function chkP4() {
+  const dw0=parseFloat(document.getElementById('p4_dw0').value);
+  const pw0=parseFloat(document.getElementById('p4_pw0').value);
+  const ok=near(dw0,0)&&near(pw0,0);
+  setInp('p4_dw0',near(dw0,0)); setInp('p4_pw0',near(pw0,0));
+  fb('p4', ok, ok ? 'Correct! Both rules: ŷ=0, y=0, error=0. No update happens. Weights stay at 0.' : 'All weights=0 → ŷ=0 for both rules. y=0, so error=0−0=0. Δw = η·0·x = 0 for every weight. Both stay at 0.');
+}
+function rstP4() { clrInp('p4_dw0','p4_pw0'); document.getElementById('p4-fb').style.display='none'; }
+
+// MCQ
+let score=0, total=0, answered={};
+const mcqData = {
+  q1: { correct:2, exp:['Incorrect. R²=1−SSE/SST=1−10/50=0.80, not 0.20.','Incorrect.','Correct! R²=1−10/50=1−0.2=0.80','Incorrect. R² is dimensionless and between 0 and 1.'] },
+  q2: { correct:1, exp:['Incorrect. R² does not mean 90% of points fall on the line.','Correct! R²=0.90 means the model accounts for 90% of the variability in y.','Incorrect. The slope is β₁, not R².','Incorrect. R² measures explained variance, not prediction accuracy.'] },
+  q3: { correct:2, exp:['Incorrect. Learning rate scales the update but doesn\'t zero it out.','Incorrect. If y=0 but ŷ≠0, there is still an error and weights still update.','Correct! Δwⱼ = η·error·xⱼ. If xⱼ=0, the whole term is 0 no matter what the error is.','Incorrect. Whether a weight is positive or negative doesn\'t affect whether it updates.'] },
+  q4: { correct:1, exp:['Incorrect. Error = y−ŷ = 0−0.7 = −0.7. That\'s negative, so weights go down.','Correct! Error=0−0.7=−0.7. Δw=η·(−0.7)·x which is negative, so weights decrease — the model predicted too high.','Incorrect. The delta rule always updates if there\'s any error.','Incorrect. All weights update, not just the bias.'] },
+  q5: { correct:2, exp:['Incorrect. 0.3 is the raw weighted sum. The perceptron must apply the threshold.','Incorrect. 0.3>0, so the threshold fires → ŷ=1, not 0.','Correct! 0.3>0, so the perceptron outputs ŷ=1.','Incorrect. Perceptron outputs 0 or 1 only.'] },
+  q6: { correct:2, exp:['Incorrect. Both rules use the same update formula: Δwⱼ=η·error·xⱼ.','Incorrect. Learning rate is a hyperparameter you set — both rules can use any learning rate.','Correct! That\'s the only difference. The perceptron threshold converts the output to 0/1 before computing error; delta uses the raw sum.','Incorrect. Both rules include a bias weight.'] },
+  q7: { correct:0, exp:['Correct! This is online (sequential) learning — you update after every single example and immediately use those new weights for the next one.','Incorrect. That would be batch learning, not online learning.','Incorrect. You always apply the update regardless of whether it improved.','Incorrect. Same as B — that\'s batch, not online.'] },
+  q8: { correct:0, exp:['Correct! R²_A = 1−5/20 = 0.75. R²_B = 1−8/20 = 0.60. Lower SSE → higher R² → better fit.','Incorrect. Higher SSE means larger residuals — the model fits worse, not better.','Incorrect. Same SST just means same total variance in y. The fit quality still differs.','Incorrect. With the same SST and known SSE, we can directly compare R² without needing predictor count.'] },
+};
+
+function mcq(qid, chosen, correct) {
+  if (answered[qid]) return;
+  answered[qid]=true; total++;
+  const opts = document.querySelectorAll(`#${qid} .mcq-opt`);
+  if (chosen===correct) score++;
+  opts.forEach((o,i) => {
+    o.classList.add('locked');
+    if (i===correct) o.classList.add('correct-opt');
+    else if (i===chosen && chosen!==correct) o.classList.add('wrong-opt');
+  });
+  fb(qid, chosen===correct, mcqData[qid].exp[chosen]);
+  document.getElementById('sc').textContent=score;
+  document.getElementById('sc-tot').textContent=total;
+  document.getElementById('sc-bar').style.width=(total/8*100)+'%';
+}
+</script>
+</body>
+</html>

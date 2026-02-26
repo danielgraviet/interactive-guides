@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 ML Midterm Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --card: #1c2030;
+    --border: #2a3050;
+    --accent: #5eead4;
+    --accent2: #f97316;
+    --accent3: #a78bfa;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --correct: #4ade80;
+    --wrong: #f87171;
+    --highlight: #fbbf24;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0d0f14 0%, #1a1f35 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(94,234,212,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(94,234,212,0.1);
+    border: 1px solid rgba(94,234,212,0.3);
+    color: var(--accent);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2px;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+  }
+  header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-style: italic;
+    color: #fff;
+    line-height: 1.1;
+  }
+  header h1 span { color: var(--accent); }
+  header p {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* NAV TABS */
+  nav {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    padding: 0 1rem;
+  }
+  .tab {
+    padding: 1rem 1.5rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    color: var(--muted);
+    background: none;
+    border-top: none; border-left: none; border-right: none;
+    font-family: 'Space Mono', monospace;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* CONTENT */
+  main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .card-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  .card h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    margin-bottom: 0.75rem;
+    color: #fff;
+  }
+  .card p, .card li {
+    font-size: 0.82rem;
+    line-height: 1.8;
+    color: #cbd5e1;
+  }
+  .card ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+  .card li { margin-bottom: 0.4rem; }
+
+  /* FORMULA BOX */
+  .formula {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-size: 0.85rem;
+    color: var(--highlight);
+    letter-spacing: 0.02em;
+    line-height: 1.7;
+  }
+  .formula .label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* SVG CANVAS */
+  .canvas-wrap {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: center;
+  }
+  svg text { font-family: 'Space Mono', monospace; }
+
+  /* QUIZ */
+  .quiz-q {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.15rem;
+    font-style: italic;
+    color: #fff;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+  .option {
+    background: #111520;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+  }
+  .option:hover { border-color: var(--accent); color: var(--accent); }
+  .option.correct { border-color: var(--correct); background: rgba(74,222,128,0.08); color: var(--correct); }
+  .option.wrong { border-color: var(--wrong); background: rgba(248,113,113,0.08); color: var(--wrong); }
+  .option:disabled { cursor: default; }
+  .feedback {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { background: rgba(74,222,128,0.08); border: 1px solid var(--correct); color: var(--correct); }
+  .feedback.wrong { background: rgba(248,113,113,0.08); border: 1px solid var(--wrong); color: var(--wrong); }
+  .next-btn {
+    margin-top: 1rem;
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    display: none;
+  }
+  .next-btn.show { display: inline-block; }
+  .quiz-progress {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.25rem;
+  }
+  .score-display {
+    font-size: 0.72rem;
+    color: var(--accent3);
+    letter-spacing: 0.08em;
+    float: right;
+  }
+
+  /* CALCULATOR */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .calc-grid { grid-template-columns: 1fr; } }
+  .input-group { margin-bottom: 1rem; }
+  .input-group label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .input-group input {
+    width: 100%;
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus { border-color: var(--accent); }
+  .calc-btn {
+    background: var(--accent2);
+    color: #0d0f14;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    margin-top: 0.5rem;
+  }
+  .result-box {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    color: var(--highlight);
+    display: none;
+  }
+  .result-box.show { display: block; }
+  .result-box .step { color: var(--muted); font-size: 0.72rem; }
+
+  /* SVM VISUAL */
+  .svm-controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+  .svm-controls label { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.08em; }
+  .svm-controls input[type=range] { accent-color: var(--accent); }
+
+  /* HIGHLIGHT */
+  .hl { color: var(--accent); font-weight: 700; }
+  .hl2 { color: var(--accent2); }
+  .hl3 { color: var(--accent3); }
+
+  /* PILL TAGS */
+  .tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .tag {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+  }
+  .tag-teal { background: rgba(94,234,212,0.1); color: var(--accent); border: 1px solid rgba(94,234,212,0.2); }
+  .tag-orange { background: rgba(249,115,22,0.1); color: var(--accent2); border: 1px solid rgba(249,115,22,0.2); }
+  .tag-purple { background: rgba(167,139,250,0.1); color: var(--accent3); border: 1px solid rgba(167,139,250,0.2); }
+
+  /* SUMMARY TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 0.75rem; margin-top: 0.75rem; }
+  th { text-align: left; padding: 0.6rem 0.75rem; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(42,48,80,0.5); color: #cbd5e1; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">CS 270 · Intro to ML · Midterm Prep</div>
+  <h1>The <span>Decision Engine</span><br>& Margin Machine</h1>
+  <p>Interactive tutor · SVMs · Decision Trees · Gini · Information Gain</p>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showTab('svm')">SVM / Max Margin</button>
+  <button class="tab" onclick="showTab('trees')">Decision Trees</button>
+  <button class="tab" onclick="showTab('math')">Gini & Info Gain</button>
+  <button class="tab" onclick="showTab('calc')">Calculator</button>
+  <button class="tab" onclick="showTab('quiz')">Quiz</button>
+</nav>
+
+<main>
+
+<!-- ========== SVM SECTION ========== -->
+<div id="svm" class="section active">
+  <div class="card">
+    <div class="tags"><span class="tag tag-teal">SVM</span><span class="tag tag-orange">Max Margin</span></div>
+    <div class="card-title">Core Concept</div>
+    <h2>Support Vector Machines</h2>
+    <p>An SVM finds the <span class="hl">hyperplane</span> that separates two classes while <span class="hl">maximizing the margin</span> — the distance between the hyperplane and the nearest data points from each class. Those nearest points are the <span class="hl2">support vectors</span>.</p>
+    <p style="margin-top:0.75rem">The intuition: a wider margin means the classifier is more confident and generalizes better to unseen data.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Key Vocabulary</div>
+    <table>
+      <tr><th>Term</th><th>What it means</th></tr>
+      <tr><td class="hl">Hyperplane</td><td>The decision boundary (a line in 2D, plane in 3D, hyperplane in N-D). Defined by <strong>w·x + b = 0</strong></td></tr>
+      <tr><td class="hl">Support Vectors</td><td>The training points <em>closest</em> to the hyperplane. Only these points determine the margin.</td></tr>
+      <tr><td class="hl">Margin</td><td>The perpendicular distance between the two margin lines. SVM maximizes this. Margin = <strong>2 / ‖w‖</strong></td></tr>
+      <tr><td class="hl">Hard Margin</td><td>Requires all points to be correctly classified (no noise tolerance).</td></tr>
+      <tr><td class="hl">Soft Margin (C)</td><td>Allows some misclassifications. C controls the tradeoff — high C = strict, low C = more flexible.</td></tr>
+      <tr><td class="hl">Kernel Trick</td><td>Maps data to higher dimensions implicitly so a linear boundary can separate non-linear data.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">The Math</div>
+    <h2>Objective Function</h2>
+    <div class="formula">
+      <span class="label">Optimization Problem (Primal Form)</span>
+      Minimize:  ½ ‖w‖²<br>
+      Subject to:  yᵢ(w·xᵢ + b) ≥ 1  for all i<br><br>
+      <span class="label">Margin Width</span>
+      margin = 2 / ‖w‖<br><br>
+      <span class="label">With Soft Margin (C parameter)</span>
+      Minimize:  ½ ‖w‖² + C · Σ ξᵢ<br>
+      ξᵢ = slack variable (how much point i violates the margin)
+    </div>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-top:0.5rem">Minimizing ½‖w‖² is equivalent to maximizing the margin. The constraint yᵢ(w·xᵢ + b) ≥ 1 ensures correct classification with margin ≥ 1.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Interactive Visualization</div>
+    <h2>Max Margin Explorer</h2>
+    <div class="canvas-wrap">
+      <canvas id="svmCanvas" width="560" height="340" style="max-width:100%; border-radius:4px;"></canvas>
+    </div>
+    <p style="font-size:0.72rem; color:var(--muted); margin-top:0.5rem">The <span class="hl">teal line</span> is the decision boundary. <span class="hl2">Orange dashed lines</span> are the margin boundaries. <span style="color:var(--accent3)">Purple dots</span> are the support vectors. The goal is to maximize the gap between the orange lines.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Common Kernels</div>
+    <table>
+      <tr><th>Kernel</th><th>Formula</th><th>Use when...</th></tr>
+      <tr><td class="hl">Linear</td><td>K(x,z) = x·z</td><td>Data is linearly separable</td></tr>
+      <tr><td class="hl">Polynomial</td><td>K(x,z) = (x·z + c)^d</td><td>Curved boundaries needed</td></tr>
+      <tr><td class="hl">RBF / Gaussian</td><td>K(x,z) = exp(−γ‖x−z‖²)</td><td>Complex, non-linear boundaries</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ========== TREES SECTION ========== -->
+<div id="trees" class="section">
+  <div class="card">
+    <div class="tags"><span class="tag tag-purple">Decision Trees</span><span class="tag tag-teal">Interpreting</span></div>
+    <div class="card-title">Core Concept</div>
+    <h2>How to Read a Decision Tree</h2>
+    <p>A decision tree is a flowchart where each <span class="hl">internal node</span> is a feature test (e.g., "Is age > 30?"), each <span class="hl2">branch</span> is an outcome of the test, and each <span class="hl3">leaf node</span> is a final prediction (class label or value).</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Anatomy of a Tree</div>
+    <div class="canvas-wrap">
+      <svg id="treeSVG" width="540" height="300" style="max-width:100%"></svg>
+    </div>
+    <p style="font-size:0.72rem; color:var(--muted); margin-top:0.5rem">
+      <span class="hl">Root node</span>: the first split (best feature overall) ·
+      <span class="hl2">Internal nodes</span>: subsequent splits ·
+      <span class="hl3">Leaves</span>: final class predictions
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">How Splits are Chosen</div>
+    <h2>Splitting Criteria</h2>
+    <p>At each node, the algorithm evaluates every possible feature and threshold. It picks the split that <span class="hl">maximizes Information Gain</span> (or equivalently, minimizes Gini Impurity in the child nodes). The process repeats recursively until a stopping condition is met.</p>
+    <ul>
+      <li><strong>Stopping conditions:</strong> max depth reached, node has too few samples, node is pure (all one class), gain is too small.</li>
+      <li><strong>Greedy:</strong> trees make locally optimal splits — they don't backtrack to find the global optimum.</li>
+      <li><strong>Overfitting risk:</strong> deep trees memorize training data. Pruning or limiting depth regularizes them.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Interpretation Rules</div>
+    <table>
+      <tr><th>What you see</th><th>What it means</th></tr>
+      <tr><td>Node near the root</td><td>High-importance feature (large information gain)</td></tr>
+      <tr><td>Shallow tree</td><td>Simpler model, lower variance, may underfit</td></tr>
+      <tr><td>Deep tree</td><td>Complex model, may overfit</td></tr>
+      <tr><td>Pure leaf (single class)</td><td>Perfect classification of that subset</td></tr>
+      <tr><td>Impure leaf</td><td>Stopping condition hit before purity — predicts majority class</td></tr>
+      <tr><td>Feature appears multiple times</td><td>Feature is useful at multiple scales/thresholds</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ========== MATH SECTION ========== -->
+<div id="math" class="section">
+  <div class="card">
+    <div class="tags"><span class="tag tag-orange">Gini Impurity</span><span class="tag tag-teal">Information Gain</span></div>
+    <div class="card-title">Gini Impurity</div>
+    <h2>Measuring Node Impurity</h2>
+    <p>Gini Impurity measures how often a randomly chosen element would be misclassified if it were randomly labeled based on the distribution in the node.</p>
+    <div class="formula">
+      <span class="label">Formula</span>
+      Gini(S) = 1 − Σ pᵢ²<br><br>
+      <span class="label">Where pᵢ = fraction of samples belonging to class i</span>
+      Range: 0 (pure) to 0.5 (binary, equal split)<br><br>
+      <span class="label">Example — node with 4 cats, 6 dogs</span>
+      p_cat = 4/10 = 0.4 · p_dog = 6/10 = 0.6<br>
+      Gini = 1 − (0.4² + 0.6²) = 1 − (0.16 + 0.36) = <strong>0.48</strong>
+    </div>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-top:0.5rem"><strong>Gini = 0</strong> means the node is perfectly pure. <strong>Gini = 0.5</strong> (binary) is maximum impurity — a 50/50 split.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Information Gain (Entropy-Based)</div>
+    <h2>Entropy & Information Gain</h2>
+    <p><span class="hl">Entropy</span> measures the disorder or uncertainty in a set. <span class="hl2">Information Gain</span> measures how much a split reduces entropy.</p>
+    <div class="formula">
+      <span class="label">Entropy</span>
+      H(S) = −Σ pᵢ · log₂(pᵢ)<br>
+      Range: 0 (pure) to log₂(k) where k = number of classes<br><br>
+      <span class="label">Information Gain</span>
+      IG(S, A) = H(S) − Σ (|Sᵥ|/|S|) · H(Sᵥ)<br><br>
+      <span class="label">Where Sᵥ = subset of S where feature A has value v</span>
+      → We pick the feature A that maximizes IG
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Worked Example</div>
+    <h2>Step-by-Step: Information Gain</h2>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:0.75rem">
+      Suppose we have 10 samples: 5 positive (+), 5 negative (−). We split on feature A:<br>
+      Left child: 4+, 1−  (5 samples) · Right child: 1+, 4− (5 samples)
+    </p>
+    <div class="formula">
+      <span class="label">Step 1: Parent entropy</span>
+      H(S) = −(5/10)log₂(5/10) − (5/10)log₂(5/10) = −2(0.5 × −1) = <strong>1.0 bit</strong><br><br>
+      <span class="label">Step 2: Left child entropy (4+, 1−)</span>
+      H(left) = −(4/5)log₂(4/5) − (1/5)log₂(1/5)<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= −(0.8)(−0.322) − (0.2)(−2.322) = 0.722 bits<br><br>
+      <span class="label">Step 3: Right child entropy (1+, 4−)</span>
+      H(right) = same by symmetry = 0.722 bits<br><br>
+      <span class="label">Step 4: Weighted child entropy</span>
+      (5/10)(0.722) + (5/10)(0.722) = <strong>0.722 bits</strong><br><br>
+      <span class="label">Step 5: Information Gain</span>
+      IG = 1.0 − 0.722 = <strong>0.278 bits</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Gini vs Entropy</div>
+    <table>
+      <tr><th></th><th>Gini Impurity</th><th>Entropy / Info Gain</th></tr>
+      <tr><td>Formula</td><td>1 − Σpᵢ²</td><td>−Σpᵢlog₂(pᵢ)</td></tr>
+      <tr><td>Max value</td><td>0.5 (binary)</td><td>1.0 (binary)</td></tr>
+      <tr><td>Computation</td><td>Faster (no log)</td><td>Slower</td></tr>
+      <tr><td>Behavior</td><td>Favors larger partitions</td><td>More balanced</td></tr>
+      <tr><td>Used in</td><td>CART / sklearn default</td><td>ID3, C4.5</td></tr>
+      <tr><td>Results</td><td colspan="2">Almost always pick the same split in practice</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ========== CALCULATOR SECTION ========== -->
+<div id="calc" class="section">
+  <div class="card">
+    <div class="card-title">Gini Impurity Calculator</div>
+    <h2>Compute Gini</h2>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">Enter the count of samples per class in a node, separated by commas.</p>
+    <div class="input-group">
+      <label>Class Counts (e.g.: 4, 6  or  3, 5, 2)</label>
+      <input type="text" id="giniInput" placeholder="4, 6" value="4, 6">
+    </div>
+    <button class="calc-btn" onclick="calcGini()">Calculate Gini</button>
+    <div class="result-box" id="giniResult"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Entropy & Information Gain Calculator</div>
+    <h2>Compute IG</h2>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">Enter class counts for the parent node, then each child node.</p>
+    <div class="calc-grid">
+      <div class="input-group">
+        <label>Parent counts (e.g.: 5, 5)</label>
+        <input type="text" id="parentInput" placeholder="5, 5" value="5, 5">
+      </div>
+    </div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;letter-spacing:0.08em">CHILD NODES</div>
+    <div class="calc-grid">
+      <div class="input-group">
+        <label>Left child counts</label>
+        <input type="text" id="leftInput" placeholder="4, 1" value="4, 1">
+      </div>
+      <div class="input-group">
+        <label>Right child counts</label>
+        <input type="text" id="rightInput" placeholder="1, 4" value="1, 4">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcIG()">Calculate Information Gain</button>
+    <div class="result-box" id="igResult"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">SVM Margin Calculator</div>
+    <h2>Compute Margin Width</h2>
+    <p style="font-size:0.8rem;color:#94a3b8;margin-bottom:1rem">Given weight vector components, compute the margin (2/‖w‖).</p>
+    <div class="calc-grid">
+      <div class="input-group">
+        <label>w₁</label>
+        <input type="number" id="w1" value="1" step="0.1">
+      </div>
+      <div class="input-group">
+        <label>w₂</label>
+        <input type="number" id="w2" value="1" step="0.1">
+      </div>
+    </div>
+    <button class="calc-btn" onclick="calcMargin()">Calculate Margin</button>
+    <div class="result-box" id="marginResult"></div>
+  </div>
+</div>
+
+<!-- ========== QUIZ SECTION ========== -->
+<div id="quiz" class="section">
+  <div class="card">
+    <div class="quiz-progress">
+      Question <span id="qNum">1</span> of <span id="qTotal">8</span>
+      <span class="score-display">Score: <span id="score">0</span></span>
+    </div>
+    <div class="quiz-q" id="quizQ"></div>
+    <div class="options" id="quizOptions"></div>
+    <div class="feedback" id="quizFeedback"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+  </div>
+  <div id="quizDone" style="display:none">
+    <div class="card" style="text-align:center;padding:2.5rem;">
+      <div class="card-title">Quiz Complete!</div>
+      <h2 id="finalScore" style="font-size:2.5rem;margin-bottom:0.5rem;"></h2>
+      <p style="color:var(--muted);font-size:0.8rem;margin-bottom:1.5rem;" id="finalMsg"></p>
+      <button class="calc-btn" onclick="restartQuiz()">Retake Quiz</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===== TAB SWITCHING =====
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== SVM CANVAS =====
+(function drawSVM() {
+  const canvas = document.getElementById('svmCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const posPoints = [[120,80],[140,120],[90,100],[160,70],[110,150],[170,110]];
+  const negPoints = [[380,200],[400,240],[360,220],[420,180],[390,260],[430,220]];
+  const svPos = [170, 110];
+  const svNeg = [360, 220];
+
+  ctx.clearRect(0,0,W,H);
+  // background grid
+  ctx.strokeStyle = 'rgba(42,48,80,0.4)';
+  ctx.lineWidth = 1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  // Decision boundary
+  ctx.strokeStyle = '#5eead4';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(240, 0); ctx.lineTo(265, H);
+  ctx.stroke();
+
+  // Margin lines
+  ctx.strokeStyle = 'rgba(249,115,22,0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([8,5]);
+  ctx.beginPath(); ctx.moveTo(190,0); ctx.lineTo(215,H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(290,0); ctx.lineTo(315,H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Margin fill
+  ctx.fillStyle = 'rgba(249,115,22,0.04)';
+  ctx.beginPath();
+  ctx.moveTo(190,0); ctx.lineTo(290,0); ctx.lineTo(315,H); ctx.lineTo(215,H);
+  ctx.closePath(); ctx.fill();
+
+  // Positive class (teal)
+  posPoints.forEach(([x,y]) => {
+    const isSV = (x===svPos[0] && y===svPos[1]);
+    ctx.beginPath();
+    ctx.arc(x,y,isSV?9:6,0,Math.PI*2);
+    ctx.fillStyle = isSV ? '#a78bfa' : 'rgba(94,234,212,0.8)';
+    ctx.fill();
+    if(isSV){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+  });
+
+  // Negative class (orange)
+  negPoints.forEach(([x,y]) => {
+    const isSV = (x===svNeg[0] && y===svNeg[1]);
+    ctx.beginPath();
+    // draw as square
+    const s = isSV ? 10 : 7;
+    ctx.rect(x-s/2, y-s/2, s, s);
+    ctx.fillStyle = isSV ? '#a78bfa' : 'rgba(249,115,22,0.8)';
+    ctx.fill();
+    if(isSV){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+  });
+
+  // Labels
+  ctx.fillStyle = '#5eead4'; ctx.font = '11px Space Mono'; ctx.fillText('+ class (circles)', 20, 20);
+  ctx.fillStyle = '#f97316'; ctx.fillText('− class (squares)', 20, 38);
+  ctx.fillStyle = '#a78bfa'; ctx.fillText('★ support vectors', 20, 56);
+
+  // Margin annotation
+  ctx.fillStyle = 'rgba(249,115,22,0.7)';
+  ctx.font = '10px Space Mono';
+  ctx.fillText('← margin →', 198, 40);
+
+})();
+
+// ===== TREE SVG =====
+(function drawTree() {
+  const svg = document.getElementById('treeSVG');
+  if (!svg) return;
+
+  const nodes = [
+    { id: 0, x: 270, y: 40, label: 'Age > 30?', type: 'root' },
+    { id: 1, x: 130, y: 130, label: 'Income > 50k?', type: 'internal' },
+    { id: 2, x: 400, y: 130, label: 'Years Exp > 5?', type: 'internal' },
+    { id: 3, x: 60, y: 230, label: '✗ No Loan', type: 'leaf-no' },
+    { id: 4, x: 190, y: 230, label: '✓ Loan', type: 'leaf-yes' },
+    { id: 5, x: 330, y: 230, label: '✓ Loan', type: 'leaf-yes' },
+    { id: 6, x: 470, y: 230, label: '✗ No Loan', type: 'leaf-no' },
+  ];
+  const edges = [
+    [0,1,'Yes'],[0,2,'No'],
+    [1,3,'No'],[1,4,'Yes'],
+    [2,5,'Yes'],[2,6,'No'],
+  ];
+
+  let html = '';
+  // Edges
+  edges.forEach(([from,to,lbl]) => {
+    const n1 = nodes[from], n2 = nodes[to];
+    const mx = (n1.x+n2.x)/2, my = (n1.y+n2.y)/2;
+    html += `<line x1="${n1.x}" y1="${n1.y+18}" x2="${n2.x}" y2="${n2.y-18}" stroke="#2a3050" stroke-width="2"/>`;
+    html += `<text x="${mx}" y="${my}" fill="#64748b" font-size="10" text-anchor="middle" dy="-4">${lbl}</text>`;
+  });
+
+  // Nodes
+  nodes.forEach(n => {
+    let fill, stroke, textColor;
+    if(n.type==='root'){fill='#1e2a40';stroke='#5eead4';textColor='#5eead4';}
+    else if(n.type==='internal'){fill='#1e2030';stroke='#a78bfa';textColor='#a78bfa';}
+    else if(n.type==='leaf-yes'){fill='rgba(74,222,128,0.1)';stroke='#4ade80';textColor='#4ade80';}
+    else{fill='rgba(248,113,113,0.1)';stroke='#f87171';textColor='#f87171';}
+    html += `<rect x="${n.x-65}" y="${n.y-18}" width="130" height="36" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
+    html += `<text x="${n.x}" y="${n.y+5}" fill="${textColor}" font-size="10.5" text-anchor="middle" font-family="Space Mono">${n.label}</text>`;
+  });
+
+  // Legend
+  html += `<rect x="10" y="270" width="12" height="12" rx="2" fill="none" stroke="#5eead4" stroke-width="1.5"/>`;
+  html += `<text x="28" y="281" fill="#64748b" font-size="9" font-family="Space Mono">Root</text>`;
+  html += `<rect x="80" y="270" width="12" height="12" rx="2" fill="none" stroke="#a78bfa" stroke-width="1.5"/>`;
+  html += `<text x="98" y="281" fill="#64748b" font-size="9" font-family="Space Mono">Internal</text>`;
+  html += `<rect x="170" y="270" width="12" height="12" rx="2" fill="none" stroke="#4ade80" stroke-width="1.5"/>`;
+  html += `<text x="188" y="281" fill="#64748b" font-size="9" font-family="Space Mono">Leaf (+)</text>`;
+  html += `<rect x="260" y="270" width="12" height="12" rx="2" fill="none" stroke="#f87171" stroke-width="1.5"/>`;
+  html += `<text x="278" y="281" fill="#64748b" font-size="9" font-family="Space Mono">Leaf (−)</text>`;
+
+  svg.innerHTML = html;
+})();
+
+// ===== CALCULATOR FUNCTIONS =====
+function parseCounts(str) {
+  return str.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n > 0);
+}
+
+function entropy(counts) {
+  const total = counts.reduce((a,b)=>a+b,0);
+  return -counts.reduce((sum,c) => {
+    if(c===0) return sum;
+    const p = c/total;
+    return sum + p * Math.log2(p);
+  }, 0);
+}
+
+function gini(counts) {
+  const total = counts.reduce((a,b)=>a+b,0);
+  return 1 - counts.reduce((sum,c) => sum + (c/total)**2, 0);
+}
+
+function calcGini() {
+  const counts = parseCounts(document.getElementById('giniInput').value);
+  if(counts.length < 2){ alert('Enter at least 2 class counts'); return; }
+  const total = counts.reduce((a,b)=>a+b,0);
+  const g = gini(counts);
+  const pTerms = counts.map(c=>`(${c}/${total})² = ${(c/total).toFixed(3)}² = ${((c/total)**2).toFixed(4)}`).join('<br>');
+  const pSum = counts.reduce((s,c)=>s+(c/total)**2,0);
+  let html = `<span class="step">// Step-by-step</span><br>`;
+  html += `Total samples: ${total}<br>`;
+  html += `p² terms:<br>${pTerms}<br>`;
+  html += `Σpᵢ² = ${pSum.toFixed(4)}<br>`;
+  html += `<br><strong>Gini = 1 − ${pSum.toFixed(4)} = ${g.toFixed(4)}</strong>`;
+  if(g < 0.1) html += `<br><span style="color:#4ade80">→ Very pure node!</span>`;
+  else if(g > 0.4) html += `<br><span style="color:#f97316">→ Very impure node.</span>`;
+  const el = document.getElementById('giniResult');
+  el.innerHTML = html; el.classList.add('show');
+}
+
+function calcIG() {
+  const parent = parseCounts(document.getElementById('parentInput').value);
+  const left = parseCounts(document.getElementById('leftInput').value);
+  const right = parseCounts(document.getElementById('rightInput').value);
+  if(!parent.length||!left.length||!right.length){alert('Fill in all fields');return;}
+  const totalP = parent.reduce((a,b)=>a+b,0);
+  const totalL = left.reduce((a,b)=>a+b,0);
+  const totalR = right.reduce((a,b)=>a+b,0);
+  const hP = entropy(parent);
+  const hL = entropy(left);
+  const hR = entropy(right);
+  const weightedH = (totalL/totalP)*hL + (totalR/totalP)*hR;
+  const ig = hP - weightedH;
+  let html = `<span class="step">// Step-by-step</span><br>`;
+  html += `H(parent) = ${hP.toFixed(4)} bits<br>`;
+  html += `H(left child) = ${hL.toFixed(4)} bits<br>`;
+  html += `H(right child) = ${hR.toFixed(4)} bits<br>`;
+  html += `Weighted H = (${totalL}/${totalP})(${hL.toFixed(4)}) + (${totalR}/${totalP})(${hR.toFixed(4)}) = ${weightedH.toFixed(4)}<br>`;
+  html += `<br><strong>Information Gain = ${hP.toFixed(4)} − ${weightedH.toFixed(4)} = ${ig.toFixed(4)} bits</strong>`;
+  if(ig > 0.3) html += `<br><span style="color:#4ade80">→ Excellent split!</span>`;
+  else if(ig < 0.05) html += `<br><span style="color:#f97316">→ Poor split — low gain.</span>`;
+  const el = document.getElementById('igResult');
+  el.innerHTML = html; el.classList.add('show');
+}
+
+function calcMargin() {
+  const w1 = parseFloat(document.getElementById('w1').value);
+  const w2 = parseFloat(document.getElementById('w2').value);
+  const norm = Math.sqrt(w1**2 + w2**2);
+  const margin = 2 / norm;
+  let html = `<span class="step">// Step-by-step</span><br>`;
+  html += `‖w‖ = √(${w1}² + ${w2}²) = √${(w1**2+w2**2).toFixed(4)} = ${norm.toFixed(4)}<br>`;
+  html += `<br><strong>Margin = 2 / ‖w‖ is the same as 2 / ${norm.toFixed(4)} which equals ${margin.toFixed(4)}</strong><br>`;
+  html += `<br><span class="step">// To maximize margin, minimize ‖w‖ (or ½‖w‖²)</span>`;
+  const el = document.getElementById('marginResult');
+  el.innerHTML = html; el.classList.add('show');
+}
+
+// ===== QUIZ =====
+const questions = [
+  {
+    q: "What are support vectors in an SVM?",
+    opts: ["All training data points","The data points closest to the decision boundary","The misclassified data points","The data points farthest from the boundary"],
+    ans: 1,
+    explain: "Support vectors are the training points that lie closest to the decision hyperplane. They are the ONLY points that influence where the boundary is placed — if you removed all other points, the SVM would produce the same boundary."
+  },
+  {
+    q: "If you increase the C parameter in a soft-margin SVM, what happens?",
+    opts: ["The margin gets wider and more points are allowed inside it","The model becomes more lenient about misclassifications","The model becomes stricter and penalizes misclassifications more heavily","The kernel changes to RBF automatically"],
+    ans: 2,
+    explain: "C controls the tradeoff between margin width and misclassification penalty. High C = the model strongly punishes any violation, leading to a narrower margin but fewer training errors. Low C = wider margin tolerated at the cost of more misclassifications."
+  },
+  {
+    q: "What does a Gini Impurity of 0 mean?",
+    opts: ["The node has equal numbers of every class","The split is useless","The node contains only one class (perfectly pure)","There are no samples in the node"],
+    ans: 2,
+    explain: "Gini = 0 means all samples in the node belong to a single class. The formula: 1 − Σpᵢ². If one class has p=1, then Gini = 1 − 1² = 0."
+  },
+  {
+    q: "A node has 6 cats and 4 dogs. What is its Gini Impurity?",
+    opts: ["0.50","0.48","0.72","0.28"],
+    ans: 1,
+    explain: "p_cat=0.6, p_dog=0.4. Gini = 1 − (0.6² + 0.4²) = 1 − (0.36+0.16) = 1 − 0.52 = 0.48."
+  },
+  {
+    q: "Which feature should a decision tree split on first?",
+    opts: ["The feature with the most unique values","The feature that produces the highest Information Gain","The feature with the lowest variance","The feature listed first in the dataset"],
+    ans: 1,
+    explain: "Decision trees greedily select the feature that maximizes Information Gain (or minimizes weighted child impurity) at each step. This puts the most discriminative feature at the top."
+  },
+  {
+    q: "What is the margin in an SVM if w = [3, 4]?",
+    opts: ["0.4","0.5","0.2","0.25"],
+    ans: 0,
+    explain: "‖w‖ = √(3² + 4²) = √(9+16) = √25 = 5. Margin = 2/‖w‖ = 2/5 = 0.4."
+  },
+  {
+    q: "In a decision tree, a feature appears in multiple internal nodes at different depths. What does this likely indicate?",
+    opts: ["A bug in the algorithm","That feature is highly important and useful at multiple thresholds","The tree is overfitting","All features are equally important"],
+    ans: 1,
+    explain: "A feature appearing at multiple levels means the algorithm found it useful for splitting at different thresholds or subsets of data. This suggests it has strong predictive power across the data distribution."
+  },
+  {
+    q: "Parent entropy is 1.0 bit. After a split, the weighted child entropy is 0.65 bits. What is the Information Gain?",
+    opts: ["1.65 bits","0.65 bits","0.35 bits","0.5 bits"],
+    ans: 2,
+    explain: "IG = H(parent) − H(children weighted) = 1.0 − 0.65 = 0.35 bits. Information Gain is always the difference — how many bits of uncertainty we eliminated by making this split."
+  }
+];
+
+let qIdx = 0, score = 0, answered = false;
+
+function renderQ() {
+  const q = questions[qIdx];
+  document.getElementById('qNum').textContent = qIdx+1;
+  document.getElementById('qTotal').textContent = questions.length;
+  document.getElementById('score').textContent = score;
+  document.getElementById('quizQ').textContent = q.q;
+  document.getElementById('quizFeedback').className = 'feedback';
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('nextBtn').className = 'next-btn';
+  answered = false;
+
+  const opts = document.getElementById('quizOptions');
+  opts.innerHTML = '';
+  q.opts.forEach((o,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = o;
+    btn.onclick = () => selectAnswer(i);
+    opts.appendChild(btn);
+  });
+}
+
+function selectAnswer(i) {
+  if(answered) return;
+  answered = true;
+  const q = questions[qIdx];
+  const btns = document.querySelectorAll('.option');
+  btns.forEach((b,idx) => {
+    if(idx === q.ans) b.classList.add('correct');
+    else if(idx === i && i !== q.ans) b.classList.add('wrong');
+    b.disabled = true;
+  });
+  const fb = document.getElementById('quizFeedback');
+  if(i === q.ans) {
+    score++;
+    document.getElementById('score').textContent = score;
+    fb.className = 'feedback correct show';
+    fb.textContent = '✓ Correct! ' + q.explain;
+  } else {
+    fb.className = 'feedback wrong show';
+    fb.textContent = '✗ Not quite. ' + q.explain;
+  }
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+  qIdx++;
+  if(qIdx >= questions.length) {
+    document.getElementById('quiz').querySelector('.card').style.display='none';
+    document.getElementById('quizDone').style.display='block';
+    const pct = Math.round(score/questions.length*100);
+    document.getElementById('finalScore').textContent = `${score} / ${questions.length}`;
+    const msgs = ['Keep reviewing — you\'ve got this!', 'Good foundation — review the formulas!', 'Solid understanding!', 'Excellent! You\'re ready for the midterm! 🎉'];
+    const mi = pct<50?0:pct<70?1:pct<90?2:3;
+    document.getElementById('finalMsg').textContent = msgs[mi];
+  } else {
+    renderQ();
+  }
+}
+
+function restartQuiz() {
+  qIdx=0; score=0; answered=false;
+  document.getElementById('quiz').querySelector('.card').style.display='block';
+  document.getElementById('quizDone').style.display='none';
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>

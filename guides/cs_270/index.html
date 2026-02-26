@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interactive Guides</title>
+<title>CS 270 — Interactive Guides</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./assets/shared.css">
+<link rel="stylesheet" href="../../assets/shared.css">
 <style>
   body {
     min-height: 100vh;
@@ -31,6 +31,21 @@
   header span {
     color: var(--muted);
     font-size: 11px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 32px 48px 0;
+    transition: color 0.15s;
+  }
+
+  .back-link:hover {
+    color: var(--accent);
   }
 
   .content {
@@ -111,34 +126,43 @@
 </head>
 <body>
 
+<a class="back-link" href="../../index.html">← All guides</a>
+
 <header>
-  <h1>Interactive Guides</h1>
-  <span>— self-contained learning modules</span>
+  <h1>CS 270</h1>
+  <span>— machine learning review modules</span>
 </header>
 
 <div class="content">
-  <div class="section-label">Available Guides</div>
+  <div class="section-label">Topics</div>
   <div class="guide-grid">
 
-    <a class="guide-card" href="./guides/concurrency/index.html">
-      <div class="guide-tag">Python · Threading</div>
-      <div class="guide-title">Thread Safety &amp; Concurrent Systems</div>
-      <div class="guide-desc">Locks, closures, dependency injection, daemon threads, and event signaling — with live interactive demos and quizzes.</div>
+    <a class="guide-card" href="../svm_dec_tree_gini_info_gain/index.html">
+      <div class="guide-tag">ML · Decision Trees</div>
+      <div class="guide-title">CS 270 ML Midterm Tutor</div>
+      <div class="guide-desc">SVMs, decision trees, Gini impurity, and information gain — interactive midterm prep with guided explanations and quizzes.</div>
       <div class="guide-arrow">Open guide →</div>
     </a>
 
-    <a class="guide-card" href="./guides/data_science/index.html">
-      <div class="guide-tag">Python · Data Science</div>
-      <div class="guide-title">Data Science Review</div>
-      <div class="guide-desc">Roles, sampling methods, statistics, Seaborn visualizations, and missing data — flashcard study mode with flip-to-reveal answers.</div>
+    <a class="guide-card" href="../delta_perceptron_review/index.html">
+      <div class="guide-tag">CS 270 · Neural Networks</div>
+      <div class="guide-title">CS270 Midterm — Neural Network Rules</div>
+      <div class="guide-desc">Delta rule, perceptron learning, and neural network fundamentals — CS 270 midterm review with interactive flashcards.</div>
       <div class="guide-arrow">Open guide →</div>
     </a>
 
-    <a class="guide-card" href="./guides/cs_270/index.html">
-      <div class="guide-tag">CS 270 · 4 guides</div>
-      <div class="guide-title">CS270 — Machine Learning</div>
-      <div class="guide-desc">SVMs, decision trees, neural networks, delta rule, Gini impurity, regression, and math foundations — full midterm review collection.</div>
-      <div class="guide-arrow">Browse topics →</div>
+    <a class="guide-card" href="../cs_270_math/index.html">
+      <div class="guide-tag">CS 270 · Math</div>
+      <div class="guide-title">CS270 ML Midterm Prep</div>
+      <div class="guide-desc">KNN, Decision Trees, Error (SSE, RMSE, etc), Regression (Linear, KNN), Naive bayes</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="../logit_log_regression/index.html">
+      <div class="guide-tag">CS 270 · Regression</div>
+      <div class="guide-title">Logit &amp; Log-Odds — CS270 Midterm Prep</div>
+      <div class="guide-desc">Logistic regression, log-odds, the logit function, and sigmoid — CS 270 midterm prep with interactive flashcards.</div>
+      <div class="guide-arrow">Open guide →</div>
     </a>
 
   </div>

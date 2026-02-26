@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Science Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a9b;
+    --accent3: #6affcb;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --correct: #6affcb;
+    --wrong: #ff6a9b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(124,106,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  header p {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    margin-top: 10px;
+  }
+
+  /* Progress */
+  .progress-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    height: 6px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: right;
+    margin-bottom: 6px;
+  }
+
+  /* Topic nav */
+  .topics {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 36px;
+  }
+
+  .topic-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .topic-btn:hover, .topic-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,255,0.1);
+  }
+
+  .topic-btn.done {
+    border-color: var(--correct);
+    color: var(--correct);
+    background: rgba(106,255,203,0.08);
+  }
+
+  /* Card */
+  .card-container {
+    perspective: 1200px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .card-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .card-back {
+    position: absolute;
+    inset: 0;
+    padding: 40px;
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 20px;
+    overflow-y: auto;
+  }
+
+  .card-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  .card-question {
+    font-size: clamp(1.2rem, 3vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .card-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .answer-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+
+  .answer-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .answer-text strong {
+    color: var(--accent3);
+  }
+
+  .answer-text .highlight {
+    background: rgba(124,106,255,0.15);
+    border-left: 3px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 12px 28px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-flip {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-flip:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,106,255,0.4); }
+
+  .btn-correct {
+    background: rgba(106,255,203,0.15);
+    color: var(--correct);
+    border: 1px solid var(--correct);
+  }
+
+  .btn-correct:hover { background: rgba(106,255,203,0.25); }
+
+  .btn-wrong {
+    background: rgba(255,106,155,0.15);
+    color: var(--wrong);
+    border: 1px solid var(--wrong);
+  }
+
+  .btn-wrong:hover { background: rgba(255,106,155,0.25); }
+
+  .btn-next {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-next:hover { border-color: var(--accent); color: var(--accent); }
+
+  .answer-controls {
+    display: none;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .answer-controls.visible { display: flex; }
+
+  /* Score display */
+  .score-display {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .score-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 8px 20px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .score-pill span {
+    font-weight: 700;
+    font-size: 1rem;
+    display: block;
+    text-align: center;
+  }
+
+  .score-correct span { color: var(--correct); }
+  .score-wrong span { color: var(--wrong); }
+  .score-left span { color: var(--accent); }
+
+  /* Complete screen */
+  .complete-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 40px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+
+  .complete-screen.visible { display: block; }
+
+  .complete-screen h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--correct), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .complete-screen p {
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .final-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .final-score span { color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .card { padding: 32px 24px; }
+    .card-back { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Data Science Review</h1>
+    <p>// flashcard study mode — flip to reveal answers</p>
+  </header>
+
+  <div class="score-display">
+    <div class="score-pill score-correct"><span id="correct-count">0</span>correct</div>
+    <div class="score-pill score-wrong"><span id="wrong-count">0</span>wrong</div>
+    <div class="score-pill score-left"><span id="left-count">0</span>remaining</div>
+  </div>
+
+  <div class="progress-label" id="progress-label">Card 1 of 0</div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+  <div class="topics" id="topics-nav"></div>
+
+  <div id="main-content">
+    <div class="card-container">
+      <div class="card" id="flashcard">
+        <div class="card-face card-front" id="card-front">
+          <div class="card-tag" id="card-tag">Topic</div>
+          <div class="card-question" id="card-question">Loading...</div>
+          <div class="card-hint">↩ click to reveal answer</div>
+        </div>
+        <div class="card-face card-back" id="card-back">
+          <div class="answer-label">Answer</div>
+          <div class="answer-text" id="card-answer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls" id="controls">
+      <button class="btn btn-flip" id="flip-btn" onclick="flipCard()">Reveal Answer</button>
+    </div>
+
+    <div class="answer-controls" id="answer-controls">
+      <button class="btn btn-wrong" onclick="markCard(false)">✗ Missed it</button>
+      <button class="btn btn-correct" onclick="markCard(true)">✓ Got it</button>
+    </div>
+  </div>
+
+  <div class="complete-screen" id="complete-screen">
+    <h2>Session Complete!</h2>
+    <div class="final-score" id="final-score">0<span>/0</span></div>
+    <p id="final-message">Keep reviewing the ones you missed!</p>
+    <button class="btn btn-flip" onclick="restart()">Restart All Cards</button>
+    &nbsp;
+    <button class="btn btn-next" onclick="reviewMissed()">Review Missed Only</button>
+  </div>
+</div>
+
+<script>
+const cards = [
+  // ── ROLES ──
+  {
+    topic: "Roles",
+    q: "What does a Data Analyst do?",
+    a: `A <strong>Data Analyst</strong> focuses on interpreting existing data to answer business questions.\n\n<div class="highlight">Key tasks: querying databases (SQL), making dashboards (Tableau/Power BI), descriptive statistics, presenting insights to stakeholders.</div>\nThinks: <strong>"What happened and why?"</strong>`
+  },
+  {
+    topic: "Roles",
+    q: "What does a Data Engineer do, and how do they differ from an analyst?",
+    a: `A <strong>Data Engineer</strong> builds and maintains the pipelines and infrastructure that make data available.\n\n<div class="highlight">Key tasks: ETL pipelines, data warehousing, cloud infra (AWS/GCP), Spark, Airflow. They build the roads — analysts drive on them.</div>\nThinks: <strong>"How do we get clean, reliable data at scale?"</strong>`
+  },
+  {
+    topic: "Roles",
+    q: "What distinguishes a Data Scientist from an analyst?",
+    a: `A <strong>Data Scientist</strong> builds predictive models and uses statistical/ML techniques to generate forward-looking insights.\n\n<div class="highlight">Key tasks: ML modeling, A/B testing, feature engineering, deploying models. Uses Python/R heavily.</div>\nThinks: <strong>"What will happen? Can we automate this decision?"</strong>`
+  },
+  {
+    topic: "Roles",
+    q: "What role does a Statistician play in data work?",
+    a: `A <strong>Statistician</strong> focuses on rigorous mathematical modeling, study design, and inference.\n\n<div class="highlight">Key strengths: experimental design, hypothesis testing, uncertainty quantification, survey methodology. Often found in academia, pharma, government.</div>\nThinks: <strong>"Is this finding statistically valid and generalizable?"</strong>`
+  },
+  {
+    topic: "Roles",
+    q: "What role does a Computer Scientist bring to a data team?",
+    a: `A <strong>Computer Scientist</strong> brings algorithmic thinking, systems design, and optimization.\n\n<div class="highlight">Key contributions: efficient algorithm design, distributed systems, data structures, software engineering best practices. Often overlaps with ML research.</div>\nThinks: <strong>"How do we solve this computationally and efficiently?"</strong>`
+  },
+
+  // ── SAMPLING ──
+  {
+    topic: "Sampling",
+    q: "What is Random Sampling?",
+    a: `<strong>Simple Random Sampling (SRS)</strong>: every individual in the population has an equal chance of being selected.\n\n<div class="highlight">Example: numbering all 1,000 students and using a random number generator to pick 100. Minimizes bias but requires a complete list.</div>\nBest when: population is homogeneous and a full list exists.`
+  },
+  {
+    topic: "Sampling",
+    q: "What is Stratified Sampling and when should you use it?",
+    a: `<strong>Stratified Sampling</strong>: divide population into subgroups (strata) by a key variable, then randomly sample within each stratum.\n\n<div class="highlight">Example: sampling 20% from each age group (18–25, 26–40, 41+). Guarantees representation of important subgroups.</div>\nUse when: subgroup differences are important to capture (e.g., clinical trials by gender).`
+  },
+  {
+    topic: "Sampling",
+    q: "What is Systematic Sampling?",
+    a: `<strong>Systematic Sampling</strong>: select every k-th element from a list after a random start.\n\n<div class="highlight">Example: from a list of 1,000, pick every 10th person starting at #4 → 4, 14, 24, 34…\nk = population size / sample size</div>\n⚠️ Risk: if there's a hidden pattern in the list at interval k, bias can creep in.`
+  },
+  {
+    topic: "Sampling",
+    q: "What is Convenience Sampling and what's the main risk?",
+    a: `<strong>Convenience Sampling</strong>: selecting whoever is easiest to reach.\n\n<div class="highlight">Example: surveying people in your college dorm, or posting a Twitter poll.\nThis is the weakest method statistically.</div>\n⚠️ Main risk: <strong>selection bias</strong> — the sample likely doesn't represent the broader population. Results cannot be generalized.`
+  },
+
+  // ── STATISTICS ──
+  {
+    topic: "Statistics",
+    q: "What is the difference between Range, Standard Deviation, and IQR?",
+    a: `All three measure <strong>spread/variability</strong>, but behave differently:\n\n<div class="highlight"><strong>Range</strong> = max − min. Simple but extremely sensitive to outliers.\n\n<strong>Std Dev (σ or s)</strong> = average distance from the mean. Sensitive to outliers. Used when data is roughly normal.\n\n<strong>IQR</strong> = Q3 − Q1. The middle 50% of data. Robust to outliers. Great for skewed data.</div>\nRule of thumb: prefer IQR when you have outliers or skewed distributions.`
+  },
+  {
+    topic: "Statistics",
+    q: "What is a One-Sample t-Test?",
+    a: `Tests whether the <strong>mean of a sample</strong> is significantly different from a known or hypothesized population mean (μ₀).\n\n<div class="highlight">t = (x̄ − μ₀) / (s / √n)\n\nExample: "Is our sample's average score of 78 significantly different from the national average of 75?"</div>\nRequires: roughly normal data (or n > 30 by CLT), unknown population std dev.`
+  },
+  {
+    topic: "Statistics",
+    q: "What is a p-value and how do you interpret it?",
+    a: `The <strong>p-value</strong> is the probability of observing your results (or more extreme) if the null hypothesis were true.\n\n<div class="highlight">p < 0.05 → "Statistically significant" → reject H₀\np ≥ 0.05 → fail to reject H₀ (not proof it's false!)</div>\n⚠️ Common mistake: p-value is NOT the probability that H₀ is true. It's about the data given H₀. A small p-value means the data is unlikely under H₀.`
+  },
+  {
+    topic: "Statistics",
+    q: "What is correlation and what are its limits?",
+    a: `<strong>Pearson's r</strong> measures the strength and direction of a linear relationship between two variables.\n\n<div class="highlight">r ranges from −1 to +1\nr = 1: perfect positive\nr = 0: no linear relationship\nr = −1: perfect negative</div>\n⚠️ Key limits: \n• Correlation ≠ causation\n• Only captures <strong>linear</strong> relationships (e.g., r=0 for a perfect U-shape)\n• Sensitive to outliers`
+  },
+
+  // ── SEABORN ──
+  {
+    topic: "Seaborn",
+    q: "When do you use a Seaborn Histogram (histplot) and what does it show?",
+    a: `Use when you want to see the <strong>distribution of a single continuous variable</strong>.\n\n<div class="highlight">sns.histplot(data=df, x='age', kde=True)\n\nShows: frequency/count of values in bins. Adding kde=True overlays a smoothed density curve.</div>\nLook for: shape (normal? skewed?), center, spread, outliers, modality (uni/bimodal).`
+  },
+  {
+    topic: "Seaborn",
+    q: "When do you use a Boxplot and what does it display?",
+    a: `Use to visualize the <strong>distribution and outliers of a continuous variable</strong>, especially across categories.\n\n<div class="highlight">sns.boxplot(data=df, x='category', y='score')\n\nBox = IQR (Q1 to Q3), line = median, whiskers = 1.5×IQR, dots = outliers.</div>\nGreat for: comparing groups, spotting outliers, seeing skew at a glance.`
+  },
+  {
+    topic: "Seaborn",
+    q: "When do you use a Scatterplot and what should you look for?",
+    a: `Use to explore the <strong>relationship between two continuous variables</strong>.\n\n<div class="highlight">sns.scatterplot(data=df, x='hours_studied', y='score', hue='grade')\n\nAdding hue adds a 3rd categorical dimension. Can add a regression line with sns.regplot().</div>\nLook for: direction (positive/negative), strength (tight/loose), outliers, non-linear patterns.`
+  },
+  {
+    topic: "Seaborn",
+    q: "When do you use a Heatmap in Seaborn?",
+    a: `Use to visualize a <strong>matrix of values</strong>, most commonly a correlation matrix.\n\n<div class="highlight">corr = df.corr()\nsns.heatmap(corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1)</div>\nGreat for: seeing which features are strongly correlated (r > 0.8 is a red flag for multicollinearity in regression).`
+  },
+  {
+    topic: "Seaborn",
+    q: "When do you use sns.barplot vs sns.countplot?",
+    a: `<strong>countplot</strong>: counts the number of occurrences of each category. No y variable needed.\n<div class="highlight">sns.countplot(data=df, x='grade') — "how many A's, B's, C's?"</div>\n<strong>barplot</strong>: shows the mean (or other aggregate) of a numeric variable per category, with confidence intervals.\n<div class="highlight">sns.barplot(data=df, x='grade', y='score') — "avg score per grade?"</div>`
+  },
+
+  // ── MISSING DATA ──
+  {
+    topic: "Missing Data",
+    q: "What is MCAR (Missing Completely At Random)?",
+    a: `<strong>MCAR</strong>: the probability of a value being missing is completely unrelated to any variable — observed or unobserved.\n\n<div class="highlight">Example: a lab machine randomly malfunctions and loses 5% of readings regardless of the patient or measurement value.\n\nTest: Little's MCAR test (p > 0.05 supports MCAR).</div>\nImplication: safe to do complete-case analysis — missingness doesn't bias results (but reduces power).`
+  },
+  {
+    topic: "Missing Data",
+    q: "What is MAR (Missing At Random)?",
+    a: `<strong>MAR</strong>: missingness is related to <em>observed</em> data, but not to the missing value itself after controlling for observed variables.\n\n<div class="highlight">Example: men are less likely to report income, but among men with the same education level, whether income is missing is random.\n\nMissing ≠ by chance, but the reason is in your data.</div>\nImplication: Imputation methods (multiple imputation, model-based) work well. Complete-case analysis may be biased.`
+  },
+  {
+    topic: "Missing Data",
+    q: "What is MNAR (Missing Not At Random)?",
+    a: `<strong>MNAR</strong>: missingness is related to the <em>unobserved value itself</em>.\n\n<div class="highlight">Example: people with very high or very low incomes are less likely to report income — the missingness depends on income itself.\n\nThis is the hardest to handle because you can't fix it just from your data.</div>\nImplication: No standard method fully corrects for MNAR. Requires sensitivity analysis, expert assumptions, or different study design.`
+  },
+  {
+    topic: "Missing Data",
+    q: "What are common strategies for handling missing data?",
+    a: `<strong>1. Complete-case analysis (listwise deletion)</strong>: drop rows with missing values. Only safe for MCAR.\n\n<div class="highlight"><strong>2. Mean/Median/Mode Imputation</strong>: fill with the average. Simple but reduces variance and ignores uncertainty.\n\n<strong>3. Multiple Imputation (MI)</strong>: create multiple complete datasets, analyze each, pool results. Gold standard for MAR.\n\n<strong>4. Model-based imputation</strong>: use regression or KNN to predict missing values.\n\n<strong>5. Indicator variables</strong>: add a binary flag for whether value was missing — sometimes missingness itself is informative.</div>`
+  },
+  {
+    topic: "Missing Data",
+    q: "How do you detect and visualize missingness in Python?",
+    a: `<div class="highlight">import missingno as msno\nmsno.matrix(df)      # shows pattern visually\nmsno.heatmap(df)     # shows correlation of missingness between columns</div>\nAlso useful:\n<div class="highlight">df.isnull().sum()                 # count per column\ndf.isnull().mean() * 100          # % missing per column\ndf.isnull().sum() / len(df)       # proportion</div>\nLook for patterns: are the same rows missing across multiple columns? That suggests MCAR is unlikely.`
+  }
+];
+
+let deck = [];
+let current = 0;
+let flipped = false;
+let correct = 0;
+let wrong = 0;
+let missed = [];
+let topics = [];
+
+function init(cardList) {
+  deck = [...cardList];
+  current = 0;
+  flipped = false;
+  correct = 0;
+  wrong = 0;
+  missed = [];
+
+  topics = [...new Set(cards.map(c => c.topic))];
+  buildTopicNav();
+  updateScores();
+  showCard();
+  document.getElementById('main-content').style.display = 'block';
+  document.getElementById('complete-screen').classList.remove('visible');
+}
+
+function buildTopicNav() {
+  const nav = document.getElementById('topics-nav');
+  nav.innerHTML = '<button class="topic-btn active" onclick="filterTopic(\'all\', this)">All</button>';
+  topics.forEach(t => {
+    nav.innerHTML += `<button class="topic-btn" onclick="filterTopic('${t}', this)">${t}</button>`;
+  });
+}
+
+function filterTopic(topic, btn) {
+  document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = topic === 'all' ? cards : cards.filter(c => c.topic === topic);
+  init(filtered);
+}
+
+function showCard() {
+  if (current >= deck.length) {
+    showComplete();
+    return;
+  }
+
+  const card = deck[current];
+  document.getElementById('card-tag').textContent = card.topic;
+  document.getElementById('card-question').textContent = card.q;
+  document.getElementById('card-answer').innerHTML = formatAnswer(card.a);
+
+  const fc = document.getElementById('flashcard');
+  fc.classList.remove('flipped');
+  flipped = false;
+
+  document.getElementById('flip-btn').style.display = 'inline-block';
+  document.getElementById('answer-controls').classList.remove('visible');
+
+  updateProgress();
+  updateScores();
+}
+
+function formatAnswer(text) {
+  return text.replace(/\n/g, '<br>');
+}
+
+function flipCard() {
+  flipped = !flipped;
+  document.getElementById('flashcard').classList.toggle('flipped', flipped);
+  if (flipped) {
+    document.getElementById('flip-btn').style.display = 'none';
+    document.getElementById('answer-controls').classList.add('visible');
+  }
+}
+
+function markCard(isCorrect) {
+  if (isCorrect) {
+    correct++;
+  } else {
+    wrong++;
+    missed.push(deck[current]);
+  }
+  current++;
+  showCard();
+}
+
+function updateProgress() {
+  const total = deck.length;
+  const pct = total ? ((current / total) * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Card ${Math.min(current + 1, total)} of ${total}`;
+}
+
+function updateScores() {
+  document.getElementById('correct-count').textContent = correct;
+  document.getElementById('wrong-count').textContent = wrong;
+  document.getElementById('left-count').textContent = deck.length - current;
+}
+
+function showComplete() {
+  document.getElementById('main-content').style.display = 'none';
+  const cs = document.getElementById('complete-screen');
+  cs.classList.add('visible');
+  document.getElementById('final-score').innerHTML = `${correct}<span>/${deck.length}</span>`;
+  const pct = Math.round((correct / deck.length) * 100);
+  let msg = pct === 100 ? "Perfect score! 🎉" : pct >= 80 ? "Great work! Review the missed ones." : "Keep practicing — you'll get there!";
+  document.getElementById('final-message').textContent = `${pct}% — ${msg}`;
+  updateScores();
+}
+
+function restart() {
+  init(cards);
+}
+
+function reviewMissed() {
+  if (missed.length === 0) {
+    restart();
+    return;
+  }
+  init(missed);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+  if (e.code === 'ArrowRight' && flipped) markCard(true);
+  if (e.code === 'ArrowLeft' && flipped) markCard(false);
+});
+
+// Click card to flip
+document.getElementById('flashcard').addEventListener('click', () => {
+  if (!flipped) flipCard();
+});
+
+init(cards);
+</script>
+</body>
+</html>

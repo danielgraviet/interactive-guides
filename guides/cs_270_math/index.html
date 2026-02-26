@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS270 ML Midterm Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3f;
+    --accent: #00e5ff;
+    --accent2: #ff6b6b;
+    --accent3: #a8ff78;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --correct: #a8ff78;
+    --wrong: #ff6b6b;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Space Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+
+  header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+    position: relative;
+  }
+
+  header .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes flicker {
+    0%,95%,100% { opacity: 1; }
+    96% { opacity: 0.4; }
+    97% { opacity: 1; }
+    98% { opacity: 0.2; }
+    99% { opacity: 1; }
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent) 0%, #7b61ff 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin: 2rem 0 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .card.red::before { background: var(--accent2); }
+  .card.green::before { background: var(--accent3); }
+  .card.purple::before { background: #7b61ff; }
+
+  .card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .card.red h3 { color: var(--accent2); }
+  .card.green h3 { color: var(--accent3); }
+  .card.purple h3 { color: #7b61ff; }
+
+  .card p, .card li { font-size: 0.82rem; line-height: 1.7; color: #c0c0d8; }
+  .card ul { padding-left: 1.25rem; }
+  .card li { margin-bottom: 0.25rem; }
+
+  .formula {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    margin: 0.75rem 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent3);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .warn {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.3);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--accent2);
+    margin-top: 0.75rem;
+  }
+
+  .warn::before { content: '⚠ QUINN TRAP: '; font-weight: 700; }
+
+  .tip {
+    background: rgba(0,229,255,0.06);
+    border: 1px solid rgba(0,229,255,0.2);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: 0.5rem;
+  }
+  .tip::before { content: '💡 '; }
+
+  /* Calculator */
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media(max-width:600px) { .calc-grid { grid-template-columns: 1fr; } }
+
+  .input-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .input-group label { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  .input-group input, .input-group textarea, .input-group select {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+    border-color: var(--accent);
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.5rem;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--accent); color: var(--bg); }
+
+  .result-box {
+    background: var(--bg);
+    border: 1px solid var(--accent3);
+    padding: 1rem;
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    color: var(--accent3);
+    display: none;
+    line-height: 1.8;
+  }
+  .result-box.show { display: block; animation: fadeIn 0.3s ease; }
+  .result-box .step { color: var(--muted); font-size: 0.75rem; }
+  .result-box .answer { color: var(--accent3); font-weight: 700; font-size: 0.9rem; }
+
+  /* Quiz */
+  .quiz-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 2px;
+  }
+
+  .quiz-question .q-text {
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .option-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    text-align: left;
+    padding: 0.6rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+  .option-btn.correct { border-color: var(--correct); color: var(--correct); background: rgba(168,255,120,0.05); }
+  .option-btn.wrong { border-color: var(--wrong); color: var(--wrong); background: rgba(255,107,107,0.05); }
+  .option-btn:disabled { cursor: default; }
+
+  .explanation {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(0,229,255,0.05);
+    border-left: 2px solid var(--accent);
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: none;
+    line-height: 1.7;
+  }
+  .explanation.show { display: block; }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    font-size: 0.8rem;
+  }
+  .score-label { color: var(--muted); }
+  .score-val { color: var(--accent); font-weight: 700; font-size: 1.1rem; }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+  }
+  .section-header h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+  .section-header span {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin: 0.75rem 0;
+  }
+  th {
+    background: var(--bg);
+    color: var(--accent);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    color: #c0c0d8;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media(max-width:600px) { .two-col { grid-template-columns: 1fr; } }
+
+  .inline-code {
+    font-family: 'Space Mono', monospace;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8em;
+    color: var(--accent3);
+  }
+
+  .next-btn {
+    display: block;
+    width: 100%;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.75rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.75rem;
+  }
+  .next-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .progress-indicator {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .full-width { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="tag">CS270 // Dr. Quinn Snell // BYU</div>
+    <h1>ML Midterm<br>Prep Terminal</h1>
+    <p>KNOW THE MATH. SURVIVE THE TRAPS.</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('reference')">📖 Reference</button>
+    <button class="tab-btn" onclick="showTab('knn')">KNN Calc</button>
+    <button class="tab-btn" onclick="showTab('tree')">Decision Tree</button>
+    <button class="tab-btn" onclick="showTab('error')">Error Calc</button>
+    <button class="tab-btn" onclick="showTab('regression')">Regression</button>
+    <button class="tab-btn" onclick="showTab('bayes')">Naive Bayes</button>
+    <button class="tab-btn" onclick="showTab('quiz')">🎯 Quiz</button>
+  </div>
+
+  <!-- REFERENCE -->
+  <div id="section-reference" class="section active">
+    <div class="section-header"><h2>Quick Reference</h2><span>FORMULAS & CONCEPTS</span></div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>KNN</h3>
+        <p>K-Nearest Neighbors: classify/predict based on the K closest training points.</p>
+        <div class="formula">Euclidean: d = √Σ(xᵢ - yᵢ)²
+Manhattan: d = Σ|xᵢ - yᵢ|
+Minkowski: d = (Σ|xᵢ-yᵢ|ᵖ)^(1/p)</div>
+        <ul>
+          <li>Odd K avoids ties (for classification)</li>
+          <li>Regression KNN → average of K neighbors</li>
+          <li>Classification KNN → majority vote</li>
+        </ul>
+        <div class="warn">Large K = more bias, less variance. Small K = more variance, less bias. k=1 memorizes training data.</div>
+        <div class="tip">Normalize features! KNN is distance-based — features on different scales will dominate.</div>
+      </div>
+
+      <div class="card red">
+        <h3>Decision Trees</h3>
+        <p>Split data to maximize information gain (minimize entropy/Gini).</p>
+        <div class="formula">Entropy: H = -Σ pᵢ log₂(pᵢ)
+Gini: G = 1 - Σ pᵢ²
+Info Gain = H(parent) - Σ(wᵢ × H(childᵢ))
+  where wᵢ = |child| / |parent|</div>
+        <div class="warn">Entropy of 0 = pure node. Entropy of 1 (2 classes) = maximally impure. IG picks the best split.</div>
+        <div class="tip">If all labels in a node are the same → entropy = 0, stop splitting.</div>
+      </div>
+
+      <div class="card green">
+        <h3>Error Metrics</h3>
+        <div class="formula">SSE = Σ(yᵢ - ŷᵢ)²
+MSE = SSE / n
+RMSE = √MSE = √(SSE/n)
+MAE = Σ|yᵢ - ŷᵢ| / n
+R² = 1 - SSE/SST
+  where SST = Σ(yᵢ - ȳ)²</div>
+        <div class="warn">RMSE is in the same units as y. MSE penalizes large errors more. R²=1 is perfect, R²=0 means "guess the mean".</div>
+      </div>
+
+      <div class="card purple">
+        <h3>Linear Regression</h3>
+        <div class="formula">ŷ = b₀ + b₁x
+b₁ = Σ(xᵢ-x̄)(yᵢ-ȳ) / Σ(xᵢ-x̄)²
+b₀ = ȳ - b₁x̄
+
+Multi: ŷ = b₀ + b₁x₁ + b₂x₂ + ...
+Matrix: β = (XᵀX)⁻¹Xᵀy</div>
+        <div class="warn">Line always passes through (x̄, ȳ). Don't extrapolate far outside training range.</div>
+      </div>
+
+      <div class="card full-width" style="grid-column: 1/-1;">
+        <h3>Naive Bayes</h3>
+        <p>Apply Bayes' theorem, assuming features are conditionally independent given the class.</p>
+        <div class="formula">P(class|features) ∝ P(class) × Π P(featureᵢ|class)
+
+Bayes: P(A|B) = P(B|A) × P(A) / P(B)
+
+Gaussian NB: P(x|μ,σ) = (1/√(2πσ²)) × e^(-(x-μ)²/(2σ²))
+
+Log version (avoid underflow):
+  log P(class|x) = log P(class) + Σ log P(xᵢ|class)</div>
+        <ul>
+          <li><strong>Prior</strong>: P(class) = count of class / total samples</li>
+          <li><strong>Likelihood</strong>: P(feature|class) = count(feature & class) / count(class)</li>
+          <li><strong>Laplace smoothing</strong>: add 1 to each count to avoid zero probabilities</li>
+        </ul>
+        <div class="warn">"Naive" = features are independent. This is often false in real life but still works surprisingly well.</div>
+        <div class="tip">To classify: compute the score for each class, pick the highest. You DON'T need to compute the denominator P(features) since it's the same for all classes.</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:0.5rem;">
+      <h3>Quinn Snell Trap Cheat Sheet</h3>
+      <table>
+        <tr><th>Common Trap</th><th>Correct Answer</th></tr>
+        <tr><td>"What does K=1 KNN do?"</td><td>Memorizes training data. 0 training error, bad generalization.</td></tr>
+        <tr><td>"Entropy of a pure node?"</td><td>0 (not 1). log₂(1)=0, so -1×log₂(1)=0.</td></tr>
+        <tr><td>"Which K minimizes training error?"</td><td>K=1 always. But this overfits.</td></tr>
+        <tr><td>"R²=0 means?"</td><td>Model is as good as guessing the mean. NOT zero accuracy.</td></tr>
+        <tr><td>"Naive Bayes needs denominator?"</td><td>No. For classification, P(features) cancels out.</td></tr>
+        <tr><td>"Higher IG = better or worse split?"</td><td>BETTER. Higher information gain = more informative split.</td></tr>
+        <tr><td>"RMSE vs MSE units?"</td><td>RMSE is same units as y. MSE is units².</td></tr>
+        <tr><td>"Does NB require feature independence?"</td><td>Yes — it ASSUMES it, even if the assumption is wrong.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- KNN CALCULATOR -->
+  <div id="section-knn" class="section">
+    <div class="section-header"><h2>KNN Calculator</h2><span>DISTANCE & CLASSIFICATION</span></div>
+
+    <div class="card">
+      <h3>Compute Distances</h3>
+      <p style="font-size:0.78rem; color:var(--muted); margin-bottom:1rem;">Enter a query point and training points. Get sorted distances and KNN prediction.</p>
+
+      <div class="calc-grid">
+        <div class="input-group">
+          <label>Query Point (comma-separated)</label>
+          <input type="text" id="knn-query" placeholder="e.g. 3, 4" value="3, 4">
+        </div>
+        <div class="input-group">
+          <label>K</label>
+          <input type="number" id="knn-k" value="3" min="1">
+        </div>
+        <div class="input-group" style="grid-column:1/-1;">
+          <label>Training Points (one per line: x1,x2,...,label)</label>
+          <textarea id="knn-points" rows="6" placeholder="1,2,A
+5,6,B
+2,3,A">1,2,A
+5,6,B
+2,3,A
+6,5,B
+1,4,A</textarea>
+        </div>
+        <div class="input-group">
+          <label>Distance Metric</label>
+          <select id="knn-metric">
+            <option value="euclidean">Euclidean</option>
+            <option value="manhattan">Manhattan</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Task</label>
+          <select id="knn-task">
+            <option value="classification">Classification (majority vote)</option>
+            <option value="regression">Regression (mean)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcKNN()">RUN KNN →</button>
+      <div id="knn-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- DECISION TREE -->
+  <div id="section-tree" class="section">
+    <div class="section-header"><h2>Decision Tree</h2><span>ENTROPY & INFO GAIN</span></div>
+
+    <div class="card">
+      <h3>Entropy / Info Gain Calculator</h3>
+      <p style="font-size:0.78rem; color:var(--muted); margin-bottom:1rem;">Enter label counts for a node and optional child splits to compute entropy and information gain.</p>
+
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Parent Node — Enter class counts (e.g. 5,3 means 5 of class A, 3 of class B)</label>
+        <input type="text" id="tree-parent" placeholder="5, 3" value="5, 3">
+      </div>
+
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Children splits — one child per line, counts separated by comma (e.g. 4,1 for one child, 1,2 for another)</label>
+        <textarea id="tree-children" rows="4" placeholder="4,1
+1,2">4,1
+1,2</textarea>
+      </div>
+
+      <button class="btn" onclick="calcTree()">CALCULATE →</button>
+      <div id="tree-result" class="result-box"></div>
+    </div>
+
+    <div class="card red">
+      <h3>Gini Impurity Calculator</h3>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Node class counts (comma-separated)</label>
+        <input type="text" id="gini-input" placeholder="5, 3" value="5, 3">
+      </div>
+      <button class="btn" onclick="calcGini()">CALCULATE GINI →</button>
+      <div id="gini-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- ERROR CALCULATOR -->
+  <div id="section-error" class="section">
+    <div class="section-header"><h2>Error Metrics</h2><span>SSE, MSE, RMSE, R²</span></div>
+
+    <div class="card">
+      <h3>Compute All Error Metrics</h3>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Actual values (y), comma-separated</label>
+        <input type="text" id="err-actual" placeholder="3, 5, 2, 8" value="3, 5, 2, 8">
+      </div>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Predicted values (ŷ), comma-separated</label>
+        <input type="text" id="err-pred" placeholder="2.5, 4, 3, 7" value="2.5, 4, 3, 7">
+      </div>
+      <button class="btn" onclick="calcError()">COMPUTE ERRORS →</button>
+      <div id="err-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- REGRESSION -->
+  <div id="section-regression" class="section">
+    <div class="section-header"><h2>Regression</h2><span>LINEAR & KNN</span></div>
+
+    <div class="card">
+      <h3>Simple Linear Regression</h3>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>X values (comma-separated)</label>
+        <input type="text" id="reg-x" placeholder="1,2,3,4,5" value="1,2,3,4,5">
+      </div>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Y values (comma-separated)</label>
+        <input type="text" id="reg-y" placeholder="2,4,5,4,5" value="2,4,5,4,5">
+      </div>
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Predict y for x = (optional)</label>
+        <input type="number" id="reg-pred-x" placeholder="6">
+      </div>
+      <button class="btn" onclick="calcRegression()">FIT LINE →</button>
+      <div id="reg-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- NAIVE BAYES -->
+  <div id="section-bayes" class="section">
+    <div class="section-header"><h2>Naive Bayes</h2><span>CLASSIFICATION</span></div>
+
+    <div class="card">
+      <h3>Categorical Naive Bayes Calculator</h3>
+      <p style="font-size:0.78rem; color:var(--muted); margin-bottom:1rem;">Enter training data (each row: f1,f2,...,class) and a query point to classify.</p>
+
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Training data (one sample per line: f1,f2,...,label)</label>
+        <textarea id="nb-data" rows="8">Sunny,Hot,High,Weak,No
+Sunny,Hot,High,Strong,No
+Overcast,Hot,High,Weak,Yes
+Rain,Mild,High,Weak,Yes
+Rain,Cool,Normal,Weak,Yes
+Rain,Cool,Normal,Strong,No
+Overcast,Cool,Normal,Strong,Yes
+Sunny,Mild,High,Weak,No
+Sunny,Cool,Normal,Weak,Yes
+Rain,Mild,Normal,Weak,Yes</textarea>
+      </div>
+
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Query point (f1,f2,...) — same number of features</label>
+        <input type="text" id="nb-query" value="Sunny,Cool,High,Strong">
+      </div>
+
+      <div class="input-group" style="margin-bottom:1rem;">
+        <label>Laplace Smoothing</label>
+        <select id="nb-smooth">
+          <option value="0">None (may get zero probability)</option>
+          <option value="1" selected>+1 (Laplace)</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="calcBayes()">CLASSIFY →</button>
+      <div id="nb-result" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="section-quiz" class="section">
+    <div class="section-header"><h2>Practice Quiz</h2><span>QUINN-STYLE TRAPS</span></div>
+
+    <div class="score-bar">
+      <span class="score-label">SCORE:</span>
+      <span class="score-val" id="quiz-score">0 / 0</span>
+      <button class="btn" style="margin-left:auto;" onclick="resetQuiz()">RESET</button>
+    </div>
+
+    <div class="progress-indicator" id="quiz-progress"></div>
+    <div id="quiz-container"></div>
+  </div>
+
+</div>
+
+<script>
+// ==================== TAB NAVIGATION ====================
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ==================== KNN ====================
+function calcKNN() {
+  const queryStr = document.getElementById('knn-query').value.trim();
+  const k = parseInt(document.getElementById('knn-k').value);
+  const metric = document.getElementById('knn-metric').value;
+  const task = document.getElementById('knn-task').value;
+  const linesRaw = document.getElementById('knn-points').value.trim().split('\n');
+
+  const query = queryStr.split(',').map(Number);
+  
+  const points = linesRaw.map(line => {
+    const parts = line.trim().split(',');
+    const label = parts[parts.length - 1].trim();
+    const coords = parts.slice(0, -1).map(Number);
+    return { coords, label };
+  }).filter(p => p.coords.length > 0);
+
+  let output = '<div class="step">== STEP 1: COMPUTE DISTANCES ==</div>\n\n';
+
+  const withDist = points.map((p, i) => {
+    let d;
+    if (metric === 'euclidean') {
+      d = Math.sqrt(p.coords.reduce((sum, v, j) => sum + Math.pow(v - query[j], 2), 0));
+    } else {
+      d = p.coords.reduce((sum, v, j) => sum + Math.abs(v - query[j]), 0);
+    }
+    output += `Point ${i+1} [${p.coords}] label=${p.label}: d = ${d.toFixed(4)}\n`;
+    return { ...p, d };
+  });
+
+  const sorted = [...withDist].sort((a, b) => a.d - b.d);
+  const kNearest = sorted.slice(0, k);
+
+  output += `\n<div class="step">== STEP 2: ${k} NEAREST NEIGHBORS ==</div>\n\n`;
+  kNearest.forEach((p, i) => {
+    output += `#${i+1}: [${p.coords}] label=${p.label}, d=${p.d.toFixed(4)}\n`;
+  });
+
+  output += `\n<div class="step">== STEP 3: PREDICTION ==</div>\n`;
+
+  if (task === 'classification') {
+    const votes = {};
+    kNearest.forEach(p => { votes[p.label] = (votes[p.label] || 0) + 1; });
+    const pred = Object.entries(votes).sort((a,b) => b[1]-a[1])[0][0];
+    output += `\nVotes: ${JSON.stringify(votes)}`;
+    output += `\n<span class="answer">→ PREDICTED CLASS: ${pred}</span>`;
+  } else {
+    const labels = kNearest.map(p => parseFloat(p.label));
+    const avg = labels.reduce((a,b) => a+b, 0) / labels.length;
+    output += `\nNeighbor values: [${labels}]`;
+    output += `\n<span class="answer">→ PREDICTED VALUE: ${avg.toFixed(4)}</span>`;
+  }
+
+  const r = document.getElementById('knn-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+// ==================== DECISION TREE ====================
+function entropy(counts) {
+  const total = counts.reduce((a,b)=>a+b,0);
+  if (total === 0) return 0;
+  return -counts.reduce((sum, c) => {
+    if (c === 0) return sum;
+    const p = c / total;
+    return sum + p * Math.log2(p);
+  }, 0);
+}
+
+function calcTree() {
+  const parentCounts = document.getElementById('tree-parent').value.trim().split(',').map(Number);
+  const childLines = document.getElementById('tree-children').value.trim().split('\n').filter(l=>l.trim());
+
+  let output = '';
+  const parentTotal = parentCounts.reduce((a,b)=>a+b,0);
+  const parentEntropy = entropy(parentCounts);
+
+  output += `<div class="step">== PARENT NODE ==</div>\n`;
+  output += `Counts: [${parentCounts}], Total: ${parentTotal}\n`;
+  output += `H(parent) = ${parentEntropy.toFixed(6)}\n`;
+
+  if (childLines.length === 0) {
+    const r = document.getElementById('tree-result');
+    r.innerHTML = output;
+    r.classList.add('show');
+    return;
+  }
+
+  output += `\n<div class="step">== CHILDREN ==</div>\n\n`;
+
+  const children = childLines.map((line, i) => {
+    const counts = line.split(',').map(Number);
+    const total = counts.reduce((a,b)=>a+b,0);
+    const h = entropy(counts);
+    output += `Child ${i+1}: counts=[${counts}], total=${total}, H=${h.toFixed(6)}\n`;
+    return { counts, total, h };
+  });
+
+  const weightedEntropy = children.reduce((sum, c) => sum + (c.total / parentTotal) * c.h, 0);
+  const infoGain = parentEntropy - weightedEntropy;
+
+  output += `\n<div class="step">== INFORMATION GAIN ==</div>\n`;
+  output += `Weighted H = ${children.map(c => `(${c.total}/${parentTotal})×${c.h.toFixed(4)}`).join(' + ')}\n`;
+  output += `Weighted H = ${weightedEntropy.toFixed(6)}\n`;
+  output += `<span class="answer">IG = H(parent) - WeightedH = ${parentEntropy.toFixed(4)} - ${weightedEntropy.toFixed(4)} = ${infoGain.toFixed(6)}</span>`;
+
+  const r = document.getElementById('tree-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+function calcGini() {
+  const counts = document.getElementById('gini-input').value.trim().split(',').map(Number);
+  const total = counts.reduce((a,b)=>a+b,0);
+  let output = '';
+  const gini = 1 - counts.reduce((sum, c) => {
+    const p = c / total;
+    output += `p${counts.indexOf(c)+1} = ${c}/${total} = ${p.toFixed(4)}, p² = ${(p*p).toFixed(6)}\n`;
+    return sum + p * p;
+  }, 0);
+  output += `<span class="answer">Gini = 1 - Σp² = ${gini.toFixed(6)}</span>`;
+  const r = document.getElementById('gini-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+// ==================== ERROR ====================
+function calcError() {
+  const actual = document.getElementById('err-actual').value.split(',').map(Number);
+  const pred = document.getElementById('err-pred').value.split(',').map(Number);
+
+  if (actual.length !== pred.length) {
+    alert('Actual and predicted must have same number of values!');
+    return;
+  }
+
+  const n = actual.length;
+  const yMean = actual.reduce((a,b)=>a+b,0)/n;
+
+  let output = `<div class="step">== RESIDUALS ==</div>\n`;
+  const errors = actual.map((y, i) => {
+    const e = y - pred[i];
+    output += `i=${i+1}: y=${y}, ŷ=${pred[i]}, (y-ŷ)=${e.toFixed(4)}, (y-ŷ)²=${(e*e).toFixed(4)}, |y-ŷ|=${Math.abs(e).toFixed(4)}\n`;
+    return e;
+  });
+
+  const sse = errors.reduce((s,e)=>s+e*e, 0);
+  const mae = errors.reduce((s,e)=>s+Math.abs(e), 0) / n;
+  const mse = sse / n;
+  const rmse = Math.sqrt(mse);
+  const sst = actual.reduce((s,y)=>s+Math.pow(y-yMean,2), 0);
+  const r2 = 1 - sse/sst;
+
+  output += `\n<div class="step">== RESULTS ==</div>\n`;
+  output += `n = ${n}, ȳ = ${yMean.toFixed(4)}\n`;
+  output += `SST = Σ(y-ȳ)² = ${sst.toFixed(4)}\n\n`;
+  output += `<span class="answer">SSE  = ${sse.toFixed(6)}
+MSE  = ${mse.toFixed(6)}
+RMSE = ${rmse.toFixed(6)}
+MAE  = ${mae.toFixed(6)}
+R²   = ${r2.toFixed(6)}</span>`;
+
+  const r = document.getElementById('err-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+// ==================== REGRESSION ====================
+function calcRegression() {
+  const xs = document.getElementById('reg-x').value.split(',').map(Number);
+  const ys = document.getElementById('reg-y').value.split(',').map(Number);
+  const predX = document.getElementById('reg-pred-x').value;
+
+  const n = xs.length;
+  const xMean = xs.reduce((a,b)=>a+b,0)/n;
+  const yMean = ys.reduce((a,b)=>a+b,0)/n;
+
+  const num = xs.reduce((s,x,i)=>s+(x-xMean)*(ys[i]-yMean),0);
+  const den = xs.reduce((s,x)=>s+(x-xMean)**2,0);
+  const b1 = num/den;
+  const b0 = yMean - b1*xMean;
+
+  let output = `<div class="step">== INTERMEDIATE VALUES ==</div>\n`;
+  output += `n = ${n}\n`;
+  output += `x̄ = ${xMean.toFixed(4)}, ȳ = ${yMean.toFixed(4)}\n\n`;
+  
+  output += `<div class="step">== STEP BY STEP ==</div>\n`;
+  xs.forEach((x, i) => {
+    output += `i=${i+1}: (x-x̄)=${(x-xMean).toFixed(4)}, (y-ȳ)=${(ys[i]-yMean).toFixed(4)}, product=${((x-xMean)*(ys[i]-yMean)).toFixed(4)}, (x-x̄)²=${((x-xMean)**2).toFixed(4)}\n`;
+  });
+
+  output += `\nΣ(x-x̄)(y-ȳ) = ${num.toFixed(4)}\n`;
+  output += `Σ(x-x̄)² = ${den.toFixed(4)}\n\n`;
+  output += `<span class="answer">b₁ = ${b1.toFixed(6)}
+b₀ = ${b0.toFixed(6)}
+→ ŷ = ${b0.toFixed(4)} + ${b1.toFixed(4)}x</span>`;
+
+  if (predX !== '') {
+    const xv = parseFloat(predX);
+    const yv = b0 + b1*xv;
+    output += `\n\n<span class="answer">For x=${xv}: ŷ = ${b0.toFixed(4)} + ${b1.toFixed(4)}×${xv} = ${yv.toFixed(4)}</span>`;
+  }
+
+  const r = document.getElementById('reg-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+// ==================== NAIVE BAYES ====================
+function calcBayes() {
+  const lines = document.getElementById('nb-data').value.trim().split('\n').map(l=>l.trim().split(','));
+  const query = document.getElementById('nb-query').value.trim().split(',');
+  const smoothing = parseInt(document.getElementById('nb-smooth').value);
+  
+  const numFeatures = lines[0].length - 1;
+  const classes = {};
+  
+  lines.forEach(row => {
+    const cls = row[numFeatures].trim();
+    if (!classes[cls]) classes[cls] = [];
+    classes[cls].push(row.slice(0, numFeatures).map(v=>v.trim()));
+  });
+
+  const total = lines.length;
+  let output = `<div class="step">== PRIORS ==</div>\n`;
+
+  const classNames = Object.keys(classes);
+  const scores = {};
+
+  classNames.forEach(cls => {
+    const cnt = classes[cls].length;
+    const prior = cnt / total;
+    output += `P(${cls}) = ${cnt}/${total} = ${prior.toFixed(4)}\n`;
+    scores[cls] = Math.log(prior);
+  });
+
+  output += `\n<div class="step">== LIKELIHOODS ==</div>\n`;
+
+  classNames.forEach(cls => {
+    output += `\n[Class: ${cls}]\n`;
+    for (let f = 0; f < numFeatures; f++) {
+      const fval = query[f].trim();
+      const clsData = classes[cls];
+      const matchCount = clsData.filter(row => row[f] === fval).length;
+      
+      // unique values for this feature
+      const allVals = new Set(lines.map(row => row[f].trim()));
+      const V = allVals.size;
+      
+      const prob = (matchCount + smoothing) / (clsData.length + smoothing * V);
+      output += `  P(f${f+1}=${fval}|${cls}) = (${matchCount}+${smoothing})/(${clsData.length}+${smoothing}×${V}) = ${prob.toFixed(6)}\n`;
+      scores[cls] += Math.log(prob);
+    }
+  });
+
+  output += `\n<div class="step">== SCORES (log scale) ==</div>\n`;
+  classNames.forEach(cls => {
+    output += `Score(${cls}) = ${scores[cls].toFixed(6)}\n`;
+  });
+
+  const best = classNames.reduce((a, b) => scores[a] > scores[b] ? a : b);
+  
+  // convert log scores back to unnormalized probs
+  const rawProbs = {};
+  classNames.forEach(cls => rawProbs[cls] = Math.exp(scores[cls]));
+  const rawSum = Object.values(rawProbs).reduce((a,b)=>a+b,0);
+  
+  output += `\n<span class="answer">→ PREDICTED CLASS: ${best}</span>`;
+
+  const r = document.getElementById('nb-result');
+  r.innerHTML = output;
+  r.classList.add('show');
+}
+
+// ==================== QUIZ ====================
+const QUESTIONS = [
+  {
+    q: "You have a KNN classifier with K=1. What is the training error?",
+    opts: ["100%","50%","0%","It depends on the data"],
+    ans: 2,
+    exp: "With K=1, every training point's nearest neighbor is itself. So every training point is classified correctly → training error = 0. This is classic overfitting — it says nothing about test performance."
+  },
+  {
+    q: "A decision tree node contains 4 samples of class A and 4 of class B. What is its entropy?",
+    opts: ["0","0.5","1.0","2.0"],
+    ans: 2,
+    exp: "H = -(0.5)log₂(0.5) - (0.5)log₂(0.5) = -(0.5×-1) - (0.5×-1) = 0.5 + 0.5 = 1.0. Equal class distribution gives maximum entropy of 1 for a 2-class problem."
+  },
+  {
+    q: "Split A gives children with entropies 0.0 and 0.9. Split B gives children both with entropy 0.5. Which split should you prefer?",
+    opts: ["Split A — lower combined entropy likely","Split B — more balanced","Cannot determine without class counts","They are equivalent"],
+    ans: 0,
+    exp: "We need the weighted entropy. A child with entropy 0.0 is completely pure (great!). Split A is likely better, but we need the actual child sizes to compute exact weighted entropy. Quinn loves asking this — always check the weighted sum using child sizes."
+  },
+  {
+    q: "In linear regression, the regression line ALWAYS passes through which point?",
+    opts: ["The origin (0,0)","The first data point","(x̄, ȳ) — the mean of x and y","The median point"],
+    ans: 2,
+    exp: "b₀ = ȳ - b₁x̄, so when x = x̄: ŷ = b₀ + b₁x̄ = ȳ - b₁x̄ + b₁x̄ = ȳ. The line always passes through (x̄, ȳ). Don't confuse this with the origin."
+  },
+  {
+    q: "What does R² = 0 indicate?",
+    opts: ["Zero prediction error","Model is completely wrong","Model predicts as well as guessing the mean","Negative correlation"],
+    ans: 2,
+    exp: "R² = 1 - SSE/SST. When R²=0, SSE = SST, meaning the model's error is exactly the same as just always guessing ȳ. It doesn't mean the model is 'wrong', just that it adds no value over the simplest baseline."
+  },
+  {
+    q: "In Naive Bayes classification, why don't you need to compute P(features) in the denominator?",
+    opts: ["It's always equal to 1","It's the same for all classes so it doesn't affect which class wins","The denominator is undefined","You need it to get calibrated probabilities"],
+    ans: 1,
+    exp: "We classify by finding the class with maximum P(class|features) ∝ P(class)×Π P(fᵢ|class). Since P(features) is constant across all classes, it doesn't change the ranking. We only need it if we want actual probability values (not just the winning class)."
+  },
+  {
+    q: "A dataset has 3 features. KNN with K=3 returns neighbors with distances 1.0, 2.0, and 5.0. Their regression values are 10, 20, and 30. What is the KNN regression prediction?",
+    opts: ["10 (closest neighbor)","20 (distance-weighted)","20 (simple average)","30 (farthest neighbor)"],
+    ans: 2,
+    exp: "Standard KNN regression uses a simple unweighted average: (10+20+30)/3 = 20. Distance-weighted KNN is a variant but if not specified, use the simple average. Quinn may try to trick you into distance-weighting."
+  },
+  {
+    q: "Which metric is in the same units as the target variable y?",
+    opts: ["SSE","MSE","RMSE","All of the above"],
+    ans: 2,
+    exp: "SSE and MSE are in units², which makes them hard to interpret. RMSE = √MSE restores the original units of y, making it interpretable in the same scale as your predictions."
+  },
+  {
+    q: "The 'Naive' in Naive Bayes refers to:",
+    opts: ["The algorithm is simple to implement","The assumption that features are conditionally independent given the class","Using only the prior probability","Ignoring the denominator in Bayes' theorem"],
+    ans: 1,
+    exp: "Naive Bayes assumes P(x₁,x₂,...,xₙ|class) = ΠP(xᵢ|class). This conditional independence assumption is 'naive' because it's often unrealistic. Despite this, the algorithm performs surprisingly well in practice."
+  },
+  {
+    q: "Increasing K in KNN generally has what effect?",
+    opts: ["Increases variance, decreases bias","Decreases variance, increases bias","Decreases both variance and bias","Increases both variance and bias"],
+    ans: 1,
+    exp: "Larger K smooths out predictions by averaging more neighbors → lower variance (less sensitive to individual points) but higher bias (may miss local patterns). K=1 is maximum variance/minimum bias; K=n is minimum variance/maximum bias (always predicts the majority class)."
+  },
+  {
+    q: "If a node has entropy 0.8 and its children have weighted entropy 0.4, what is the information gain?",
+    opts: ["1.2","0.4","0.8","0.2"],
+    ans: 1,
+    exp: "IG = H(parent) - Weighted H(children) = 0.8 - 0.4 = 0.4. Higher IG = better split because you're reducing uncertainty more."
+  },
+  {
+    q: "A training set has 3 'Yes' and 7 'No' labels. Using Laplace smoothing (+1), what is P(f=Sunny | class=Yes) if 2 of the 3 Yes examples have f=Sunny, and 'f' has 3 possible values (Sunny/Rainy/Cloudy)?",
+    opts: ["2/3 = 0.667","(2+1)/(3+1) = 0.75","(2+1)/(3+3) = 0.5","2/10 = 0.2"],
+    ans: 2,
+    exp: "With Laplace smoothing: P(f=Sunny|Yes) = (count + 1) / (class_count + V) where V = number of unique values for f. = (2+1)/(3+3) = 3/6 = 0.5. The +3 in denominator is +1 per unique value."
+  },
+  {
+    q: "You compute SSE = 100 for a model and SST = 100 for the data. What is R²?",
+    opts: ["1.0","0.5","0.0","-1.0"],
+    ans: 2,
+    exp: "R² = 1 - SSE/SST = 1 - 100/100 = 1 - 1 = 0. This means the model performs exactly as well as predicting the mean ȳ — it captures none of the variance in y."
+  },
+  {
+    q: "In a 2D KNN problem with Euclidean distance, point A is at (0,0) and the query is at (3,4). What is the distance?",
+    opts: ["3","4","5","7"],
+    ans: 2,
+    exp: "Euclidean: d = √(3² + 4²) = √(9+16) = √25 = 5. Classic 3-4-5 right triangle. Quinn might include this as a 'easy' trap when you're in a hurry."
+  },
+  {
+    q: "Which of the following is a sign that your decision tree is OVERFITTING?",
+    opts: ["High training accuracy AND high test accuracy","Low training accuracy AND low test accuracy","Very high training accuracy AND low test accuracy","Very low training accuracy AND high test accuracy"],
+    ans: 2,
+    exp: "Overfitting = model memorizes training data but fails to generalize. This shows as near-perfect training performance but poor test performance. A fully grown decision tree (one leaf per training point) always overfits."
+  }
+];
+
+let quizState = { score: 0, answered: 0, total: QUESTIONS.length };
+let shuffled = [];
+
+function shuffleQuestions() {
+  shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+
+  shuffled.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.id = `q-${qi}`;
+
+    const opts = q.opts.map((o, oi) => 
+      `<button class="option-btn" onclick="answerQ(${qi},${oi})" id="q${qi}o${oi}">${String.fromCharCode(65+oi)}. ${o}</button>`
+    ).join('');
+
+    div.innerHTML = `
+      <div class="q-text"><strong>${qi+1}.</strong> ${q.q}</div>
+      <div class="options">${opts}</div>
+      <div class="explanation" id="exp-${qi}">📐 ${q.exp}</div>
+    `;
+    container.appendChild(div);
+  });
+
+  updateScore();
+  document.getElementById('quiz-progress').textContent = `${QUESTIONS.length} questions total`;
+}
+
+function answerQ(qi, oi) {
+  const q = shuffled[qi];
+  const allOpts = document.querySelectorAll(`#q-${qi} .option-btn`);
+  
+  // Already answered?
+  if (allOpts[0].disabled) return;
+
+  const correct = oi === q.ans;
+  
+  allOpts.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === oi) btn.classList.add('wrong');
+  });
+
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  
+  if (correct) quizState.score++;
+  quizState.answered++;
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('quiz-score').textContent = `${quizState.score} / ${quizState.answered} answered (${shuffled.length} total)`;
+}
+
+function resetQuiz() {
+  quizState = { score: 0, answered: 0, total: QUESTIONS.length };
+  shuffleQuestions();
+  renderQuiz();
+}
+
+// Init quiz
+shuffleQuestions();
+renderQuiz();
+</script>
+</body>
+</html>

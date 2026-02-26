@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logit & Log-Odds — CS270 Midterm Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #00e5a0;
+    --accent2: #7c6fff;
+    --accent3: #ff6b6b;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --correct: #00e5a0;
+    --wrong: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 28px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Nav tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+  /* Section */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: #fff;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+
+  p {
+    line-height: 1.7;
+    color: #c0c0d0;
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  p:last-child { margin-bottom: 0; }
+
+  /* Formula blocks */
+  .formula {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    margin: 16px 0;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+
+  .formula .comment {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* Highlight box */
+  .highlight {
+    background: rgba(0,229,160,0.06);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+  }
+
+  .highlight-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin: 16px 0;
+  }
+
+  th {
+    background: var(--surface);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--border);
+  }
+
+  td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    color: #c0c0d0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Interactive slider */
+  .slider-section {
+    margin: 20px 0;
+  }
+
+  .slider-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .live-result {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .live-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .live-box .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .live-box .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* Quiz */
+  .quiz-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .question-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .question-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+    text-align: left;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .option:hover:not(.disabled) {
+    border-color: var(--accent2);
+    background: rgba(124,111,255,0.08);
+  }
+
+  .option.correct {
+    border-color: var(--correct) !important;
+    background: rgba(0,229,160,0.1) !important;
+    color: #fff;
+  }
+
+  .option.wrong {
+    border-color: var(--wrong) !important;
+    background: rgba(255,107,107,0.1) !important;
+    color: var(--muted);
+  }
+
+  .option.disabled { cursor: default; }
+
+  .opt-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent2);
+    min-width: 20px;
+    margin-top: 1px;
+  }
+
+  .option.correct .opt-letter { color: var(--correct); }
+  .option.wrong .opt-letter { color: var(--wrong); }
+
+  .explanation {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(0,229,160,0.06);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c0c0d0;
+    display: none;
+  }
+
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--accent); }
+
+  /* Score bar */
+  .score-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .score-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+
+  /* Two-col grid */
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 600px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .live-result { grid-template-columns: 1fr; }
+  }
+
+  /* Analogy callout */
+  .analogy {
+    background: rgba(124,111,255,0.08);
+    border: 1px solid rgba(124,111,255,0.25);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 14px 0;
+  }
+
+  .analogy-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  /* Warning box */
+  .warning {
+    background: rgba(255,107,107,0.07);
+    border: 1px solid rgba(255,107,107,0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14px;
+    color: #e0a0a0;
+  }
+
+  .warning strong { color: var(--accent3); }
+
+  /* Sigmoid visual */
+  #sigmoidCanvas {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    background: #0d0d14;
+    display: block;
+  }
+
+  .dot-line {
+    stroke-dasharray: 4 4;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="tag">CS270 · Intro to Machine Learning · BYU</div>
+    <h1>Logit & Log-Odds</h1>
+    <p class="subtitle">Interactive midterm prep — Dr. Quinstal style hard questions included</p>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressBar" style="width:20%"></div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab(0)">📐 Concepts</button>
+    <button class="tab" onclick="showTab(1)">🔢 Math</button>
+    <button class="tab" onclick="showTab(2)">🎛️ Interactive</button>
+    <button class="tab" onclick="showTab(3)">⚠️ Traps</button>
+    <button class="tab" onclick="showTab(4)">🎯 Quiz</button>
+  </div>
+
+  <!-- SECTION 0: CONCEPTS -->
+  <div class="section active" id="sec0">
+
+    <div class="card">
+      <div class="card-label">The Core Problem</div>
+      <h2>Why Not Just Use Linear Regression?</h2>
+      <p>For classification, we want to predict a probability — a value between 0 and 1. But linear regression outputs any real number (−∞ to +∞). If you tried to use it directly for binary classification, you'd get predicted "probabilities" like 1.7 or −0.3, which are meaningless.</p>
+      <p>Logistic regression solves this by using a clever transformation: it models the <strong style="color:var(--accent)">log-odds</strong> as a linear function, then converts back to a probability using the <strong style="color:var(--accent)">sigmoid function</strong>.</p>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-label">Definition</div>
+        <h3>Odds</h3>
+        <p>Odds express the ratio of the probability of success to the probability of failure.</p>
+        <div class="formula">
+          Odds = p / (1 − p)
+        </div>
+        <p style="font-size:13px;">If P(spam) = 0.75, then:<br>Odds = 0.75 / 0.25 = <strong style="color:var(--accent)">3</strong><br><span style="color:var(--muted)">→ 3-to-1 odds of being spam</span></p>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Definition</div>
+        <h3>Log-Odds (Logit)</h3>
+        <p>The <strong style="color:var(--accent)">logit</strong> is just the natural log of the odds. These two terms mean the exact same thing.</p>
+        <div class="formula">
+          logit(p) = log(p / (1 − p))
+        </div>
+        <p style="font-size:13px;">Range: −∞ to +∞<br>This lets us model probabilities with a linear equation!</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">The Key Insight</div>
+      <h2>The Logit Link</h2>
+      <p>Logistic regression assumes that the <em>log-odds</em> of the outcome is a linear combination of the input features:</p>
+      <div class="formula">
+        log(p / (1−p)) = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ
+        <br><br>
+        <span class="comment">← This is what's actually linear. Not p itself!</span>
+      </div>
+      <div class="highlight">
+        <div class="highlight-title">🔑 Critical Distinction</div>
+        <p style="margin:0; font-size:14px;">In linear regression, we model <strong>y</strong> directly as linear. In logistic regression, we model <strong>log(p/(1−p))</strong> as linear. The probability p is <em>never</em> linear in the features.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Visual</div>
+      <h2>The Sigmoid Function</h2>
+      <p>To go from log-odds back to probability, we apply the <strong style="color:var(--accent)">sigmoid function</strong> σ(z):</p>
+      <div class="formula">
+        σ(z) = 1 / (1 + e<sup>−z</sup>)
+        <br>
+        <span class="comment">where z = β₀ + β₁x₁ + ... (the linear combination)</span>
+      </div>
+      <canvas id="sigmoidCanvas"></canvas>
+      <p style="font-size:13px; color:var(--muted); margin-top:10px; text-align:center;">Sigmoid squashes any real number into (0, 1). The dot shows where z=0 → p=0.5.</p>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">💡 The Betting Analogy</div>
+      <p style="margin:0; font-size:14px; color:#c0c0d0;">Think of a casino. If the house says odds are 4:1 against you winning, that means P(win)=0.2. The log-odds = log(0.2/0.8) = log(0.25) ≈ −1.39. Negative log-odds = unlikely event. Positive log-odds = likely event. Zero log-odds = 50/50.</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 1: MATH -->
+  <div class="section" id="sec1">
+
+    <div class="card">
+      <div class="card-label">The Full Math</div>
+      <h2>Forward & Inverse Transformations</h2>
+      <p>You need to be comfortable going in both directions:</p>
+
+      <h3>Probability → Log-Odds (Logit)</h3>
+      <div class="formula">
+        logit(p) = log(p / (1 − p))
+        <br>
+        <span class="comment">Input: probability p ∈ (0,1)  →  Output: any real number</span>
+      </div>
+
+      <h3 style="margin-top:20px;">Log-Odds → Probability (Sigmoid)</h3>
+      <div class="formula">
+        p = σ(z) = 1 / (1 + e<sup>−z</sup>)
+        <br>
+        <span class="comment">Input: log-odds z ∈ (−∞, +∞)  →  Output: probability p ∈ (0,1)</span>
+      </div>
+
+      <div class="highlight">
+        <div class="highlight-title">🔄 They're Inverses</div>
+        <p style="margin:0;font-size:14px;">sigmoid(logit(p)) = p<br>logit(sigmoid(z)) = z<br><br>The sigmoid "undoes" the logit, and vice versa.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Reference Table</div>
+      <h2>Key Values to Know Cold</h2>
+      <table>
+        <thead>
+          <tr><th>Probability (p)</th><th>Odds</th><th>Log-Odds</th><th>Interpretation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0.01</td><td>≈0.0101</td><td>≈−4.60</td><td>Very unlikely</td></tr>
+          <tr><td>0.10</td><td>≈0.111</td><td>≈−2.20</td><td>Unlikely</td></tr>
+          <tr><td>0.25</td><td>0.333</td><td>≈−1.10</td><td>Below 50/50</td></tr>
+          <tr><td style="color:var(--accent)">0.50</td><td style="color:var(--accent)">1.00</td><td style="color:var(--accent)">0.00</td><td style="color:var(--accent)">50/50 → boundary!</td></tr>
+          <tr><td>0.75</td><td>3.00</td><td>≈1.10</td><td>Above 50/50</td></tr>
+          <tr><td>0.90</td><td>9.00</td><td>≈2.20</td><td>Likely</td></tr>
+          <tr><td>0.99</td><td>99.0</td><td>≈4.60</td><td>Very likely</td></tr>
+        </tbody>
+      </table>
+      <div class="warning">
+        <strong>⚠️ Exam Trap:</strong> p=0 gives log-odds of −∞, and p=1 gives +∞. Logit is undefined at the boundaries. Professors love testing this edge case.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Interpreting Coefficients</div>
+      <h2>What Do the β Coefficients Mean?</h2>
+      <p>This is a major source of exam questions. In logistic regression:</p>
+      <div class="formula">
+        log(p / (1−p)) = β₀ + β₁x₁
+      </div>
+      <p>When x₁ increases by 1 unit:</p>
+      <div class="grid2">
+        <div class="highlight">
+          <div class="highlight-title">Log-Odds Change</div>
+          <p style="margin:0;font-size:14px;">The <strong>log-odds increases by β₁</strong>.<br>This is additive.</p>
+        </div>
+        <div class="highlight">
+          <div class="highlight-title">Odds Change</div>
+          <p style="margin:0;font-size:14px;">The <strong>odds multiply by e<sup>β₁</sup></strong>.<br>This is multiplicative.</p>
+        </div>
+      </div>
+      <div class="warning">
+        <strong>⚠️ Common Mistake:</strong> Saying "β₁ is the change in probability." That's WRONG. It's the change in <em>log-odds</em>. The actual change in probability depends on where you are on the sigmoid curve.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Decision Boundary</div>
+      <h2>When Does the Model Predict Class 1?</h2>
+      <p>By convention, we predict class 1 when p ≥ 0.5. Since sigmoid(z) = 0.5 when z = 0:</p>
+      <div class="formula">
+        Predict class 1 when:  β₀ + β₁x₁ + ... ≥ 0
+        <br>
+        <span class="comment">i.e., when log-odds ≥ 0  →  odds ≥ 1  →  p ≥ 0.5</span>
+      </div>
+      <p>The decision boundary is the hyperplane where the linear combination equals zero — it's defined by the log-odds, not by a raw probability threshold alone.</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 2: INTERACTIVE -->
+  <div class="section" id="sec2">
+
+    <div class="card">
+      <div class="card-label">Live Calculator</div>
+      <h2>Explore Logit ↔ Probability</h2>
+      <p>Drag the slider to set a probability and watch all three values update in real time.</p>
+
+      <div class="slider-section">
+        <div class="slider-label">
+          <span>Probability (p)</span>
+          <span id="pLabel" style="color:var(--accent)">0.50</span>
+        </div>
+        <input type="range" id="probSlider" min="1" max="99" value="50" oninput="updateCalc()">
+      </div>
+
+      <div class="live-result">
+        <div class="live-box">
+          <div class="lbl">Probability</div>
+          <div class="val" id="probVal">0.500</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Odds</div>
+          <div class="val" id="oddsVal">1.000</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Log-Odds</div>
+          <div class="val" id="logoddsVal">0.000</div>
+        </div>
+      </div>
+
+      <div id="calcNote" style="margin-top:14px; font-size:13px; color:var(--muted); font-family:'JetBrains Mono',monospace;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Live Calculator #2</div>
+      <h2>From Log-Odds → Probability</h2>
+      <p>Enter a log-odds value (the linear model output) and see the predicted probability.</p>
+
+      <div class="slider-section">
+        <div class="slider-label">
+          <span>Log-Odds (z)</span>
+          <span id="zLabel" style="color:var(--accent2)">0.00</span>
+        </div>
+        <input type="range" id="zSlider" min="-500" max="500" value="0" oninput="updateSigmoid()">
+      </div>
+
+      <div class="live-result">
+        <div class="live-box">
+          <div class="lbl">Log-Odds (z)</div>
+          <div class="val" id="zVal" style="color:var(--accent2)">0.00</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Sigmoid Output</div>
+          <div class="val" id="sigVal">0.500</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Prediction</div>
+          <div class="val" id="predVal" style="font-size:1rem;">Class ?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Coefficient Simulator</div>
+      <h2>Effect of β Coefficient</h2>
+      <p>Suppose log-odds = β₀ + β₁·x. With β₀=0, see how β₁ scales the log-odds when x increases by 1:</p>
+
+      <div class="slider-section">
+        <div class="slider-label">
+          <span>β₁ coefficient</span>
+          <span id="betaLabel" style="color:var(--accent)">1.00</span>
+        </div>
+        <input type="range" id="betaSlider" min="-300" max="300" value="100" oninput="updateBeta()">
+      </div>
+
+      <div class="live-result">
+        <div class="live-box">
+          <div class="lbl">β₁</div>
+          <div class="val" id="betaVal">1.00</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Odds Ratio (e^β₁)</div>
+          <div class="val" id="orVal">2.718</div>
+        </div>
+        <div class="live-box">
+          <div class="lbl">Interpretation</div>
+          <div class="val" id="betaInterp" style="font-size:11px; line-height:1.3;">Odds × 2.72<br>per +1 x</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 3: TRAPS -->
+  <div class="section" id="sec3">
+
+    <div class="card">
+      <div class="card-label">Common Exam Mistakes</div>
+      <h2>Pitfalls Dr. Quinstal Might Test</h2>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #1: β is NOT the change in probability</h3>
+      <p>Many students think that if β₁ = 0.5, then a 1-unit increase in x₁ increases P(y=1) by 0.5. <strong style="color:var(--accent3)">This is wrong.</strong></p>
+      <div class="formula">β₁ = change in LOG-ODDS, not change in probability.</div>
+      <p>The change in probability depends on the current probability. Near p=0.5, the effect on p is larger. Near p=0 or p=1, the effect is smaller (sigmoid is flat there).</p>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #2: Log-Odds vs. Log of Probability</h3>
+      <div class="warning">
+        <strong>log(p / (1−p))</strong> is NOT the same as <strong>log(p)</strong>.<br><br>
+        Log-odds divides by (1−p). Many students drop the denominator. Always include it.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #3: "Logistic regression predicts probabilities directly"</h3>
+      <p>Technically yes, but the <em>model</em> is linear in the log-odds space, not the probability space. The sigmoid converts to probability at the end. If a question asks "what is logistic regression modeling as linear?", the answer is the <strong style="color:var(--accent)">log-odds</strong>.</p>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #4: Confusing Odds and Probability</h3>
+      <table>
+        <thead><tr><th>Scenario</th><th>Probability</th><th>Odds</th></tr></thead>
+        <tbody>
+          <tr><td>Flip heads</td><td>0.5</td><td>1 (1-to-1)</td></tr>
+          <tr><td>Roll a 6</td><td>1/6 ≈ 0.167</td><td>1/5 = 0.2</td></tr>
+          <tr><td>Spam email</td><td>0.8</td><td>4 (4-to-1)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:12px;">Odds = 1 does NOT mean 100% probability. It means 50/50. Always double-check which scale you're in.</p>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #5: Sign of Log-Odds</h3>
+      <div class="grid2">
+        <div class="highlight">
+          <div class="highlight-title">Negative Log-Odds</div>
+          <p style="margin:0;font-size:14px;">p &lt; 0.5<br>Odds &lt; 1<br>Model leans toward Class 0</p>
+        </div>
+        <div class="highlight">
+          <div class="highlight-title">Positive Log-Odds</div>
+          <p style="margin:0;font-size:14px;">p &gt; 0.5<br>Odds &gt; 1<br>Model leans toward Class 1</p>
+        </div>
+      </div>
+      <p style="margin-top:12px; font-size:14px;">Log-odds = 0 → exactly 50/50. This is the decision boundary.</p>
+    </div>
+
+    <div class="card">
+      <h3>❌ Trap #6: Assuming Linear Relationship Between Features and Probability</h3>
+      <p>Logistic regression is a <em>linear</em> classifier — but only in log-odds space. The relationship between features and the <em>probability</em> is nonlinear (S-shaped sigmoid). A question might ask "is logistic regression linear?" — the careful answer is "linear in log-odds / in its parameters, nonlinear in probability."</p>
+    </div>
+
+  </div>
+
+  <!-- SECTION 4: QUIZ -->
+  <div class="section" id="sec4">
+
+    <div class="score-display">
+      <div>
+        <div class="score-label">Score</div>
+        <div class="score-num" id="scoreDisplay">0 / 8</div>
+      </div>
+      <div style="flex:1;">
+        <div class="progress-track">
+          <div class="progress-fill" id="quizProgress" style="width:0%"></div>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px; font-family:'JetBrains Mono',monospace;" id="quizStatus">Answer questions below</div>
+      </div>
+      <button class="btn btn-ghost" onclick="resetQuiz()">Reset</button>
+    </div>
+
+    <div id="quizContainer"></div>
+
+  </div>
+
+</div>
+
+<script>
+// ─── Sigmoid Canvas ───────────────────────────────────────────────────────────
+function drawSigmoid() {
+  const canvas = document.getElementById('sigmoidCanvas');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth, H = canvas.offsetHeight || 200;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  ctx.fillStyle = '#0d0d14';
+  ctx.fillRect(0,0,W,H);
+
+  const pad = 40;
+  const xMin = -6, xMax = 6;
+
+  function toCanvas(z, p) {
+    return [
+      pad + (z - xMin) / (xMax - xMin) * (W - 2*pad),
+      pad + (1 - p) * (H - 2*pad)
+    ];
+  }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  for (let p = 0; p <= 1; p += 0.25) {
+    const [,y] = toCanvas(0, p);
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W-pad, y); ctx.stroke();
+  }
+  for (let z = -6; z <= 6; z += 2) {
+    const [x] = toCanvas(z, 0.5);
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, H-pad); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  const [,midY] = toCanvas(0, 0.5);
+  const [midX] = toCanvas(0, 0);
+  ctx.beginPath(); ctx.moveTo(pad, midY); ctx.lineTo(W-pad, midY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(midX, pad); ctx.lineTo(midX, H-pad); ctx.stroke();
+
+  // Sigmoid curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#00e5a0';
+  ctx.lineWidth = 2.5;
+  let first = true;
+  for (let z = xMin; z <= xMax; z += 0.05) {
+    const p = 1 / (1 + Math.exp(-z));
+    const [x,y] = toCanvas(z, p);
+    if (first) { ctx.moveTo(x,y); first=false; } else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  // Dot at z=0
+  const [cx, cy] = toCanvas(0, 0.5);
+  ctx.beginPath();
+  ctx.arc(cx, cy, 6, 0, Math.PI*2);
+  ctx.fillStyle = '#7c6fff';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Labels
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillText('z=0, p=0.5', cx+10, cy-8);
+  ctx.fillText('1.0', pad+4, pad+10);
+  ctx.fillText('0.5', pad+4, midY-4);
+  ctx.fillText('0.0', pad+4, H-pad-4);
+}
+
+window.addEventListener('resize', drawSigmoid);
+setTimeout(drawSigmoid, 100);
+
+// ─── Interactive Calculators ──────────────────────────────────────────────────
+function updateCalc() {
+  const p = parseInt(document.getElementById('probSlider').value) / 100;
+  const odds = p / (1 - p);
+  const logodds = Math.log(odds);
+
+  document.getElementById('pLabel').textContent = p.toFixed(2);
+  document.getElementById('probVal').textContent = p.toFixed(3);
+  document.getElementById('oddsVal').textContent = odds < 100 ? odds.toFixed(3) : odds.toFixed(1);
+  document.getElementById('logoddsVal').textContent = logodds.toFixed(3);
+
+  let note = '';
+  if (logodds > 0.01) note = `→ Positive log-odds: model favors Class 1 (p > 0.5)`;
+  else if (logodds < -0.01) note = `→ Negative log-odds: model favors Class 0 (p < 0.5)`;
+  else note = `→ Log-odds ≈ 0: decision boundary, 50/50`;
+  document.getElementById('calcNote').textContent = note;
+}
+
+function updateSigmoid() {
+  const z = parseInt(document.getElementById('zSlider').value) / 100;
+  const p = 1 / (1 + Math.exp(-z));
+
+  document.getElementById('zLabel').textContent = z.toFixed(2);
+  document.getElementById('zVal').textContent = z.toFixed(2);
+  document.getElementById('sigVal').textContent = p.toFixed(4);
+
+  const pred = document.getElementById('predVal');
+  if (p >= 0.5) {
+    pred.textContent = 'Class 1';
+    pred.style.color = 'var(--correct)';
+  } else {
+    pred.textContent = 'Class 0';
+    pred.style.color = 'var(--accent3)';
+  }
+}
+
+function updateBeta() {
+  const beta = parseInt(document.getElementById('betaSlider').value) / 100;
+  const or = Math.exp(beta);
+
+  document.getElementById('betaLabel').textContent = beta.toFixed(2);
+  document.getElementById('betaVal').textContent = beta.toFixed(2);
+  document.getElementById('orVal').textContent = or.toFixed(3);
+
+  let interp;
+  if (or > 1.005) interp = `Odds × ${or.toFixed(2)}<br>per +1 x<br><span style="color:var(--correct)">↑ increases odds</span>`;
+  else if (or < 0.995) interp = `Odds × ${or.toFixed(2)}<br>per +1 x<br><span style="color:var(--accent3)">↓ decreases odds</span>`;
+  else interp = `Odds unchanged<br>(no effect)`;
+  document.getElementById('betaInterp').innerHTML = interp;
+}
+
+// Initialize
+updateCalc(); updateSigmoid(); updateBeta();
+
+// ─── Quiz ─────────────────────────────────────────────────────────────────────
+const questions = [
+  {
+    q: "In logistic regression, what does the model assume is a linear function of the input features?",
+    opts: [
+      "The probability P(y=1)",
+      "The log-odds log(p / (1−p))",
+      "The squared probability p²",
+      "The sigmoid output σ(Xβ)"
+    ],
+    ans: 1,
+    exp: "Logistic regression models the <strong>log-odds</strong> (a.k.a. logit) as linear: log(p/(1−p)) = β₀ + β₁x₁ + ... The probability itself is not linear in the features — it's obtained via the sigmoid transformation."
+  },
+  {
+    q: "A logistic regression model outputs a raw score (linear combination) of z = 2.3. What is the predicted probability, and which class is predicted?",
+    opts: [
+      "p ≈ 0.50, Class 0 or 1 are equally likely",
+      "p = 2.3 directly, Class 1 (since z > 0)",
+      "p = σ(2.3) ≈ 0.909, Class 1",
+      "p = logit(2.3) ≈ 3.99, Class 1"
+    ],
+    ans: 2,
+    exp: "The raw score z = 2.3 is the log-odds. To get probability, apply the sigmoid: p = 1/(1+e^−2.3) ≈ 0.909. Since p > 0.5 (equivalently, z > 0), we predict Class 1. Never use z directly as a probability."
+  },
+  {
+    q: "A logistic regression coefficient β₁ = 1.5 for feature x₁. What is the correct interpretation?",
+    opts: [
+      "A 1-unit increase in x₁ increases P(y=1) by 1.5",
+      "A 1-unit increase in x₁ multiplies the odds by e^1.5 ≈ 4.48",
+      "A 1-unit increase in x₁ multiplies the probability by 1.5",
+      "A 1-unit increase in x₁ decreases the log-odds by 1.5"
+    ],
+    ans: 1,
+    exp: "β₁ is the additive change in log-odds per unit increase in x₁. In terms of odds, this means multiplying by e^β₁ = e^1.5 ≈ 4.48. The effect on probability is NOT constant — it depends on the current value of p."
+  },
+  {
+    q: "What are the odds if P(y=1) = 0.80?",
+    opts: [
+      "0.80",
+      "4.0",
+      "0.20",
+      "1.25"
+    ],
+    ans: 1,
+    exp: "Odds = p / (1−p) = 0.80 / 0.20 = 4.0. This means the event is 4 times as likely to occur than not. Note: odds = 1 corresponds to p = 0.5, not p = 1."
+  },
+  {
+    q: "If the log-odds of an event is −∞, what is the probability of that event?",
+    opts: [
+      "0 (impossible event)",
+      "1 (certain event)",
+      "0.5",
+      "This is undefined — log-odds cannot be −∞"
+    ],
+    ans: 0,
+    exp: "As log-odds → −∞, the odds → 0, meaning the event becomes impossible: p → 0. Conversely, log-odds → +∞ means p → 1. The boundaries are technically excluded from the logit domain because logit(0) = −∞ and logit(1) = +∞."
+  },
+  {
+    q: "Which of the following statements about logistic regression is FALSE?",
+    opts: [
+      "The decision boundary is where the linear combination β₀ + βᵀx = 0",
+      "The sigmoid function maps any real number to the interval (0, 1)",
+      "The model coefficients β represent the direct change in probability per unit feature change",
+      "Logistic regression can be used for binary classification"
+    ],
+    ans: 2,
+    exp: "Statement C is FALSE. The coefficients β represent the change in LOG-ODDS, not the direct change in probability. The change in probability is nonlinear and depends on the current value of p. All other statements are correct."
+  },
+  {
+    q: "Two models produce the following log-odds: Model A outputs z = −0.001 and Model B outputs z = 0.001. Which model predicts Class 1, and what can you say about their confidence?",
+    opts: [
+      "Model A predicts Class 1 with high confidence; Model B predicts Class 0",
+      "Model B predicts Class 1; both models are nearly at the decision boundary with very low confidence",
+      "Model A predicts Class 0; Model B predicts Class 1; both are highly confident",
+      "Both models predict Class 1 since z > −1 for both"
+    ],
+    ans: 1,
+    exp: "The decision boundary is z = 0. Model A (z < 0) predicts Class 0; Model B (z > 0) predicts Class 1. However, both z values are extremely close to 0, meaning p ≈ 0.5 for both — they have almost no confidence. This is a key insight: magnitude of z matters for confidence, not just sign."
+  },
+  {
+    q: "You fit a logistic regression and find β₁ = −2.0. A new data point has x₁ = 3. Holding all else constant (β₀ = 0), what are the log-odds and predicted class?",
+    opts: [
+      "Log-odds = 6.0, Class 1",
+      "Log-odds = −6.0, Class 0",
+      "Log-odds = −2.0, Class 0",
+      "Log-odds = 0.5, Class 1"
+    ],
+    ans: 1,
+    exp: "Log-odds = β₀ + β₁x₁ = 0 + (−2.0)(3) = −6.0. Since z = −6.0 is strongly negative, p = σ(−6) ≈ 0.0025, so we predict Class 0 with very high confidence. The negative coefficient and positive feature combine to push strongly away from Class 1."
+  }
+];
+
+let scores = new Array(questions.length).fill(null);
+let answered = new Array(questions.length).fill(false);
+
+function buildQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+  questions.forEach((q, qi) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-card';
+    div.id = `q${qi}`;
+
+    const optLetters = ['A','B','C','D'];
+    const optsHTML = q.opts.map((opt, oi) => 
+      `<button class="option${answered[qi] ? ' disabled' : ''} ${answered[qi] ? (oi === q.ans ? 'correct' : (scores[qi] !== null && scores[qi] === oi && oi !== q.ans ? 'wrong' : '')) : ''}" 
+        onclick="${answered[qi] ? '' : `pickAnswer(${qi}, ${oi})`}" id="q${qi}o${oi}">
+        <span class="opt-letter">${optLetters[oi]}</span>
+        <span>${opt}</span>
+      </button>`
+    ).join('');
+
+    div.innerHTML = `
+      <div class="question-num">Question ${qi+1} of ${questions.length}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options">${optsHTML}</div>
+      <div class="explanation ${answered[qi] ? 'show' : ''}" id="exp${qi}">
+        ${scores[qi] === q.ans ? '✅ Correct! ' : '❌ Not quite. '}${q.exp}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  updateScore();
+}
+
+function pickAnswer(qi, oi) {
+  if (answered[qi]) return;
+  answered[qi] = true;
+  scores[qi] = oi;
+
+  const correct = oi === questions[qi].ans;
+
+  // Style options
+  questions[qi].opts.forEach((_, i) => {
+    const btn = document.getElementById(`q${qi}o${i}`);
+    btn.classList.add('disabled');
+    if (i === questions[qi].ans) btn.classList.add('correct');
+    else if (i === oi && !correct) btn.classList.add('wrong');
+  });
+
+  const exp = document.getElementById(`exp${qi}`);
+  exp.innerHTML = `${correct ? '✅ Correct! ' : '❌ Not quite. '}${questions[qi].exp}`;
+  exp.classList.add('show');
+
+  updateScore();
+}
+
+function updateScore() {
+  const total = questions.length;
+  const answeredCount = answered.filter(Boolean).length;
+  const correctCount = scores.filter((s,i) => s === questions[i].ans).length;
+
+  document.getElementById('scoreDisplay').textContent = `${correctCount} / ${total}`;
+  document.getElementById('quizProgress').style.width = `${(answeredCount/total)*100}%`;
+  document.getElementById('quizStatus').textContent = answeredCount < total
+    ? `${total - answeredCount} questions remaining`
+    : correctCount === total ? '🎉 Perfect score!' : `Completed — ${correctCount}/${total} correct`;
+}
+
+function resetQuiz() {
+  scores = new Array(questions.length).fill(null);
+  answered = new Array(questions.length).fill(false);
+  buildQuiz();
+}
+
+buildQuiz();
+
+// ─── Tab navigation ───────────────────────────────────────────────────────────
+const progMap = [20, 40, 60, 80, 100];
+function showTab(i) {
+  document.querySelectorAll('.section').forEach((s,j) => s.classList.toggle('active', j===i));
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.getElementById('progressBar').style.width = progMap[i] + '%';
+  if (i === 0) setTimeout(drawSigmoid, 50);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

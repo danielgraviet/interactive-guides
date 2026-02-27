@@ -346,17 +346,7 @@ No changes to `index.html` HTML required after the initial setup.
 
 ## Decisions
 
-1. **How many top-level categories?** — **3 for now** (Machine Learning, Computer Science, Data Science). Add more categories only when new content clearly warrants a new grouping.
-
-2. **Keep category hub pages?** — **No, remove them.** The inline panel fully replaces their function. Back-links in each guide point to `index.html#<category>` which auto-opens the correct panel, so deep linking still works without maintaining separate hub pages.
-
-3. **Lesson metadata** — **Yes, show light metadata.** Each entry in the `CATEGORIES` data object will include a `meta` field (e.g., `"Flashcards · 12 questions"`, `"Interactive demo"`). This also powers the search feature so results can display type and topic at a glance.
-
-4. **Search** — **Scoped in.** A client-side text filter above the category grid, searching across lesson titles and metadata. **No framework switch needed** — a 20-line vanilla JS filter over the `CATEGORIES` object will be instant at this scale and preserves the "Go Live" workflow you rely on. Next.js would add a build step, `npm run dev`, and Node.js as a dependency without providing any benefit for a static content site. Vercel deploys vanilla HTML just as cleanly.
-
-   **Search UX:** A single `<input>` above the category grid. As you type, lesson cards across all categories are filtered in real time. Categories with zero matches collapse automatically. Results show lesson title + metadata snippet.
-
-   Updated `CATEGORIES` entry shape:
-   ```js
-   { title: 'Naive Bayes', path: '...', meta: 'Flashcards · 12 questions', tags: ['ML', 'probability'] }
-   ```
+1. **How many top-level categories?** Currently 3 natural groupings exist. Adding a 4th (e.g., "Mathematics") now vs. later? -- Answer: Keep the 3 natural groupings. 
+2. **Keep category hub pages** (`guides/machine-learning/index.html`) as a deep-linkable fallback, or remove them entirely in favor of the panel? Answer: Not sure here, make the best choice. 
+3. **Lesson metadata** — should lesson cards show extra info (e.g., "Flashcards · 12 questions", "Interactive demo")? This would require adding metadata to the `CATEGORIES` data object. Answer: Yes show some light info to help with our search feature. 
+4. **Search** — as the guide count grows, a simple text filter above the category grid might be useful. Worth scoping in now or deferring? Answer: Yes scope that in. I would like to easily search for content. To make this easy, should we switch to a framework like Next.js? Would that make it easier or harder. I could just deploy on vercel. The reason I like this method, is that I get instant access when I click "go live" 

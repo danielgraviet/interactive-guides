@@ -24,7 +24,6 @@ interactive-guides/
 │
 └── guides/
     ├── machine-learning/
-    │   ├── index.html                  # Category hub (optional deep link)
     │   ├── linear-regression/
     │   │   └── index.html
     │   ├── logit-log-regression/
@@ -45,12 +44,10 @@ interactive-guides/
     │       └── index.html
     │
     ├── computer-science/
-    │   ├── index.html
     │   └── concurrency/
     │       └── index.html
     │
     └── data-science/
-        ├── index.html
         └── data-science-review/
             └── index.html
 ```
@@ -154,6 +151,7 @@ Place each `.sub-panel` **immediately after its category row** in the DOM so the
 <a class="lesson-card" href="./guides/machine-learning/naive-bayes/index.html">
   <span class="lesson-title">Naive Bayes</span>
   <span class="lesson-meta">Flashcards · 12 questions</span>
+  <!-- lesson-meta is populated from the `meta` field in the CATEGORIES data object -->
 </a>
 ```
 
@@ -312,6 +310,7 @@ document.querySelectorAll('.panel-close').forEach(btn => {
 3. Add `assets/nav.js` and link it at the bottom of `index.html`
 4. Add panel CSS (either inline in `index.html` or extend `assets/shared.css`)
 5. Remove the now-redundant `guides/cs_270/index.html` hub page (its role is replaced by the ML panel)
+6. Add search input above the category grid; wire up client-side filter in `nav.js`
 
 ### Phase 3 — Polish
 
@@ -345,9 +344,19 @@ No changes to `index.html` HTML required after the initial setup.
 
 ---
 
-## Open Questions Before Implementation
+## Decisions
 
-1. **How many top-level categories?** Currently 3 natural groupings exist. Adding a 4th (e.g., "Mathematics") now vs. later?
-2. **Keep category hub pages** (`guides/machine-learning/index.html`) as a deep-linkable fallback, or remove them entirely in favor of the panel?
-3. **Lesson metadata** — should lesson cards show extra info (e.g., "Flashcards · 12 questions", "Interactive demo")? This would require adding metadata to the `CATEGORIES` data object.
-4. **Search** — as the guide count grows, a simple text filter above the category grid might be useful. Worth scoping in now or deferring?
+1. **How many top-level categories?** — **3 for now** (Machine Learning, Computer Science, Data Science). Add more categories only when new content clearly warrants a new grouping.
+
+2. **Keep category hub pages?** — **No, remove them.** The inline panel fully replaces their function. Back-links in each guide point to `index.html#<category>` which auto-opens the correct panel, so deep linking still works without maintaining separate hub pages.
+
+3. **Lesson metadata** — **Yes, show light metadata.** Each entry in the `CATEGORIES` data object will include a `meta` field (e.g., `"Flashcards · 12 questions"`, `"Interactive demo"`). This also powers the search feature so results can display type and topic at a glance.
+
+4. **Search** — **Scoped in.** A client-side text filter above the category grid, searching across lesson titles and metadata. **No framework switch needed** — a 20-line vanilla JS filter over the `CATEGORIES` object will be instant at this scale and preserves the "Go Live" workflow you rely on. Next.js would add a build step, `npm run dev`, and Node.js as a dependency without providing any benefit for a static content site. Vercel deploys vanilla HTML just as cleanly.
+
+   **Search UX:** A single `<input>` above the category grid. As you type, lesson cards across all categories are filtered in real time. Categories with zero matches collapse automatically. Results show lesson title + metadata snippet.
+
+   Updated `CATEGORIES` entry shape:
+   ```js
+   { title: 'Naive Bayes', path: '...', meta: 'Flashcards · 12 questions', tags: ['ML', 'probability'] }
+   ```

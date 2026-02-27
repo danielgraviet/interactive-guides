@@ -58,6 +58,11 @@ const CATEGORIES = {
         path: './guides/computer-science/concurrency/',
         meta: 'Interactive demos · Locks & signaling',
       },
+      {
+        title: 'Package Managers & Tooling',
+        path: './guides/computer-science/package_managers/',
+        meta: 'Interactive guide · Environments & dependencies',
+      },
     ],
   },
   'data-science': {

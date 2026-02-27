@@ -347,7 +347,7 @@ No changes to `index.html` HTML required after the initial setup.
 
 ## Open Questions Before Implementation
 
-1. **How many top-level categories?** Currently 3 natural groupings exist. Adding a 4th (e.g., "Mathematics") now vs. later?
-2. **Keep category hub pages** (`guides/machine-learning/index.html`) as a deep-linkable fallback, or remove them entirely in favor of the panel?
-3. **Lesson metadata** — should lesson cards show extra info (e.g., "Flashcards · 12 questions", "Interactive demo")? This would require adding metadata to the `CATEGORIES` data object.
-4. **Search** — as the guide count grows, a simple text filter above the category grid might be useful. Worth scoping in now or deferring?
+1. **How many top-level categories?** Currently 3 natural groupings exist. Adding a 4th (e.g., "Mathematics") now vs. later? -- Answer: Keep the 3 natural groupings. 
+2. **Keep category hub pages** (`guides/machine-learning/index.html`) as a deep-linkable fallback, or remove them entirely in favor of the panel? Answer: Not sure here, make the best choice. 
+3. **Lesson metadata** — should lesson cards show extra info (e.g., "Flashcards · 12 questions", "Interactive demo")? This would require adding metadata to the `CATEGORIES` data object. Answer: Yes show some light info to help with our search feature. 
+4. **Search** — as the guide count grows, a simple text filter above the category grid might be useful. Worth scoping in now or deferring? Answer: Yes scope that in. I would like to easily search for content. To make this easy, should we switch to a framework like Next.js? Would that make it easier or harder. I could just deploy on vercel. The reason I like this method, is that I get instant access when I click "go live" 

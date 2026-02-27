@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning — Interactive Guides</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/shared.css">
+<style>
+  body { min-height: 100vh; font-family: 'DM Mono', monospace; }
+
+  header {
+    padding: 32px 48px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header span { color: var(--muted); font-size: 11px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 32px 48px 0;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--accent); }
+
+  .content { padding: 48px; max-width: 960px; }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .guide-card {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .guide-card:hover { border-color: var(--accent); background: rgba(107, 229, 132, 0.04); }
+
+  .guide-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(107, 229, 132, 0.10);
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  .guide-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .guide-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+  .guide-arrow {
+    margin-top: 20px;
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .guide-card:hover .guide-arrow { opacity: 1; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../../index.html">← All categories</a>
+
+<header>
+  <h1>Machine Learning</h1>
+  <span>— regression, classifiers, neural nets &amp; more</span>
+</header>
+
+<div class="content">
+  <div class="section-label">9 guides</div>
+  <div class="guide-grid">
+
+    <a class="guide-card" href="./linear-regression/index.html">
+      <div class="guide-tag">CS 270 · Regression</div>
+      <div class="guide-title">Linear Regression</div>
+      <div class="guide-desc">Linear regression fundamentals — interactive study guide covering OLS, SSE, RMSE, and prediction.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./logit-log-regression/index.html">
+      <div class="guide-tag">CS 270 · Regression</div>
+      <div class="guide-title">Logit &amp; Log-Odds</div>
+      <div class="guide-desc">Logistic regression, log-odds, the logit function, and sigmoid — interactive flashcards and midterm prep.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./bias-variance/index.html">
+      <div class="guide-tag">CS 270 · Model Complexity</div>
+      <div class="guide-title">Bias, Variance &amp; Overfitting</div>
+      <div class="guide-desc">Bias-variance tradeoff, underfitting, overfitting, and model complexity — interactive study guide.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./naive-bayes/index.html">
+      <div class="guide-tag">CS 270 · Naive Bayes</div>
+      <div class="guide-title">Naive Bayes</div>
+      <div class="guide-desc">Bayes' theorem, conditional probability, and likelihood computation — flashcard study mode.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./roc-curves/index.html">
+      <div class="guide-tag">CS 270 · Evaluation</div>
+      <div class="guide-title">ROC Curves</div>
+      <div class="guide-desc">FPR, TPR, thresholds, specificity, and confusion matrix — interactive evaluation metrics guide.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./svm-decision-trees/index.html">
+      <div class="guide-tag">CS 270 · Decision Trees</div>
+      <div class="guide-title">SVMs &amp; Decision Trees</div>
+      <div class="guide-desc">SVMs, decision trees, Gini impurity, and information gain — interactive midterm prep.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./delta-perceptron/index.html">
+      <div class="guide-tag">CS 270 · Neural Networks</div>
+      <div class="guide-title">Delta Rule &amp; Perceptron</div>
+      <div class="guide-desc">Delta rule, perceptron learning, and neural network fundamentals — interactive flashcards.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./error-validation/index.html">
+      <div class="guide-tag">CS 270 · Validation</div>
+      <div class="guide-title">Error &amp; Validation</div>
+      <div class="guide-desc">L1, L2 error, MSE, SSE, RMSE, cross-validation — interactive problem sets.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+    <a class="guide-card" href="./cs270-math/index.html">
+      <div class="guide-tag">CS 270 · Math</div>
+      <div class="guide-title">Math Foundations</div>
+      <div class="guide-desc">KNN, decision trees, error metrics, regression, and Naive Bayes — calculation practice.</div>
+      <div class="guide-arrow">Open guide →</div>
+    </a>
+
+  </div>
+</div>
+
+</body>
+</html>

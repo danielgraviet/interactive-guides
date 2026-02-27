@@ -24,7 +24,6 @@ interactive-guides/
 │
 └── guides/
     ├── machine-learning/
-    │   ├── index.html                  # Category hub (optional deep link)
     │   ├── linear-regression/
     │   │   └── index.html
     │   ├── logit-log-regression/
@@ -45,12 +44,10 @@ interactive-guides/
     │       └── index.html
     │
     ├── computer-science/
-    │   ├── index.html
     │   └── concurrency/
     │       └── index.html
     │
     └── data-science/
-        ├── index.html
         └── data-science-review/
             └── index.html
 ```
@@ -154,6 +151,7 @@ Place each `.sub-panel` **immediately after its category row** in the DOM so the
 <a class="lesson-card" href="./guides/machine-learning/naive-bayes/index.html">
   <span class="lesson-title">Naive Bayes</span>
   <span class="lesson-meta">Flashcards · 12 questions</span>
+  <!-- lesson-meta is populated from the `meta` field in the CATEGORIES data object -->
 </a>
 ```
 
@@ -312,6 +310,7 @@ document.querySelectorAll('.panel-close').forEach(btn => {
 3. Add `assets/nav.js` and link it at the bottom of `index.html`
 4. Add panel CSS (either inline in `index.html` or extend `assets/shared.css`)
 5. Remove the now-redundant `guides/cs_270/index.html` hub page (its role is replaced by the ML panel)
+6. Add search input above the category grid; wire up client-side filter in `nav.js`
 
 ### Phase 3 — Polish
 
@@ -345,7 +344,7 @@ No changes to `index.html` HTML required after the initial setup.
 
 ---
 
-## Open Questions Before Implementation
+## Decisions
 
 1. **How many top-level categories?** Currently 3 natural groupings exist. Adding a 4th (e.g., "Mathematics") now vs. later? -- Answer: Keep the 3 natural groupings. 
 2. **Keep category hub pages** (`guides/machine-learning/index.html`) as a deep-linkable fallback, or remove them entirely in favor of the panel? Answer: Not sure here, make the best choice. 

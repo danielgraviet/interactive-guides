@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web → ML Concept Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #12151c;
+    --surface2: #1a1e28;
+    --surface3: #222836;
+    --border: #2a3040;
+    --text: #e2e8f0;
+    --text-dim: #8892a8;
+    --accent: #6ee7b7;
+    --accent2: #34d399;
+    --accent-glow: rgba(110, 231, 183, 0.15);
+    --warm: #fbbf24;
+    --warm-glow: rgba(251, 191, 36, 0.15);
+    --coral: #fb7185;
+    --coral-glow: rgba(251, 113, 133, 0.15);
+    --blue: #60a5fa;
+    --blue-glow: rgba(96, 165, 250, 0.15);
+    --purple: #a78bfa;
+    --purple-glow: rgba(167, 139, 250, 0.15);
+    --cyan: #22d3ee;
+    --cyan-glow: rgba(34, 211, 238, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10, 12, 16, 0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-brand {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 14px; color: var(--accent); letter-spacing: 1px;
+  }
+  .nav-brand span { color: var(--text-dim); }
+  .nav-progress {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .nav-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--surface3); border: 1.5px solid var(--border);
+    cursor: pointer; transition: all 0.3s;
+  }
+  .nav-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .nav-dot.completed { background: var(--accent2); border-color: var(--accent2); opacity: 0.6; }
+  .nav-score {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--warm); background: var(--warm-glow);
+    padding: 4px 12px; border-radius: 20px;
+  }
+
+  /* MAIN */
+  main { padding-top: 80px; max-width: 960px; margin: 0 auto; padding-left: 20px; padding-right: 20px; padding-bottom: 80px; }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 60px 0 40px;
+    animation: fadeUp 0.8s ease;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif; font-weight: 900;
+    font-size: clamp(32px, 5vw, 52px); line-height: 1.15;
+    background: linear-gradient(135deg, var(--accent), var(--cyan), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .hero p { color: var(--text-dim); font-size: 17px; max-width: 600px; margin: 0 auto 32px; line-height: 1.7; }
+  .hero-start {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: var(--bg); font-weight: 700;
+    padding: 14px 32px; border-radius: 12px; border: none;
+    cursor: pointer; font-size: 16px; font-family: inherit;
+    transition: all 0.3s; box-shadow: 0 4px 20px var(--accent-glow);
+  }
+  .hero-start:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+
+  /* SECTIONS */
+  .section { display: none; animation: fadeUp 0.5s ease; }
+  .section.active { display: block; }
+
+  .section-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 32px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--bg); background: var(--accent); width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 10px; font-weight: 700; flex-shrink: 0;
+  }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; }
+  .section-subtitle { font-size: 14px; color: var(--text-dim); margin-top: 2px; }
+
+  /* CONTENT CARDS */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 20px;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--surface3); }
+  .card h3 {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  }
+  .card p, .card li { font-size: 15px; line-height: 1.8; color: var(--text-dim); }
+  .card p + p { margin-top: 12px; }
+  .card ul { padding-left: 20px; margin-top: 8px; }
+  .card li { margin-bottom: 6px; }
+  .card strong { color: var(--text); }
+
+  .tag-web { color: var(--accent); }
+  .tag-ml { color: var(--warm); }
+  .tag-both { color: var(--purple); }
+
+  /* ANALOGY BOX */
+  .analogy {
+    background: linear-gradient(135deg, var(--accent-glow), var(--warm-glow));
+    border: 1px solid rgba(110, 231, 183, 0.2);
+    border-radius: 14px; padding: 24px; margin: 20px 0;
+    position: relative; overflow: hidden;
+  }
+  .analogy::before {
+    content: '⟷'; position: absolute; top: 12px; right: 16px;
+    font-size: 20px; opacity: 0.4;
+  }
+  .analogy h4 { font-size: 13px; font-family: 'JetBrains Mono', monospace; color: var(--accent); margin-bottom: 10px; letter-spacing: 1px; }
+  .analogy p { font-size: 15px; line-height: 1.7; }
+
+  /* DIAGRAM */
+  .diagram-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 2; color: var(--text-dim); overflow-x: auto;
+    white-space: pre;
+  }
+  .diagram-box .hl-accent { color: var(--accent); }
+  .diagram-box .hl-warm { color: var(--warm); }
+  .diagram-box .hl-coral { color: var(--coral); }
+  .diagram-box .hl-blue { color: var(--blue); }
+  .diagram-box .hl-purple { color: var(--purple); }
+  .diagram-box .hl-cyan { color: var(--cyan); }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0d1117; border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    line-height: 1.8; overflow-x: auto; color: #c9d1d9;
+  }
+  .code-block .comment { color: #6e7681; }
+  .code-block .keyword { color: #ff7b72; }
+  .code-block .string { color: #a5d6ff; }
+  .code-block .fn { color: #d2a8ff; }
+  .code-block .type { color: #79c0ff; }
+
+  /* INTERACTIVE: WHAT-IF */
+  .whatif-container {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin: 24px 0;
+  }
+  .whatif-container h3 {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--cyan); margin-bottom: 16px; letter-spacing: 1px;
+  }
+  .whatif-scenario { margin-bottom: 20px; }
+  .whatif-scenario p { font-size: 15px; line-height: 1.7; color: var(--text-dim); margin-bottom: 12px; }
+  .whatif-options { display: flex; flex-direction: column; gap: 10px; }
+  .whatif-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; cursor: pointer;
+    font-size: 14px; color: var(--text); font-family: inherit;
+    text-align: left; transition: all 0.3s; line-height: 1.5;
+  }
+  .whatif-btn:hover { border-color: var(--cyan); background: var(--cyan-glow); }
+  .whatif-btn.selected { border-color: var(--cyan); background: var(--cyan-glow); }
+  .whatif-btn.correct { border-color: var(--accent); background: var(--accent-glow); }
+  .whatif-btn.wrong { border-color: var(--coral); background: var(--coral-glow); }
+  .whatif-explanation {
+    margin-top: 14px; padding: 16px; border-radius: 10px;
+    background: var(--surface2); font-size: 14px; line-height: 1.7;
+    color: var(--text-dim); display: none;
+  }
+  .whatif-explanation.show { display: block; animation: fadeUp 0.3s ease; }
+
+  /* QUIZ */
+  .quiz-container {
+    background: var(--surface); border: 2px solid var(--border);
+    border-radius: 16px; padding: 28px; margin: 28px 0;
+  }
+  .quiz-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .quiz-header h3 {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--warm); letter-spacing: 1px;
+  }
+  .quiz-counter { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-dim); }
+  .quiz-question { font-size: 16px; line-height: 1.7; margin-bottom: 18px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .quiz-opt {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; cursor: pointer;
+    font-size: 14px; color: var(--text); font-family: inherit;
+    text-align: left; transition: all 0.25s; line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .quiz-opt:hover:not(.disabled) { border-color: var(--warm); background: var(--warm-glow); }
+  .quiz-opt .opt-letter {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    font-size: 13px; min-width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; background: var(--surface3); flex-shrink: 0;
+  }
+  .quiz-opt.correct { border-color: var(--accent) !important; background: var(--accent-glow) !important; }
+  .quiz-opt.correct .opt-letter { background: var(--accent); color: var(--bg); }
+  .quiz-opt.wrong { border-color: var(--coral) !important; background: var(--coral-glow) !important; }
+  .quiz-opt.wrong .opt-letter { background: var(--coral); color: var(--bg); }
+  .quiz-opt.disabled { cursor: default; opacity: 0.6; }
+  .quiz-opt.disabled.correct { opacity: 1; }
+  .quiz-feedback {
+    padding: 16px; border-radius: 10px; margin-top: 14px;
+    font-size: 14px; line-height: 1.7; display: none;
+  }
+  .quiz-feedback.show { display: block; animation: fadeUp 0.3s ease; }
+  .quiz-feedback.correct-fb { background: var(--accent-glow); border: 1px solid rgba(110, 231, 183, 0.2); }
+  .quiz-feedback.wrong-fb { background: var(--coral-glow); border: 1px solid rgba(251, 113, 133, 0.2); }
+
+  /* SLIDER INTERACTIVE */
+  .slider-interactive {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin: 24px 0;
+  }
+  .slider-interactive h3 {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    color: var(--purple); margin-bottom: 6px; letter-spacing: 1px;
+  }
+  .slider-interactive p { font-size: 14px; color: var(--text-dim); margin-bottom: 18px; }
+  .slider-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .slider-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--text-dim); min-width: 130px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1; appearance: none; height: 6px;
+    background: var(--surface3); border-radius: 3px; cursor: pointer;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    appearance: none; width: 18px; height: 18px;
+    background: var(--purple); border-radius: 50%; cursor: pointer;
+  }
+  .slider-val {
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    color: var(--purple); min-width: 50px; text-align: right;
+  }
+  .slider-result {
+    background: var(--surface2); border-radius: 10px; padding: 16px;
+    margin-top: 14px; font-size: 14px; line-height: 1.7; color: var(--text-dim);
+  }
+
+  /* TABS */
+  .tab-group { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); border-radius: 10px; padding: 4px; }
+  .tab-btn {
+    flex: 1; padding: 10px 16px; border: none; background: transparent;
+    color: var(--text-dim); font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; cursor: pointer; border-radius: 8px; transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .tab-btn.active { background: var(--surface3); color: var(--text); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; animation: fadeUp 0.3s ease; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+  .btn {
+    padding: 12px 24px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--text); font-family: inherit;
+    font-size: 14px; cursor: pointer; transition: all 0.3s; font-weight: 600;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  .btn-primary:hover { box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
+
+  /* SUMMARY */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 20px 0; }
+  .summary-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; transition: border-color 0.3s;
+  }
+  .summary-card:hover { border-color: var(--accent); }
+  .summary-card h4 { font-size: 15px; margin-bottom: 8px; }
+  .summary-card p { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* COMPARISON TABLE */
+  .comp-table {
+    width: 100%; border-collapse: collapse; margin: 16px 0;
+    font-size: 14px;
+  }
+  .comp-table th {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 1px; text-align: left;
+    padding: 12px 16px; border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+  }
+  .comp-table td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    color: var(--text-dim); line-height: 1.6;
+  }
+  .comp-table tr:hover td { background: var(--surface2); }
+
+  /* SCORE DISPLAY */
+  .final-score {
+    text-align: center; padding: 40px;
+    background: linear-gradient(135deg, var(--accent-glow), var(--blue-glow));
+    border-radius: 20px; margin: 30px 0;
+  }
+  .final-score .big-num {
+    font-family: 'Playfair Display', serif; font-size: 72px;
+    font-weight: 900; color: var(--accent);
+  }
+  .final-score p { color: var(--text-dim); margin-top: 8px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 640px) {
+    main { padding-left: 14px; padding-right: 14px; }
+    .card, .quiz-container, .whatif-container, .slider-interactive { padding: 20px; }
+    .section-title { font-size: 22px; }
+    .slider-row { flex-wrap: wrap; }
+    .slider-label { min-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<nav>
+  <div class="nav-brand">PIPELINE<span>.tutor</span></div>
+  <div class="nav-progress" id="navProgress"></div>
+  <div class="nav-score" id="navScore">Score: 0</div>
+</nav>
+
+<main id="app"></main>
+
+<script>
+// ====== STATE ======
+let currentSection = 0;
+let score = 0;
+let completedSections = new Set();
+const totalSections = 7; // 0=hero, 1-6=topics, 7=final
+
+// ====== CONTENT DATA ======
+const sections = [
+  // ===== 1: SERVER RENDERING PIPELINES =====
+  {
+    num: 1,
+    title: "Server Rendering Pipelines",
+    subtitle: "How data flows from request to response — and how ML inference pipelines mirror this exactly",
+    color: "accent",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> CORE CONCEPT</h3>
+        <p>A <strong>server rendering pipeline</strong> is the full chain of operations that transforms a user's HTTP request into a fully-rendered HTML page delivered to their browser. Instead of sending a blank HTML shell and having the browser build everything (client-side rendering), the server does the heavy lifting.</p>
+        <p>The pipeline typically follows: <strong>Request → Route matching → Data fetching → Template/Component rendering → HTML serialization → Response</strong>. Each step transforms data, and the output of one step feeds into the next — exactly like a data pipeline.</p>
+        <p>Frameworks like Next.js, Nuxt, and Remix implement this as a series of composable stages. Understanding these stages gives you architectural vocabulary that directly transfers to ML systems.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-web">●</span> THE STAGES IN DEPTH</h3>
+        <div class="diagram-box"><span class="hl-cyan">REQUEST</span> arrives at edge/server
+    │
+    ▼
+<span class="hl-accent">ROUTE MATCH</span> — Map URL to handler (like routing input to correct model)
+    │
+    ▼
+<span class="hl-warm">DATA FETCH</span> — Pull from DB, API, cache (like feature retrieval)
+    │
+    ▼
+<span class="hl-purple">RENDER</span> — Build component tree → HTML string (like forward pass)
+    │
+    ▼
+<span class="hl-coral">SERIALIZE</span> — Convert to byte stream (like output encoding)
+    │
+    ▼
+<span class="hl-blue">RESPONSE</span> — Send to client with headers</div>
+        <p>Each stage can <strong>fail independently</strong>, can be <strong>cached independently</strong>, and can be <strong>parallelized</strong>. This modularity is the key architectural insight.</p>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p>A server rendering pipeline is structurally identical to an <strong>ML inference pipeline</strong>. In ML: <em>Raw input → Preprocessing → Feature extraction → Model inference → Postprocessing → Output formatting</em>. Both are directed acyclic graphs (DAGs) of transformations. Both need to handle latency at each stage. Both benefit from caching intermediate results. In ML serving frameworks like TFServing, Triton, or BentoML, you compose "runners" into a pipeline — just like composing middleware and handlers in Express or Next.js.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: INFERENCE PIPELINES</h3>
+        <p>In production ML, you rarely call a model directly. Instead you build a <strong>serving pipeline</strong>:</p>
+        <ul>
+          <li><strong>Input validation</strong> — Schema checks, type coercion (like request parsing)</li>
+          <li><strong>Feature engineering</strong> — Tokenization, normalization, embedding lookups (like data fetching)</li>
+          <li><strong>Batching</strong> — Group requests for GPU efficiency (like request coalescing)</li>
+          <li><strong>Inference</strong> — The actual forward pass (like rendering)</li>
+          <li><strong>Post-processing</strong> — Decode tokens, apply thresholds, format response (like serialization)</li>
+        </ul>
+        <p>Frameworks like <strong>Triton Inference Server</strong> let you chain models in a DAG — model A's output feeds into model B. This is exactly like nested server components in React.</p>
+      </div>
+
+      <div class="code-block"><span class="comment">// Web: Next.js server rendering pipeline</span>
+<span class="keyword">export async function</span> <span class="fn">getServerSideProps</span>(context) {
+  <span class="keyword">const</span> user = <span class="keyword">await</span> <span class="fn">fetchUser</span>(context.params.id);  <span class="comment">// data fetch</span>
+  <span class="keyword">const</span> posts = <span class="keyword">await</span> <span class="fn">fetchPosts</span>(user.id);       <span class="comment">// dependent fetch</span>
+  <span class="keyword">return</span> { props: { user, posts } };              <span class="comment">// → render stage</span>
+}
+
+<span class="comment">// ML: Equivalent inference pipeline (pseudo-code)</span>
+<span class="keyword">class</span> <span class="type">InferencePipeline</span>:
+    <span class="keyword">def</span> <span class="fn">__call__</span>(self, raw_input):
+        features = self.preprocessor(raw_input)    <span class="comment"># feature extraction</span>
+        embeddings = self.encoder(features)        <span class="comment"># dependent computation</span>
+        prediction = self.model(embeddings)        <span class="comment"># forward pass = "render"</span>
+        <span class="keyword">return</span> self.postprocess(prediction)         <span class="comment"># format output</span></div>
+    `,
+    whatifs: [
+      {
+        scenario: "You're building an ML service that takes a user photo, detects faces, then classifies emotions on each face. The face detection takes 200ms and emotion classification takes 100ms per face. A photo has 3 faces. What architecture would minimize total latency?",
+        options: [
+          "Run face detection, then classify emotions sequentially for each face (200 + 300 = 500ms)",
+          "Run face detection, then classify all 3 faces in parallel (200 + 100 = 300ms)",
+          "Run face detection and emotion classification simultaneously on the full image",
+          "Skip face detection and run emotion classification on the whole image"
+        ],
+        correct: 1,
+        explanation: "This is exactly like server rendering with parallel data fetches. The face detection is a blocking prerequisite (like route matching), but the per-face classifications are independent — so you parallelize them. In Next.js, this is like fetching user data first, then fetching their posts, comments, and preferences in parallel via Promise.all(). In ML, you'd use batch inference or concurrent model calls on the detected face crops."
+      }
+    ],
+    quiz: [
+      {
+        q: "Which web rendering concept most directly parallels the 'forward pass' in neural network inference?",
+        opts: ["Route matching", "Data fetching from database", "Component tree rendering to HTML", "HTTP response compression"],
+        correct: 2,
+        explanation: "Component rendering (transforming a tree of components + data into HTML) is the direct parallel to a forward pass (transforming input features through layers into output). Both take structured input and produce structured output through a series of deterministic transformations."
+      },
+      {
+        q: "In an ML inference pipeline, 'batching' multiple requests together for GPU efficiency most closely resembles which web server technique?",
+        opts: ["Server-side rendering", "Request coalescing / DataLoader pattern", "CSS minification", "DNS resolution"],
+        correct: 1,
+        explanation: "Request coalescing (e.g., Facebook's DataLoader) groups multiple individual data requests into a single batch query, just as ML batching groups multiple inference requests to maximize GPU utilization. Both sacrifice individual request latency slightly to dramatically improve throughput."
+      },
+      {
+        q: "A server rendering pipeline and an ML inference pipeline are both examples of what fundamental computational pattern?",
+        opts: ["Recursive descent parser", "Directed Acyclic Graph (DAG) of transformations", "Map-reduce framework", "Publish-subscribe event system"],
+        correct: 1,
+        explanation: "Both are DAGs — data flows through a series of stages where each stage's output feeds into subsequent stages, there are no cycles, and independent branches can execute in parallel. This pattern shows up everywhere: CI/CD pipelines, data engineering (Airflow DAGs), ML training pipelines, and server rendering."
+      }
+    ]
+  },
+
+  // ===== 2: RSC STREAMING =====
+  {
+    num: 2,
+    title: "RSC Streaming",
+    subtitle: "React Server Components and progressive delivery — the architecture behind modern streaming inference",
+    color: "warm",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> WHAT ARE REACT SERVER COMPONENTS?</h3>
+        <p><strong>React Server Components (RSC)</strong> are components that run exclusively on the server. Unlike traditional SSR where the entire page is rendered and sent as one chunk, RSC enables a fundamentally new architecture: <strong>components stream to the client as they become ready</strong>.</p>
+        <p>The key innovations are:</p>
+        <ul>
+          <li><strong>Server-only execution</strong> — RSCs can directly access databases, file systems, and internal APIs without exposing them to the client</li>
+          <li><strong>Zero client JS</strong> — RSCs don't ship JavaScript to the browser; only their rendered output does</li>
+          <li><strong>Streaming</strong> — The server sends HTML/payload progressively as each component finishes rendering, using HTTP chunked transfer encoding</li>
+          <li><strong>Suspense boundaries</strong> — Define fallback UI while async data loads, enabling partial hydration</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-web">●</span> HOW STREAMING WORKS</h3>
+        <div class="diagram-box"><span class="hl-cyan">Browser Request</span>
+    │
+    ▼
+Server starts rendering component tree:
+    │
+    ├─ <span class="hl-accent">&lt;Layout&gt;</span> ─── renders instantly ──────── <span class="hl-accent">▸ STREAM chunk 1</span>
+    │   ├─ <span class="hl-accent">&lt;Header&gt;</span> ─ renders instantly ─────── <span class="hl-accent">▸ (included in chunk 1)</span>
+    │   ├─ <span class="hl-warm">&lt;Suspense&gt;</span>
+    │   │   └─ <span class="hl-warm">&lt;SlowDataComponent&gt;</span> ── fetching DB... 800ms
+    │   └─ <span class="hl-purple">&lt;Suspense&gt;</span>
+    │       └─ <span class="hl-purple">&lt;RecommendationsAI&gt;</span> ── calling ML API... 1200ms
+    │
+    ▼ (time passes...)
+    │
+    ├─ <span class="hl-warm">SlowDataComponent resolves</span> ─────── <span class="hl-warm">▸ STREAM chunk 2 (t=800ms)</span>
+    │
+    ▼ (more time...)
+    │
+    └─ <span class="hl-purple">RecommendationsAI resolves</span> ──────── <span class="hl-purple">▸ STREAM chunk 3 (t=1200ms)</span>
+
+User sees layout + header <span class="hl-accent">immediately</span>,
+data section at <span class="hl-warm">800ms</span>, AI recs at <span class="hl-purple">1200ms</span></div>
+        <p>Without streaming, the user would see nothing until 1200ms (the slowest component). With streaming, they see useful content within milliseconds and the page progressively fills in.</p>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p><strong>RSC Streaming is identical to streaming inference in LLMs.</strong> When ChatGPT shows tokens appearing one at a time, that's streaming inference — the model doesn't wait until the entire response is generated before sending data. Each token is sent as it's produced. The Suspense boundary in React is like a "generation context" in an LLM — a delineated region where content arrives progressively. Server-Sent Events (SSE) in LLM APIs map directly to chunked transfer encoding in RSC. Both solve the same problem: <em>the user shouldn't wait for the slowest part of computation to see any result.</em></p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: STREAMING & PROGRESSIVE INFERENCE</h3>
+        <p>Streaming shows up across ML in several important ways:</p>
+        <ul>
+          <li><strong>Autoregressive generation</strong> — LLMs produce tokens one at a time. Streaming each token to the user as it's generated (via SSE) reduces perceived latency from 10s+ to milliseconds for first content.</li>
+          <li><strong>Speculative decoding</strong> — A small "draft" model generates candidate tokens quickly, and a large model verifies them in parallel. This is like RSC sending a placeholder (Suspense fallback) and then streaming the real content.</li>
+          <li><strong>Progressive image generation</strong> — Diffusion models can stream intermediate denoising steps so users see a blurry image sharpen over time, rather than waiting for the final result.</li>
+          <li><strong>Ensemble streaming</strong> — When multiple models contribute to a response (retrieval + generation in RAG), you can stream the retrieval results first as context while the generation model works.</li>
+          <li><strong>Early exit / anytime inference</strong> — Some architectures (like early-exit transformers) can produce a rough answer quickly and refine it — streaming progressively better answers.</li>
+        </ul>
+      </div>
+
+      <div class="code-block"><span class="comment">// Web: React Server Component with Suspense streaming</span>
+<span class="keyword">async function</span> <span class="fn">ProductPage</span>({ id }) {
+  <span class="keyword">return</span> (
+    &lt;<span class="type">Layout</span>&gt;
+      &lt;<span class="type">ProductHeader</span> id={id} /&gt;  <span class="comment">{/* renders immediately */}</span>
+      &lt;<span class="type">Suspense</span> fallback={&lt;<span class="type">Skeleton</span> /&gt;}&gt;
+        &lt;<span class="type">ProductReviews</span> id={id} /&gt;  <span class="comment">{/* streams when DB responds */}</span>
+      &lt;/<span class="type">Suspense</span>&gt;
+      &lt;<span class="type">Suspense</span> fallback={&lt;<span class="type">Skeleton</span> /&gt;}&gt;
+        &lt;<span class="type">AIRecommendations</span> id={id} /&gt;  <span class="comment">{/* streams when ML model responds */}</span>
+      &lt;/<span class="type">Suspense</span>&gt;
+    &lt;/<span class="type">Layout</span>&gt;
+  );
+}
+
+<span class="comment"># ML: Streaming LLM inference (pseudo-code)</span>
+<span class="keyword">async def</span> <span class="fn">stream_response</span>(prompt):
+    <span class="keyword">for</span> token <span class="keyword">in</span> model.generate_stream(prompt):
+        <span class="keyword">yield</span> token                     <span class="comment"># each token = a "chunk"</span>
+        <span class="comment"># Client sees tokens appearing progressively</span>
+        <span class="comment"># Exactly like RSC streaming HTML chunks</span></div>
+    `,
+    whatifs: [
+      {
+        scenario: "You're building a RAG (Retrieval-Augmented Generation) chatbot. The retrieval step takes 300ms to find relevant documents, and the LLM generation takes 3 seconds total but can stream tokens. How should you architect the response delivery?",
+        options: [
+          "Wait for both retrieval and generation to complete, then send the full response",
+          "Stream the retrieved document citations immediately, then stream the LLM-generated answer token by token",
+          "Show a loading spinner for the full 3.3 seconds",
+          "Run retrieval and generation in parallel, ignoring retrieved context"
+        ],
+        correct: 1,
+        explanation: "This directly mirrors RSC Suspense boundaries! The citation/source display is like a fast-rendering Server Component — send it immediately. The LLM answer is like a slow async component wrapped in Suspense — stream it progressively. The user sees sources at 300ms and the answer builds token-by-token from 300ms to 3.3s. Running them in parallel (option D) would defeat RAG's purpose — the retrieved docs ARE the context for generation."
+      }
+    ],
+    quiz: [
+      {
+        q: "What web technology does RSC streaming use that is also used by LLM APIs to deliver tokens progressively?",
+        opts: ["WebSockets", "HTTP chunked transfer encoding / Server-Sent Events", "GraphQL subscriptions", "WebRTC data channels"],
+        correct: 1,
+        explanation: "Both RSC streaming and LLM streaming APIs (like OpenAI's) primarily use chunked transfer encoding or Server-Sent Events (SSE). These are simple, HTTP-native mechanisms for progressive delivery. WebSockets could work but are overkill for unidirectional streaming."
+      },
+      {
+        q: "React Suspense boundaries define where fallback UI appears while data loads. What is the closest ML parallel?",
+        opts: ["Training checkpoints", "Speculative decoding / progressive image denoising (coarse → refined output)", "Model quantization", "Gradient accumulation"],
+        correct: 1,
+        explanation: "Suspense shows a placeholder, then swaps in the real content. Speculative decoding shows a 'draft' response quickly, then refines it. Progressive denoising in diffusion models shows a blurry placeholder that sharpens. Both are 'show something rough fast, replace with quality later.'"
+      },
+      {
+        q: "A Server Component that directly queries a database without exposing credentials to the client is most analogous to:",
+        opts: ["An ML model accessing a private feature store during inference without exposing the store's API to end users", "A client-side model running in the browser", "A model checkpoint saved to disk", "A public API for model predictions"],
+        correct: 0,
+        explanation: "Server Components access server-side resources (DBs, APIs) without leaking them to the client, exactly like an ML inference service that pulls from private feature stores (user embeddings, real-time features) during prediction without exposing the feature store endpoint to end users."
+      }
+    ]
+  },
+
+  // ===== 3: MIDDLEWARE =====
+  {
+    num: 3,
+    title: "Middleware",
+    subtitle: "The interceptor pattern — from HTTP request processing to ML preprocessing guards",
+    color: "coral",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> CORE CONCEPT</h3>
+        <p><strong>Middleware</strong> is code that sits between the incoming request and the final handler, forming a chain of interceptors that can inspect, transform, redirect, or reject requests. Each middleware receives the request, optionally modifies it, and either passes it to the next middleware or short-circuits the chain.</p>
+        <p>The fundamental pattern is: <strong>Request → Middleware A → Middleware B → ... → Handler → Response flows back through middlewares in reverse</strong>.</p>
+        <p>Middleware is everywhere: Express.js middleware, Next.js edge middleware, Django middleware, Redux middleware. The pattern is so powerful because it enables <strong>separation of concerns</strong> — authentication, logging, rate limiting, input validation, and CORS are all cross-cutting concerns that belong in middleware rather than polluting business logic.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-web">●</span> MIDDLEWARE CHAIN ANATOMY</h3>
+        <div class="diagram-box"><span class="hl-cyan">Incoming Request</span>
+    │
+    ▼
+┌─────────────────────────────┐
+│ <span class="hl-accent">Auth Middleware</span>              │ → Check JWT → reject if invalid
+└─────────────┬───────────────┘
+              ▼
+┌─────────────────────────────┐
+│ <span class="hl-warm">Rate Limiter</span>                 │ → Check request count → 429 if exceeded
+└─────────────┬───────────────┘
+              ▼
+┌─────────────────────────────┐
+│ <span class="hl-purple">Input Validator</span>              │ → Validate/sanitize body → 400 if bad
+└─────────────┬───────────────┘
+              ▼
+┌─────────────────────────────┐
+│ <span class="hl-coral">Logger</span>                       │ → Record request metadata
+└─────────────┬───────────────┘
+              ▼
+┌─────────────────────────────┐
+│ <span class="hl-blue">Request Handler</span>              │ → Business logic / Render page
+└─────────────────────────────┘
+
+Any middleware can <span class="hl-coral">SHORT-CIRCUIT</span> the chain
+(e.g., auth failure returns 401 immediately)</div>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p>Middleware in ML takes the form of <strong>preprocessing guards, input validation layers, and inference pipeline interceptors</strong>. Before a model ever sees input: you validate the schema, check for adversarial inputs (guardrails), apply rate limiting to prevent GPU exhaustion, normalize/tokenize the input, and log the request. Frameworks like <strong>LangChain</strong> use middleware-like "chains" — each link can transform, validate, or route data. <strong>ML guardrails</strong> (like NeMo Guardrails or Guardrails AI) are literally middleware for LLMs — they intercept prompts and outputs to check for safety, relevance, and format compliance.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: GUARDRAILS AS MIDDLEWARE</h3>
+        <p>Modern LLM applications have a middleware stack that mirrors web servers almost exactly:</p>
+        <ul>
+          <li><strong>Input guardrails</strong> — Detect prompt injection, check for PII, validate against topic boundaries. This is your "auth + validation" middleware.</li>
+          <li><strong>Rate limiting</strong> — Per-user token budgets, concurrent request limits to protect GPU resources. Identical concept to web rate limiting.</li>
+          <li><strong>Preprocessing</strong> — Tokenization, prompt template injection, context window management. Like request body parsing middleware.</li>
+          <li><strong>Output guardrails</strong> — Check generated text for hallucinations, bias, format compliance, safety. Like response validation middleware.</li>
+          <li><strong>Logging/monitoring</strong> — Record latency, token usage, model version, input/output pairs. Like request logging middleware.</li>
+        </ul>
+        <p>The short-circuit pattern is critical: if an input guardrail detects prompt injection, it <strong>immediately returns a rejection</strong> without ever hitting the expensive GPU inference — just like auth middleware returning 401 before the handler runs.</p>
+      </div>
+
+      <div class="code-block"><span class="comment">// Web: Express middleware chain</span>
+app.<span class="fn">use</span>(<span class="fn">authenticate</span>);        <span class="comment">// check JWT</span>
+app.<span class="fn">use</span>(<span class="fn">rateLimit</span>({ max: 100 })); <span class="comment">// rate limit</span>
+app.<span class="fn">use</span>(<span class="fn">validateBody</span>(schema));   <span class="comment">// input validation</span>
+app.<span class="fn">use</span>(<span class="fn">requestLogger</span>);         <span class="comment">// logging</span>
+
+<span class="comment"># ML: LLM guardrails as middleware (pseudo-code)</span>
+pipeline = Pipeline([
+    InputGuardrail(block_injection=<span class="keyword">True</span>),   <span class="comment"># like auth middleware</span>
+    TokenRateLimiter(max_tokens_per_min=10000),<span class="comment"># like rate limiter</span>
+    PromptTemplate(template=rag_template),     <span class="comment"># like body parser</span>
+    LLMInference(model=<span class="string">"gpt-4"</span>),              <span class="comment"># the "handler"</span>
+    OutputGuardrail(check_hallucination=<span class="keyword">True</span>), <span class="comment"># response validation</span>
+    ResponseLogger(),                          <span class="comment"># like request logger</span>
+])</div>
+    `,
+    whatifs: [
+      {
+        scenario: "Your ML chatbot is receiving thousands of requests, some of which are prompt injection attacks trying to extract the system prompt. Your GPU inference costs $0.03/request. Where in the pipeline should you place the injection detection?",
+        options: [
+          "After the LLM generates its response, check if the output contains the system prompt",
+          "As the very first middleware, before any expensive processing occurs",
+          "Right before the final response is sent to the user",
+          "It doesn't matter where you place it since it needs to run anyway"
+        ],
+        correct: 1,
+        explanation: "This is the short-circuit principle from web middleware! Auth middleware goes first because it's cheap and rejects bad requests before they consume expensive resources. Similarly, injection detection should be the FIRST middleware — it's a lightweight classifier (or regex/heuristic check) that can reject malicious requests before they burn $0.03 of GPU compute. At 1000 attacks/day, that's $30/day saved. In web terms: you don't process a request body before checking if the user is authenticated."
+      }
+    ],
+    quiz: [
+      {
+        q: "Middleware's ability to 'short-circuit' a request chain is most valuable in ML for:",
+        opts: ["Improving model accuracy", "Rejecting invalid/adversarial inputs before expensive GPU inference", "Training models faster", "Reducing model file size"],
+        correct: 1,
+        explanation: "Short-circuiting saves compute cost. A lightweight input guardrail (running on CPU) that catches prompt injections, malformed inputs, or rate limit violations prevents them from consuming expensive GPU resources. This is exactly why auth middleware comes first in web stacks."
+      },
+      {
+        q: "LangChain's 'chain' abstraction — where each link can transform, route, or validate data before passing it on — is a direct implementation of which pattern?",
+        opts: ["Observer pattern", "Middleware / Chain of Responsibility pattern", "Singleton pattern", "Factory pattern"],
+        correct: 1,
+        explanation: "LangChain chains are the middleware pattern (formally: Chain of Responsibility). Each link receives input, optionally transforms it, and passes it to the next link. Any link can short-circuit. This is identical to Express middleware, Django middleware, or HTTP interceptors."
+      },
+      {
+        q: "If an ML pipeline has: Input Validation → Tokenization → Model Inference → Output Parsing → Safety Check, and the Safety Check fails, what should happen?",
+        opts: ["Return the unsafe output anyway with a warning", "Retry the entire pipeline from Input Validation", "Return a safe fallback response (short-circuit on the response path)", "Skip the safety check for faster responses"],
+        correct: 2,
+        explanation: "Just like response middleware in web servers can intercept and modify responses, the safety check middleware should short-circuit with a safe fallback. You don't retry the whole pipeline (that's wasteful and might produce the same output). This is like error-handling middleware in Express that catches errors and returns a standardized error response."
+      }
+    ]
+  },
+
+  // ===== 4: CACHING LAYERS =====
+  {
+    num: 4,
+    title: "Caching Layers",
+    subtitle: "Memory hierarchies, cache invalidation, and why caching is critical in both web and ML",
+    color: "blue",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> CORE CONCEPT</h3>
+        <p><strong>Caching</strong> is the practice of storing computed results so they can be reused without recomputation. In web systems, caching operates at multiple layers, forming a hierarchy from closest-to-user (fastest) to farthest (slowest):</p>
+        <ul>
+          <li><strong>Browser cache</strong> — Static assets, HTTP cache headers (Cache-Control, ETag)</li>
+          <li><strong>CDN / Edge cache</strong> — Full page or fragment caching at geographically distributed nodes</li>
+          <li><strong>Application cache</strong> — In-memory stores like Redis or Memcached for API responses, sessions, computed data</li>
+          <li><strong>Database query cache</strong> — Cached query results, materialized views</li>
+          <li><strong>Full-page / ISR cache</strong> — Next.js Incremental Static Regeneration: serve stale, revalidate in background</li>
+        </ul>
+        <p>The two hardest problems in computer science are: <strong>cache invalidation</strong>, naming things, and off-by-one errors. Cache invalidation — knowing when cached data is stale — is genuinely one of the most difficult architectural challenges.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-web">●</span> CACHE HIERARCHY VISUALIZED</h3>
+        <div class="diagram-box">Speed:  <span class="hl-accent">FASTEST</span> ◄──────────────────────────► <span class="hl-coral">SLOWEST</span>
+Cost:   <span class="hl-accent">CHEAPEST</span> ◄─────────────────────────► <span class="hl-coral">MOST EXPENSIVE</span>
+
+┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐
+│ <span class="hl-accent">Browser</span>  │→ │ <span class="hl-warm">CDN/Edge</span> │→ │ <span class="hl-purple">Redis</span>    │→ │ <span class="hl-blue">DB Cache</span> │→ │ <span class="hl-coral">Origin</span>   │
+│ <span class="hl-accent">~1ms</span>     │  │ <span class="hl-warm">~20ms</span>    │  │ <span class="hl-purple">~5ms</span>     │  │ <span class="hl-blue">~50ms</span>    │  │ <span class="hl-coral">~200ms+</span>  │
+└──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘
+
+Cache strategies:
+• <span class="hl-accent">Cache-aside</span>:    App checks cache → miss → compute → store
+• <span class="hl-warm">Write-through</span>:  Write to cache + DB simultaneously
+• <span class="hl-purple">Write-behind</span>:   Write to cache → async write to DB
+• <span class="hl-blue">ISR</span>:            Serve stale → revalidate in background</div>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p>ML has its own caching hierarchy that's strikingly similar: <strong>KV-cache in transformers</strong> (caches key-value attention states to avoid recomputing them for every new token — like browser cache), <strong>embedding caches</strong> (pre-computed vector representations stored in Redis/FAISS — like CDN cache), <strong>prompt caching</strong> (Anthropic/OpenAI cache the processed system prompt so repeated calls skip re-processing — like ISR), <strong>model weight caching</strong> (keeping model parameters in GPU VRAM vs. loading from disk — like in-memory vs. database). Both web and ML caching trade <em>memory for computation</em>.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: THE KV-CACHE AND BEYOND</h3>
+        <p>The <strong>KV-cache</strong> is one of the most important optimizations in LLM inference. During autoregressive generation, each new token needs to attend to all previous tokens. Without caching, generating token N requires recomputing attention for tokens 1 through N-1 — O(N²) per token. The KV-cache stores the Key and Value matrices for all previous tokens so each new token only computes attention against cached states — reducing per-token cost to O(N).</p>
+        <p>This is conceptually identical to <strong>incremental static regeneration (ISR)</strong>: don't recompute the entire page (sequence), just compute the delta (new token) and merge it with cached state.</p>
+        <p>Other ML caching patterns:</p>
+        <ul>
+          <li><strong>Feature store caches</strong> — Pre-computed features cached in Redis (like API response caching)</li>
+          <li><strong>Embedding indices</strong> — Vector databases (Pinecone, FAISS) are essentially caches of expensive embedding computations</li>
+          <li><strong>Compilation caches</strong> — PyTorch 2.0's torch.compile caches compiled GPU kernels (like build artifact caching)</li>
+          <li><strong>Semantic caching</strong> — Cache LLM responses by semantic similarity of prompts, not exact match (novel to ML!)</li>
+        </ul>
+      </div>
+    `,
+    whatifs: [
+      {
+        scenario: "You have an LLM-powered customer support bot. 40% of questions are near-identical (e.g., 'What's your return policy?' with slight wording variations). Full inference costs $0.02/request and takes 2 seconds. How would you design the caching strategy?",
+        options: [
+          "Exact-match cache: cache responses keyed by the exact prompt string",
+          "Semantic cache: embed each prompt, check cosine similarity to cached prompts, return cached response if similarity > 0.95",
+          "No caching: LLM responses should always be freshly generated for quality",
+          "Cache only the system prompt processing using prompt caching APIs"
+        ],
+        correct: 1,
+        explanation: "Semantic caching is unique to ML and incredibly powerful. 'What is your return policy?', 'How do I return something?', and 'Returns?' are different strings but semantically equivalent. By embedding prompts and checking similarity, you can serve cached responses for ~40% of traffic — saving $0.008/request × volume. This is like CDN cache with intelligent cache key normalization (stripping query params, etc.), but using vector similarity instead of string matching. Option D (prompt caching) helps too and you'd use it alongside semantic caching."
+      }
+    ],
+    quiz: [
+      {
+        q: "The KV-cache in transformer inference is most analogous to which web caching concept?",
+        opts: ["Browser localStorage", "Incremental Static Regeneration — don't recompute everything, just the delta", "DNS caching", "Service Worker caching"],
+        correct: 1,
+        explanation: "ISR serves cached (stale) content and only recomputes what changed. KV-cache stores attention states for all previous tokens and only computes the new token's attention — both avoid recomputing the full result from scratch on each request."
+      },
+      {
+        q: "A vector database like Pinecone or FAISS that stores pre-computed embeddings for fast similarity search is most like:",
+        opts: ["A CDN that caches pre-rendered content at edge locations for fast retrieval", "A browser cookie", "A database index on primary keys", "A load balancer"],
+        correct: 0,
+        explanation: "CDNs pre-compute and distribute content geographically for fast retrieval. Vector databases pre-compute embeddings and index them for fast similarity retrieval. Both trade storage + precomputation for dramatically faster access times. Both require invalidation strategies when source data changes."
+      },
+      {
+        q: "What makes 'semantic caching' for LLMs fundamentally different from traditional web caching?",
+        opts: ["It uses a different programming language", "Cache keys are based on meaning similarity rather than exact string matching", "It doesn't use any storage", "It only works with streaming responses"],
+        correct: 1,
+        explanation: "Traditional caches use exact keys (URL, query string). Semantic caching embeds the query into a vector and checks cosine similarity — two different strings can match the same cache entry if they're semantically close. This is only possible because ML provides us with embedding models that capture meaning."
+      }
+    ]
+  },
+
+  // ===== 5: BUNDLE SIZE =====
+  {
+    num: 5,
+    title: "Bundle Size",
+    subtitle: "The weight of your deliverables — from JavaScript bytes to model parameters",
+    color: "purple",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> CORE CONCEPT</h3>
+        <p><strong>Bundle size</strong> is the total amount of JavaScript (and CSS, assets, etc.) that must be downloaded and parsed by the browser before your application becomes interactive. It's the single biggest factor in web app load time performance.</p>
+        <p>Modern JS bundles are created by tools like Webpack, Rollup, Vite, or Turbopack that: resolve import graphs, tree-shake unused exports, code-split into chunks, minify and compress the output. Every unnecessary byte costs real money (bandwidth) and real time (parsing, compilation, execution).</p>
+        <p>Key techniques for managing bundle size:</p>
+        <ul>
+          <li><strong>Tree shaking</strong> — Remove unused code by analyzing the import/export graph</li>
+          <li><strong>Code splitting</strong> — Split into chunks loaded on demand (route-based or component-based)</li>
+          <li><strong>Dynamic imports</strong> — <code>import()</code> to lazy-load modules when needed</li>
+          <li><strong>Compression</strong> — Brotli/gzip reduce transfer size by 60-80%</li>
+          <li><strong>Dependency analysis</strong> — Audit and replace heavy libraries (moment.js → date-fns)</li>
+        </ul>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p><strong>Bundle size is to web apps what model size is to ML.</strong> A 70B parameter LLM is like a 50MB JavaScript bundle — both are too large for constrained environments. The optimization techniques are remarkably parallel: <strong>Tree shaking → Pruning</strong> (remove unused/low-importance weights). <strong>Minification → Quantization</strong> (reduce precision from float32 to int8/int4). <strong>Code splitting → Model sharding/partitioning</strong> (distribute across devices). <strong>Compression → Weight compression/knowledge distillation</strong> (smaller representation with preserved capability). <strong>Dynamic imports → Mixture of Experts</strong> (only activate the relevant subset of parameters).</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: MODEL COMPRESSION SPECTRUM</h3>
+        <div class="diagram-box">Original model: <span class="hl-coral">70B params, float32 → 280GB</span>
+(Like an unoptimized 50MB JS bundle with unused dependencies)
+
+<span class="hl-accent">Quantization (int8)</span>:  70B params → 70GB   <span class="hl-accent">(= minification)</span>
+<span class="hl-warm">Quantization (int4)</span>:  70B params → 35GB   <span class="hl-warm">(= aggressive minification)</span>
+<span class="hl-purple">Pruning (50%)</span>:        35B params → 17.5GB <span class="hl-purple">(= tree shaking)</span>
+<span class="hl-blue">Distillation</span>:         7B params → 7GB     <span class="hl-blue">(= rewrite with lighter lib)</span>
+<span class="hl-cyan">MoE (8 experts)</span>:      Active: ~12B / Total: 70B <span class="hl-cyan">(= code splitting)</span></div>
+
+        <p>Each technique trades off something:</p>
+        <ul>
+          <li><strong>Quantization</strong> reduces numerical precision → slight accuracy loss, like minification sometimes breaking code</li>
+          <li><strong>Pruning</strong> removes connections → can lose capability on edge cases, like tree shaking removing code that's actually needed dynamically</li>
+          <li><strong>Distillation</strong> trains a smaller model to mimic a larger one → great compression but requires extra training, like rewriting a module with a lighter library</li>
+          <li><strong>Mixture of Experts (MoE)</strong> only activates relevant parameter subsets per input → total size is large but active size is small, like code splitting where only relevant chunks are loaded</li>
+        </ul>
+      </div>
+    `,
+    whatifs: [
+      {
+        scenario: "You need to deploy an LLM on a mobile device with 6GB RAM. Your model is 13B parameters in float32 (52GB). What combination of techniques would you use, and in what order?",
+        options: [
+          "Distill to a 3B model, then quantize to int4 → ~1.5GB. Fits easily with room to spare.",
+          "Quantize to int4 only → 6.5GB. Barely doesn't fit.",
+          "Prune 90% of weights → 1.3B params but severely degraded quality",
+          "Keep the full model and use cloud inference instead"
+        ],
+        correct: 0,
+        explanation: "This is exactly like optimizing a web bundle for mobile! You wouldn't just minify a 50MB bundle (quantize only) — you'd also remove unnecessary dependencies (distill to smaller architecture) and tree-shake (prune). The correct approach layers techniques: distill to 3B (like rewriting with lighter libraries), then quantize to int4 (like minification + compression). This gives you a capable model at ~1.5GB. Option D (cloud inference) is valid but adds latency and requires connectivity — it's like server-side rendering when you wanted client-side interactivity."
+      }
+    ],
+    quiz: [
+      {
+        q: "Tree shaking in web bundlers removes unused code by analyzing the import graph. The ML equivalent that removes unimportant connections is:",
+        opts: ["Quantization", "Pruning", "Distillation", "Fine-tuning"],
+        correct: 1,
+        explanation: "Pruning removes weights (connections) whose magnitude is below a threshold, just like tree shaking removes exports that no other module imports. Both analyze the 'dependency graph' (import graph for JS, weight importance for ML) to identify what can be safely removed."
+      },
+      {
+        q: "Mixture of Experts (MoE) models have many parameters but only activate a subset per input. Which web concept is this most like?",
+        opts: ["Server-side rendering", "Code splitting with dynamic imports — total bundle is large but only relevant chunks load", "CSS variables", "Web Workers"],
+        correct: 1,
+        explanation: "MoE keeps total parameters high but 'loads' (activates) only the relevant expert for each input. Code splitting keeps the total codebase large but only loads relevant chunks per route/interaction. Both optimize the 'active working set' rather than reducing total size."
+      },
+      {
+        q: "Knowledge distillation — training a small 'student' model to mimic a large 'teacher' — is most like which web optimization?",
+        opts: ["Using a CDN", "Rewriting a module with a smaller, focused library (e.g., moment.js → day.js)", "Adding TypeScript types", "Using a different domain name"],
+        correct: 1,
+        explanation: "Replacing moment.js (330KB) with day.js (7KB) gives you similar functionality in a fraction of the size, just as distilling GPT-4 into a 7B model gives similar capability in a fraction of the parameters. Both require effort (rewriting code / training) but dramatically reduce footprint while preserving core functionality."
+      }
+    ]
+  },
+
+  // ===== 6: BUILD TIME =====
+  {
+    num: 6,
+    title: "Build Time",
+    subtitle: "The cost of preparation — from compile steps to model training epochs",
+    color: "cyan",
+    content: `
+      <div class="card">
+        <h3><span class="tag-web">●</span> CORE CONCEPT</h3>
+        <p><strong>Build time</strong> is the phase where source code is transformed into deployable artifacts. This includes: TypeScript compilation, JSX transformation, bundling, tree shaking, CSS processing, image optimization, static page generation, and more. Build time is when you pay the "preparation tax" so that runtime is fast.</p>
+        <p>The fundamental tradeoff: <strong>more work at build time = less work at runtime</strong>. Static Site Generation (SSG) does maximum work at build time (pre-rendering every page) for minimum runtime cost. Server-Side Rendering (SSR) does moderate build work and moderate runtime work. Client-Side Rendering (CSR) does minimal build work but maximum runtime work.</p>
+        <p>Build time optimization is critical for developer experience (DX) and deployment velocity:</p>
+        <ul>
+          <li><strong>Incremental builds</strong> — Only recompile changed modules (Turbopack, SWC)</li>
+          <li><strong>Persistent caching</strong> — Cache compilation artifacts across builds</li>
+          <li><strong>Parallelization</strong> — Multi-threaded compilation (esbuild, SWC written in Rust/Go)</li>
+          <li><strong>Code generation</strong> — Generate types, API clients, routes at build time</li>
+        </ul>
+      </div>
+
+      <div class="analogy">
+        <h4>WEB → ML PARALLEL</h4>
+        <p><strong>Build time in web = Training time in ML.</strong> This is perhaps the most profound parallel. Training a neural network is the "build step" — you invest enormous upfront computation to produce an artifact (model weights) that can serve requests efficiently at runtime (inference). SSG pre-rendering all pages is like training: massive upfront cost, but serving is essentially free. CSR is like few-shot prompting: no training cost, but every "request" requires full computation. <strong>Fine-tuning is like incremental builds</strong> — you don't retrain from scratch, you update only what changed. <strong>Transfer learning is like using pre-built libraries</strong> — leverage work someone else already did at their build time.</p>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> ML DEEP DIVE: THE BUILD/TRAIN SPECTRUM</h3>
+        <div class="diagram-box">                  BUILD TIME (Training)          RUNTIME (Inference)
+                  ─────────────────────         ──────────────────
+<span class="hl-accent">SSG</span>  ≈  <span class="hl-accent">Full Pre-training</span>    Maximum upfront cost           Near-zero serving cost
+                              GPT-4: ~$100M, months          Lookup/forward pass
+                              Pre-render all pages            Serve from CDN
+
+<span class="hl-warm">ISR</span>  ≈  <span class="hl-warm">Fine-tuning</span>          Moderate update cost            Moderate serving cost
+                              LoRA: hours on 1 GPU           Fast inference
+                              Rebuild changed pages           Serve cached + revalidate
+
+<span class="hl-purple">SSR</span>  ≈  <span class="hl-purple">RAG</span>                  Minimal build (index docs)      Per-request retrieval + gen
+                              Build vector index              Retrieve → Generate
+                              Route definitions only          Render per request
+
+<span class="hl-coral">CSR</span>  ≈  <span class="hl-coral">Zero-shot / Prompting</span> Zero build cost                 Maximum runtime cost
+                              No training                     Full computation per request
+                              Ship raw JS to client           Entire context in prompt</div>
+      </div>
+
+      <div class="card">
+        <h3><span class="tag-ml">●</span> INCREMENTAL BUILDS = FINE-TUNING</h3>
+        <p>When you change one component in a Next.js app, Turbopack doesn't rebuild the entire project — it performs an <strong>incremental build</strong> using its module graph to determine what's affected. Fine-tuning does the same: <strong>LoRA (Low-Rank Adaptation)</strong> freezes most model weights and only trains small adapter matrices, dramatically reducing compute cost while adapting the model to new data.</p>
+        <p>Key parallels in build optimization:</p>
+        <ul>
+          <li><strong>Persistent build cache</strong> → <strong>Checkpointing</strong> — Save intermediate training state so you can resume</li>
+          <li><strong>Parallel compilation</strong> → <strong>Distributed training</strong> (data parallel, model parallel) — Split work across GPUs/machines</li>
+          <li><strong>Build matrix / CI</strong> → <strong>Hyperparameter sweeps</strong> — Test many configurations in parallel</li>
+          <li><strong>Build artifacts (bundles)</strong> → <strong>Model artifacts (weight files, ONNX, TensorRT engines)</strong></li>
+          <li><strong>Compiler optimizations</strong> → <strong>Graph optimizations</strong> (operator fusion, kernel tuning via torch.compile)</li>
+        </ul>
+      </div>
+    `,
+    whatifs: [
+      {
+        scenario: "You have a product recommendation system. Option A: Pre-compute recommendations for all 10M users nightly (4-hour batch job). Option B: Compute recommendations in real-time per request (200ms/request). Option C: Pre-compute for top 1M active users, real-time for the rest. Which approach maps to which web rendering strategy, and which would you choose?",
+        options: [
+          "A=SSG, B=CSR, C=ISR hybrid. Choose C: pre-compute for active users (high cache hit rate), compute on-demand for long-tail.",
+          "A=SSR, B=CSR, C=SSG. Choose A: always pre-compute everything.",
+          "A=CSR, B=SSG, C=SSR. Choose B: real-time is always best.",
+          "They're all equivalent, it doesn't matter."
+        ],
+        correct: 0,
+        explanation: "This is a direct mapping! A = SSG (pre-render everything at build time): high upfront cost but fast serving. B = CSR/SSR (compute per request): no upfront cost but high per-request latency. C = ISR hybrid (pre-compute popular pages, generate others on-demand): best of both worlds. In practice, the Pareto principle applies: 10% of users generate 90% of traffic, so pre-computing for the top 1M gives you 90%+ cache hit rate while saving 90% of the batch compute cost. This is exactly how Netflix, Spotify, and Amazon design their recommendation systems."
+      }
+    ],
+    quiz: [
+      {
+        q: "The relationship between SSG (pre-rendering all pages at build) and CSR (rendering in the browser) maps to which ML comparison?",
+        opts: ["Supervised vs unsupervised learning", "Pre-training (massive upfront compute, fast inference) vs zero-shot prompting (no training, expensive inference)", "Classification vs regression", "Online vs offline learning"],
+        correct: 1,
+        explanation: "SSG invests heavily at build time so serving is near-instant (static files from CDN). Pre-training invests $100M+ in compute so inference is a simple forward pass. CSR does no build-time work and pushes all computation to runtime. Zero-shot prompting does no training and pushes all work to inference time (long context = expensive)."
+      },
+      {
+        q: "LoRA fine-tuning, which freezes most model weights and only trains small adapter layers, is the ML equivalent of:",
+        opts: ["Full static site rebuild", "Incremental build — only recompile modules affected by the change", "Client-side rendering", "Database migration"],
+        correct: 1,
+        explanation: "LoRA is incremental building for models. Instead of retraining all parameters (full rebuild), you identify which 'modules' need updating (the adapters) and only train those. The result is the same (an updated model/bundle) but the cost is dramatically lower."
+      },
+      {
+        q: "A CI/CD pipeline that runs build, test, and deploy in parallel across multiple machines is most analogous to:",
+        opts: ["Model inference", "Distributed training across multiple GPUs/machines with hyperparameter sweeps", "Model pruning", "Data augmentation"],
+        correct: 1,
+        explanation: "CI/CD parallelizes the build-test-deploy pipeline across agents/containers. Distributed training parallelizes gradient computation across GPUs/nodes. Hyperparameter sweeps run multiple training configurations in parallel, like a build matrix testing across different environments. Both optimize the 'build phase' through parallelism."
+      }
+    ]
+  }
+];
+
+// ====== RENDER FUNCTIONS ======
+function renderNav() {
+  const navProgress = document.getElementById('navProgress');
+  navProgress.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot';
+    if (currentSection === i) dot.classList.add('active');
+    if (completedSections.has(i)) dot.classList.add('completed');
+    dot.title = sections[i - 1].title;
+    dot.onclick = () => goToSection(i);
+    navProgress.appendChild(dot);
+  }
+  document.getElementById('navScore').textContent = `Score: ${score}`;
+}
+
+function renderHero() {
+  return `
+    <div class="hero" id="section-0">
+      <h1>Web Architecture Meets Machine Learning</h1>
+      <p>An interactive deep-dive into 6 fundamental web concepts and their surprisingly direct parallels in machine learning. Complete quizzes, explore what-if scenarios, and build real intuition.</p>
+      <button class="hero-start" onclick="goToSection(1)">Begin Learning →</button>
+      <div style="margin-top: 32px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+        ${sections.map((s, i) => `
+          <button onclick="goToSection(${i+1})" style="background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--${s.color}); font-size: 13px; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--${s.color})'" onmouseout="this.style.borderColor='var(--border)'">${s.num}. ${s.title}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderSection(idx) {
+  const s = sections[idx];
+  const quizHtml = s.quiz.map((q, qi) => renderQuiz(q, qi, idx)).join('');
+  const whatifHtml = s.whatifs.map((w, wi) => renderWhatIf(w, wi, idx)).join('');
+
+  return `
+    <div class="section active" id="section-${idx + 1}">
+      <div class="section-header">
+        <div class="section-num" style="background: var(--${s.color})">${s.num}</div>
+        <div>
+          <div class="section-title">${s.title}</div>
+          <div class="section-subtitle">${s.subtitle}</div>
+        </div>
+      </div>
+
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab(this, 'learn-${idx}')">📖 LEARN</button>
+        <button class="tab-btn" onclick="switchTab(this, 'whatif-${idx}')">🧪 WHAT-IF</button>
+        <button class="tab-btn" onclick="switchTab(this, 'quiz-${idx}')">✅ QUIZ</button>
+      </div>
+
+      <div class="tab-content active" id="learn-${idx}">
+        ${s.content}
+      </div>
+
+      <div class="tab-content" id="whatif-${idx}">
+        <h3 style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--cyan); margin-bottom: 20px; letter-spacing: 1px;">🧪 WHAT-IF SCENARIOS</h3>
+        <p style="color: var(--text-dim); margin-bottom: 24px; font-size: 15px; line-height: 1.7;">Apply your knowledge to real-world architecture decisions. These scenarios test whether you can transfer the concept to practical ML problems.</p>
+        ${whatifHtml}
+      </div>
+
+      <div class="tab-content" id="quiz-${idx}">
+        <h3 style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--warm); margin-bottom: 20px; letter-spacing: 1px;">✅ KNOWLEDGE CHECK</h3>
+        <p style="color: var(--text-dim); margin-bottom: 24px; font-size: 15px; line-height: 1.7;">Test your understanding of ${s.title} and its ML parallels.</p>
+        ${quizHtml}
+      </div>
+
+      <div class="btn-row">
+        ${idx > 0 ? `<button class="btn" onclick="goToSection(${idx})">← Previous</button>` : `<button class="btn" onclick="goToSection(0)">← Home</button>`}
+        ${idx < 5 ? `<button class="btn btn-primary" onclick="completeAndNext(${idx + 1}, ${idx + 2})">Next: ${sections[idx + 1].title} →</button>` : `<button class="btn btn-primary" onclick="showFinalSummary()">View Summary →</button>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderQuiz(q, qi, sectionIdx) {
+  const letters = ['A', 'B', 'C', 'D'];
+  return `
+    <div class="quiz-container" id="quiz-${sectionIdx}-${qi}">
+      <div class="quiz-header">
+        <h3>● QUESTION ${qi + 1}</h3>
+      </div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.opts.map((opt, oi) => `
+          <button class="quiz-opt" onclick="answerQuiz(${sectionIdx}, ${qi}, ${oi}, ${q.correct})" id="qopt-${sectionIdx}-${qi}-${oi}">
+            <span class="opt-letter">${letters[oi]}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="quiz-feedback" id="qfb-${sectionIdx}-${qi}">${q.explanation}</div>
+    </div>
+  `;
+}
+
+function renderWhatIf(w, wi, sectionIdx) {
+  return `
+    <div class="whatif-container" id="whatif-${sectionIdx}-${wi}">
+      <h3>● SCENARIO ${wi + 1}</h3>
+      <div class="whatif-scenario">
+        <p>${w.scenario}</p>
+        <div class="whatif-options">
+          ${w.options.map((opt, oi) => `
+            <button class="whatif-btn" onclick="answerWhatIf(${sectionIdx}, ${wi}, ${oi}, ${w.correct})" id="wopt-${sectionIdx}-${wi}-${oi}">${opt}</button>
+          `).join('')}
+        </div>
+        <div class="whatif-explanation" id="wfb-${sectionIdx}-${wi}">${w.explanation}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderFinalSummary() {
+  const maxScore = 6 * 4 * 10; // 6 sections, ~4 questions each, 10 pts each (approx)
+  const pct = Math.round((score / Math.max(score, 1)) * 100);
+  return `
+    <div class="section active" id="section-final">
+      <div class="section-header">
+        <div class="section-num" style="background: var(--warm)">★</div>
+        <div>
+          <div class="section-title">Course Complete</div>
+          <div class="section-subtitle">Review your learning across all six concepts</div>
+        </div>
+      </div>
+
+      <div class="final-score">
+        <div class="big-num">${score}</div>
+        <p>points earned across all quizzes and scenarios</p>
+      </div>
+
+      <h3 style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--accent); margin: 30px 0 16px; letter-spacing: 1px;">CONCEPT MAP: WEB → ML</h3>
+      <div class="summary-grid">
+        <div class="summary-card" style="border-left: 3px solid var(--accent);">
+          <h4 style="color: var(--accent);">Server Rendering Pipeline</h4>
+          <p><strong>ML:</strong> Inference Pipeline. Both are DAGs of staged transformations. Route matching → input routing. Data fetch → feature retrieval. Render → forward pass.</p>
+        </div>
+        <div class="summary-card" style="border-left: 3px solid var(--warm);">
+          <h4 style="color: var(--warm);">RSC Streaming</h4>
+          <p><strong>ML:</strong> Streaming Inference & Speculative Decoding. Progressive delivery of results. Suspense boundaries → generation contexts. Chunked encoding → token-by-token SSE.</p>
+        </div>
+        <div class="summary-card" style="border-left: 3px solid var(--coral);">
+          <h4 style="color: var(--coral);">Middleware</h4>
+          <p><strong>ML:</strong> Guardrails & Pipeline Interceptors. Short-circuit pattern saves compute. Auth → input validation. Rate limiting → GPU budget. Output middleware → output safety checks.</p>
+        </div>
+        <div class="summary-card" style="border-left: 3px solid var(--blue);">
+          <h4 style="color: var(--blue);">Caching Layers</h4>
+          <p><strong>ML:</strong> KV-Cache, Embedding Indices, Semantic Cache. Memory hierarchies trade storage for computation. ISR → KV-cache (incremental). CDN → vector DB. Semantic caching is unique to ML.</p>
+        </div>
+        <div class="summary-card" style="border-left: 3px solid var(--purple);">
+          <h4 style="color: var(--purple);">Bundle Size</h4>
+          <p><strong>ML:</strong> Model Size & Compression. Tree shaking → pruning. Minification → quantization. Code splitting → MoE. Distillation → rewriting with lighter library.</p>
+        </div>
+        <div class="summary-card" style="border-left: 3px solid var(--cyan);">
+          <h4 style="color: var(--cyan);">Build Time</h4>
+          <p><strong>ML:</strong> Training Time. SSG → pre-training. ISR → fine-tuning/LoRA. CSR → zero-shot. Incremental builds → incremental training. Build cache → checkpoints.</p>
+        </div>
+      </div>
+
+      <h3 style="font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--purple); margin: 30px 0 16px; letter-spacing: 1px;">MASTER COMPARISON TABLE</h3>
+      <div style="overflow-x: auto;">
+        <table class="comp-table">
+          <thead>
+            <tr><th>Web Concept</th><th>ML Parallel</th><th>Shared Principle</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Server rendering pipeline</td><td>Inference pipeline</td><td>DAG of transformations</td></tr>
+            <tr><td>Route matching</td><td>Model/expert routing</td><td>Input-dependent dispatch</td></tr>
+            <tr><td>Data fetching</td><td>Feature retrieval</td><td>Gather inputs from stores</td></tr>
+            <tr><td>Component rendering</td><td>Forward pass</td><td>Transform input → output</td></tr>
+            <tr><td>RSC streaming</td><td>Token streaming (SSE)</td><td>Progressive delivery</td></tr>
+            <tr><td>Suspense fallback</td><td>Speculative decoding draft</td><td>Show rough → refine</td></tr>
+            <tr><td>Middleware chain</td><td>Guardrail pipeline</td><td>Interceptor/filter pattern</td></tr>
+            <tr><td>Auth short-circuit</td><td>Input rejection guardrail</td><td>Fail fast, save compute</td></tr>
+            <tr><td>CDN cache</td><td>Embedding vector DB</td><td>Pre-computed fast retrieval</td></tr>
+            <tr><td>ISR (stale-while-revalidate)</td><td>KV-cache</td><td>Reuse, compute only delta</td></tr>
+            <tr><td>Tree shaking</td><td>Weight pruning</td><td>Remove unused components</td></tr>
+            <tr><td>Minification</td><td>Quantization</td><td>Reduce precision/size</td></tr>
+            <tr><td>Code splitting</td><td>Mixture of Experts</td><td>Load only what's needed</td></tr>
+            <tr><td>Knowledge distillation</td><td>Library replacement (moment→day.js)</td><td>Same function, smaller package</td></tr>
+            <tr><td>SSG (build everything upfront)</td><td>Pre-training</td><td>Max upfront cost, min runtime</td></tr>
+            <tr><td>Incremental build</td><td>LoRA fine-tuning</td><td>Update only what changed</td></tr>
+            <tr><td>Build cache / CI artifacts</td><td>Checkpointing</td><td>Resume from saved state</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" onclick="goToSection(0)">← Back to Home</button>
+        <button class="btn btn-primary" onclick="resetAll()">🔄 Start Over</button>
+      </div>
+    </div>
+  `;
+}
+
+// ====== INTERACTION HANDLERS ======
+function goToSection(idx) {
+  currentSection = idx;
+  const app = document.getElementById('app');
+  if (idx === 0) {
+    app.innerHTML = renderHero();
+  } else if (idx <= 6) {
+    app.innerHTML = renderSection(idx - 1);
+  }
+  renderNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function completeAndNext(currentIdx, nextIdx) {
+  completedSections.add(currentIdx);
+  goToSection(nextIdx);
+}
+
+function showFinalSummary() {
+  completedSections.add(6);
+  currentSection = 7;
+  document.getElementById('app').innerHTML = renderFinalSummary();
+  renderNav();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetAll() {
+  score = 0;
+  completedSections.clear();
+  answeredQuizzes = {};
+  answeredWhatIfs = {};
+  goToSection(0);
+}
+
+function switchTab(btn, tabId) {
+  const parent = btn.closest('.section');
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  parent.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+let answeredQuizzes = {};
+function answerQuiz(sIdx, qIdx, optIdx, correctIdx) {
+  const key = `${sIdx}-${qIdx}`;
+  if (answeredQuizzes[key]) return;
+  answeredQuizzes[key] = true;
+
+  const opts = document.querySelectorAll(`#quiz-${sIdx}-${qIdx} .quiz-opt`);
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if (i === correctIdx) o.classList.add('correct');
+    if (i === optIdx && i !== correctIdx) o.classList.add('wrong');
+  });
+
+  const fb = document.getElementById(`qfb-${sIdx}-${qIdx}`);
+  fb.classList.add('show');
+  if (optIdx === correctIdx) {
+    fb.classList.add('correct-fb');
+    score += 10;
+  } else {
+    fb.classList.add('wrong-fb');
+  }
+  renderNav();
+}
+
+let answeredWhatIfs = {};
+function answerWhatIf(sIdx, wIdx, optIdx, correctIdx) {
+  const key = `${sIdx}-${wIdx}`;
+  if (answeredWhatIfs[key]) return;
+  answeredWhatIfs[key] = true;
+
+  const btns = document.querySelectorAll(`#whatif-${sIdx}-${wIdx} .whatif-btn`);
+  btns.forEach((b, i) => {
+    if (i === correctIdx) b.classList.add('correct');
+    if (i === optIdx && i !== correctIdx) b.classList.add('wrong');
+    b.style.pointerEvents = 'none';
+  });
+
+  const fb = document.getElementById(`wfb-${sIdx}-${wIdx}`);
+  fb.classList.add('show');
+  if (optIdx === correctIdx) {
+    score += 10;
+  }
+  renderNav();
+}
+
+// ====== INIT ======
+document.getElementById('app').innerHTML = renderHero();
+renderNav();
+</script>
+</body>
+</html>

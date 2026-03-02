@@ -78,6 +78,11 @@ const CATEGORIES = {
         path: './guides/computer-science/executables/',
         meta: 'Interactive guide · Binary format, loading, and runtime',
       },
+      {
+        title: 'Web Architecture Meets ML',
+        path: './guides/computer-science/web-architecture',
+        meta: 'Interactive guide · An interactive deep-dive into 6 fundamental web concepts and their surprisingly direct parallels in machine learning. Complete quizzes, explore what-if scenarios, and build real intuition.',
+      },
     ],
   },
   'data-science': {

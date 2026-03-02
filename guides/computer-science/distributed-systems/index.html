@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distributed Systems Interactive Tutor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Configuration for Custom Colors/Fonts -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            850: '#1f2937',
+                            900: '#111827',
+                            950: '#0b0f19',
+                        },
+                        accent: {
+                            blue: '#3b82f6',
+                            purple: '#8b5cf6',
+                            green: '#10b981',
+                            red: '#ef4444'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #374151; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563; 
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(31, 41, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* CAP Theorem Triangle Animation */
+        .cap-node {
+            transition: all 0.3s ease;
+        }
+        .cap-line {
+            transition: all 0.3s ease;
+            stroke-dasharray: 10;
+            animation: dash 30s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 1000;
+            }
+        }
+
+        /* Scaling Animation Classes */
+        .server-box {
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .scale-up-anim {
+            transform: scale(1.5);
+            background-color: #10b981; /* Green */
+            box-shadow: 0 0 20px #10b981;
+        }
+        .scale-out-anim {
+            /* Handled via JS adding/removing elements, but base transition here */
+        }
+        
+        /* Tooltip Customization */
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased h-screen flex overflow-hidden selection:bg-accent-blue selection:text-white">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-gray-900 border-r border-gray-800 flex flex-col hidden md:flex z-20">
+        <div class="p-6 flex items-center gap-3 border-b border-gray-800">
+            <div class="w-8 h-8 bg-gradient-to-br from-accent-blue to-accent-purple rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-network-wired text-white text-sm"></i>
+            </div>
+            <h1 class="font-bold text-lg tracking-tight">DistSys<span class="text-accent-blue">Tutor</span></h1>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
+            <button onclick="scrollToSection('intro')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-400 hover:text-white group active-nav">
+                <i class="fa-solid fa-book-open w-5 group-hover:text-accent-blue transition-colors"></i>
+                <span>1. The Fallacies</span>
+            </button>
+            <button onclick="scrollToSection('cap')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-400 hover:text-white group">
+                <i class="fa-solid fa-triangle-exclamation w-5 group-hover:text-accent-purple transition-colors"></i>
+                <span>2. CAP Theorem</span>
+            </button>
+            <button onclick="scrollToSection('scaling')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-400 hover:text-white group">
+                <i class="fa-solid fa-server w-5 group-hover:text-accent-green transition-colors"></i>
+                <span>3. Scaling Strategies</span>
+            </button>
+            <button onclick="scrollToSection('glossary')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-3 text-gray-400 hover:text-white group">
+                <i class="fa-solid fa-layer-group w-5 group-hover:text-accent-red transition-colors"></i>
+                <span>4. Core Concepts</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center space-y-2">
+            <a href="../index.html" class="block text-gray-500 hover:text-gray-300 transition-colors">← Computer Science</a>
+            <span>v1.0.0 &bull; Interactive Learning Module</span>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 overflow-y-auto relative scroll-smooth" id="main-container">
+        
+        <!-- Mobile Header -->
+        <div class="md:hidden bg-gray-900 p-4 border-b border-gray-800 flex justify-between items-center sticky top-0 z-30">
+            <h1 class="font-bold text-lg">DistSys Tutor</h1>
+            <button class="text-gray-400 hover:text-white"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <div class="max-w-5xl mx-auto p-6 md:p-12 space-y-24 pb-32">
+
+            <!-- HERO SECTION -->
+            <section class="text-center space-y-6 py-10">
+                <div class="inline-block px-3 py-1 rounded-full bg-accent-blue/10 text-accent-blue text-sm font-mono mb-2 border border-accent-blue/20">
+                    Educational Dashboard
+                </div>
+                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                    Mastering Distributed Systems
+                </h1>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                    An interactive journey through the fundamental concepts that power the modern internet. 
+                    From the fallacies of networking to the trade-offs of the CAP theorem.
+                </p>
+            </section>
+
+            <!-- SECTION 1: THE FALLACIES -->
+            <section id="intro" class="scroll-mt-10">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-accent-blue/20 flex items-center justify-center text-accent-blue">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold">The 8 Fallacies of Distributed Computing</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Intro Card -->
+                    <div class="glass-panel p-6 rounded-xl md:col-span-2 border-l-4 border-accent-blue">
+                        <h3 class="text-xl font-semibold mb-2 text-white">Why do systems fail?</h3>
+                        <p class="text-gray-400">
+                            Developers new to distributed systems often make assumptions that lead to catastrophic failures. 
+                            These are the <strong>8 Fallacies</strong>—false assumptions that everyone makes when building distributed systems for the first time.
+                        </p>
+                    </div>
+
+                    <!-- Fallacy Items (Generated via JS below, but hardcoding structure for clarity) -->
+                    <div id="fallacies-container" class="contents">
+                        <!-- JS will inject cards here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: CAP THEOREM -->
+            <section id="cap" class="scroll-mt-10">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-accent-purple/20 flex items-center justify-center text-accent-purple">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold">The CAP Theorem</h2>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <!-- Interactive Visual -->
+                    <div class="glass-panel p-8 rounded-xl flex flex-col items-center justify-center relative min-h-[400px]">
+                        <h3 class="absolute top-6 left-6 text-sm font-mono text-gray-500">INTERACTIVE VISUALIZER</h3>
+                        
+                        <!-- SVG Triangle -->
+                        <svg width="300" height="260" viewBox="0 0 300 260" class="overflow-visible">
+                            <!-- Lines -->
+                            <line x1="150" y1="20" x2="30" y2="240" stroke="#374151" stroke-width="4" class="cap-line" id="line-ca" />
+                            <line x1="150" y1="20" x2="270" y2="240" stroke="#374151" stroke-width="4" class="cap-line" id="line-ap" />
+                            <line x1="30" y1="240" x2="270" y2="240" stroke="#374151" stroke-width="4" class="cap-line" id="line-cp" />
+
+                            <!-- Nodes (Clickable) -->
+                            <!-- Consistency (Top) -->
+                            <g class="cursor-pointer group" onclick="toggleCap('consistency')">
+                                <circle cx="150" cy="20" r="30" fill="#1f2937" stroke="#ef4444" stroke-width="3" class="cap-node transition-all" id="node-c" />
+                                <text x="150" y="25" text-anchor="middle" fill="white" font-size="12" font-weight="bold" class="pointer-events-none">C</text>
+                                <text x="150" y="60" text-anchor="middle" fill="#9ca3af" font-size="12" class="opacity-0 group-hover:opacity-100 transition-opacity">Consistency</text>
+                            </g>
+
+                            <!-- Availability (Right) -->
+                            <g class="cursor-pointer group" onclick="toggleCap('availability')">
+                                <circle cx="270" cy="240" r="30" fill="#1f2937" stroke="#10b981" stroke-width="3" class="cap-node transition-all" id="node-a" />
+                                <text x="270" y="245" text-anchor="middle" fill="white" font-size="12" font-weight="bold" class="pointer-events-none">A</text>
+                                <text x="270" y="285" text-anchor="middle" fill="#9ca3af" font-size="12" class="opacity-0 group-hover:opacity-100 transition-opacity">Availability</text>
+                            </g>
+
+                            <!-- Partition Tolerance (Left) -->
+                            <g class="cursor-pointer group" onclick="toggleCap('partition')">
+                                <circle cx="30" cy="240" r="30" fill="#1f2937" stroke="#3b82f6" stroke-width="3" class="cap-node transition-all" id="node-p" />
+                                <text x="30" y="245" text-anchor="middle" fill="white" font-size="12" font-weight="bold" class="pointer-events-none">P</text>
+                                <text x="30" y="285" text-anchor="middle" fill="#9ca3af" font-size="12" class="opacity-0 group-hover:opacity-100 transition-opacity">Partition Tolerance</text>
+                            </g>
+                        </svg>
+
+                        <div class="mt-4 text-center text-sm text-gray-400">
+                            Click on the nodes to select <span class="text-white font-bold">only two</span>.
+                        </div>
+                    </div>
+
+                    <!-- Explanation Panel -->
+                    <div class="space-y-6">
+                        <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 h-full">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <span id="cap-badge" class="px-2 py-1 rounded text-xs bg-gray-800 text-gray-400 border border-gray-700">SELECT TWO</span>
+                                Trade-off Analysis
+                            </h3>
+                            
+                            <div id="cap-explanation" class="space-y-4">
+                                <p class="text-gray-400 italic">
+                                    "In a distributed data store, you can only guarantee two out of the three properties during a network partition."
+                                </p>
+                                <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                                    <p class="text-sm text-gray-300">Select two nodes on the left to see the real-world implications.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: SCALING -->
+            <section id="scaling" class="scroll-mt-10">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center text-accent-green">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold">Scaling: Up vs. Out</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Vertical Scaling Simulation -->
+                    <div class="glass-panel p-6 rounded-xl flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Vertical Scaling</h3>
+                                <p class="text-sm text-gray-400">"Scaling Up"</p>
+                            </div>
+                            <button onclick="simulateVertical()" class="px-4 py-2 bg-accent-blue hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                <i class="fa-solid fa-plus mr-2"></i>Add CPU/RAM
+                            </button>
+                        </div>
+                        
+                        <!-- Visualization Area -->
+                        <div class="flex-1 bg-gray-900/50 rounded-lg border border-gray-800 relative flex items-center justify-center min-h-[200px] overflow-hidden">
+                            <!-- Load Balancer (Not used in vertical, but for context) -->
+                            <div class="absolute top-4 text-xs text-gray-500 font-mono">SINGLE NODE ARCHITECTURE</div>
+                            
+                            <!-- The Server -->
+                            <div id="v-server" class="server-box w-24 h-32 bg-gray-700 rounded border-2 border-gray-600 flex flex-col items-center justify-center relative z-10">
+                                <i class="fa-solid fa-server text-3xl text-gray-400 mb-2"></i>
+                                <div class="text-[10px] text-gray-400 font-mono">CPU: <span id="v-cpu">2</span> Core</div>
+                                <div class="text-[10px] text-gray-400 font-mono">RAM: <span id="v-ram">8</span> GB</div>
+                            </div>
+
+                            <!-- Traffic Particles (Visual flair) -->
+                            <div id="v-traffic" class="absolute inset-0 pointer-events-none"></div>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-400">
+                            <strong class="text-white">Pros:</strong> Simplicity, strong consistency.<br>
+                            <strong class="text-white">Cons:</strong> Hardware limits, single point of failure.
+                        </p>
+                    </div>
+
+                    <!-- Horizontal Scaling Simulation -->
+                    <div class="glass-panel p-6 rounded-xl flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Horizontal Scaling</h3>
+                                <p class="text-sm text-gray-400">"Scaling Out"</p>
+                            </div>
+                            <button onclick="simulateHorizontal()" class="px-4 py-2 bg-accent-green hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                <i class="fa-solid fa-clone mr-2"></i>Add Server
+                            </button>
+                        </div>
+                        
+                        <!-- Visualization Area -->
+                        <div class="flex-1 bg-gray-900/50 rounded-lg border border-gray-800 relative flex flex-col items-center justify-center min-h-[200px] overflow-hidden p-4">
+                            <div class="absolute top-4 text-xs text-gray-500 font-mono">LOAD BALANCED ARCHITECTURE</div>
+                            
+                            <!-- Load Balancer -->
+                            <div class="mb-4 px-4 py-2 bg-gray-800 rounded border border-gray-600 text-xs font-mono text-accent-blue z-20">
+                                <i class="fa-solid fa-arrow-right-arrow-left mr-2"></i>LOAD BALANCER
+                            </div>
+
+                            <!-- Server Pool -->
+                            <div id="h-pool" class="flex gap-2 items-end h-32 z-10">
+                                <!-- Initial Server -->
+                                <div class="server-box w-16 h-24 bg-gray-700 rounded border-2 border-gray-600 flex flex-col items-center justify-center text-[10px] text-gray-400">
+                                    <i class="fa-solid fa-server mb-1"></i>
+                                    <span>Node 1</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-400">
+                            <strong class="text-white">Pros:</strong> High availability, unlimited scaling.<br>
+                            <strong class="text-white">Cons:</strong> Complexity, data consistency challenges.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 4: GLOSSARY -->
+            <section id="glossary" class="scroll-mt-10">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-10 h-10 rounded-full bg-accent-red/20 flex items-center justify-center text-accent-red">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold">Core Concepts Glossary</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Latency vs Throughput -->
+                    <div class="glass-panel p-6 rounded-xl">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">Latency vs. Throughput</h3>
+                            <i class="fa-solid fa-stopwatch text-accent-blue"></i>
+                        </div>
+                        
+                        <!-- Interactive Pipe Analogy -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                <span>Pipe Width (Throughput)</span>
+                                <span id="width-val">50%</span>
+                            </div>
+                            <input type="range" min="10" max="100" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-accent-blue" oninput="updatePipe(this.value)">
+                        </div>
+
+                        <div class="relative h-24 bg-gray-900 rounded-lg border border-gray-700 overflow-hidden flex items-center px-4" id="pipe-container">
+                            <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiMzYjgyZjYiLz48L3N2Zz4=')]"></div>
+                            
+                            <!-- The "Water" / Data -->
+                            <div id="pipe-flow" class="h-12 bg-accent-blue/50 rounded-full transition-all duration-300 flex items-center justify-center relative" style="width: 50%;">
+                                <div class="absolute -right-2 w-4 h-4 bg-white rounded-full animate-ping"></div>
+                                <span class="text-xs font-bold text-white drop-shadow-md z-10">Data Packet</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="block text-gray-500 text-xs uppercase">Latency</span>
+                                <span class="text-white font-mono" id="latency-display">20ms</span>
+                                <p class="text-xs text-gray-400 mt-1">Time for one packet to travel (Length of pipe).</p>
+                            </div>
+                            <div>
+                                <span class="block text-gray-500 text-xs uppercase">Throughput</span>
+                                <span class="text-white font-mono" id="throughput-display">500 Mbps</span>
+                                <p class="text-xs text-gray-400 mt-1">Volume of data per second (Width of pipe).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sync vs Async -->
+                    <div class="glass-panel p-6 rounded-xl">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">Sync vs. Async</h3>
+                            <i class="fa-solid fa-comments text-accent-purple"></i>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="p-3 bg-gray-800/50 rounded border border-gray-700">
+                                <h4 class="text-accent-blue font-semibold text-sm mb-1">Synchronous (Blocking)</h4>
+                                <p class="text-xs text-gray-400">You wait at the restaurant for your pizza to be cooked. You can't do anything else.</p>
+                                <div class="mt-2 flex gap-1">
+                                    <div class="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-accent-blue w-full animate-[pulse_2s_infinite]"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-gray-800/50 rounded border border-gray-700">
+                                <h4 class="text-accent-green font-semibold text-sm mb-1">Asynchronous (Non-blocking)</h4>
+                                <p class="text-xs text-gray-400">You order pizza, go do laundry, and the delivery guy rings the doorbell when it's ready.</p>
+                                <div class="mt-2 flex gap-1">
+                                    <div class="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-accent-green w-1/3 animate-[bounce_2s_infinite]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Consensus -->
+                    <div class="glass-panel p-6 rounded-xl md:col-span-2">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="text-lg font-bold text-white">Consensus: Paxos & Raft</h3>
+                            <i class="fa-solid fa-users text-accent-red"></i>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="flex-1">
+                                <p class="text-gray-300 text-sm leading-relaxed mb-4">
+                                    Imagine a room of people trying to agree on a pizza topping. Consensus algorithms (like <strong>Paxos</strong> or <strong>Raft</strong>) are the rules they use to agree, even if some people are shouting, can't hear, or leave the room.
+                                </p>
+                                <ul class="space-y-2 text-sm text-gray-400">
+                                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-green"></i> Leader Election (Who orders?)</li>
+                                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-green"></i> Log Replication (Everyone writes down the same order)</li>
+                                    <li class="flex items-center gap-2"><i class="fa-solid fa-check text-accent-green"></i> Safety (No two people order different pizzas)</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Simple Consensus Animation -->
+                            <div class="flex-1 bg-gray-900 rounded-lg border border-gray-800 p-4 relative overflow-hidden">
+                                <div class="absolute top-2 left-2 text-xs font-mono text-gray-500">RAFT SIMULATION</div>
+                                <div class="flex justify-around items-center h-full pt-4">
+                                    <!-- Node 1 (Leader) -->
+                                    <div class="text-center">
+                                        <div class="w-12 h-12 bg-accent-blue rounded-full flex items-center justify-center border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse">
+                                            <i class="fa-solid fa-crown text-white text-xs"></i>
+                                        </div>
+                                        <span class="text-[10px] text-gray-400 mt-1 block">Leader</span>
+                                    </div>
+                                    <!-- Node 2 -->
+                                    <div class="text-center opacity-80">
+                                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center border border-gray-500">
+                                            <i class="fa-solid fa-server text-gray-400 text-xs"></i>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 mt-1 block">Follower</span>
+                                    </div>
+                                    <!-- Node 3 -->
+                                    <div class="text-center opacity-80">
+                                        <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center border border-gray-500">
+                                            <i class="fa-solid fa-server text-gray-400 text-xs"></i>
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 mt-1 block">Follower</span>
+                                    </div>
+                                </div>
+                                <!-- Connection Lines -->
+                                <svg class="absolute inset-0 w-full h-full pointer-events-none">
+                                    <line x1="25%" y1="60%" x2="50%" y2="60%" stroke="#374151" stroke-width="2" />
+                                    <line x1="50%" y1="60%" x2="75%" y2="60%" stroke="#374151" stroke-width="2" />
+                                    <!-- Heartbeat -->
+                                    <circle r="3" fill="#3b82f6">
+                                        <animate attributeName="cx" values="25%;50%;75%" dur="2s" repeatCount="indefinite" />
+                                        <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
+                                    </circle>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- 1. Navigation Logic ---
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+                // Update active state in sidebar
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-gray-800', 'text-white');
+                    btn.classList.add('text-gray-400');
+                });
+                // Simple active state logic (in a real app, use IntersectionObserver)
+                event.currentTarget.classList.remove('text-gray-400');
+                event.currentTarget.classList.add('bg-gray-800', 'text-white');
+            }
+        }
+
+        // --- 2. Fallacies Data & Rendering ---
+        const fallacies = [
+            { title: "1. The network is reliable", icon: "fa-wifi", desc: "Networks fail. Cables get cut, DNS fails, packets drop. Your app must handle timeouts and retries gracefully." },
+            { title: "2. Latency is zero", icon: "fa-bolt", desc: "It takes time for electrons to travel. Calling a local function is microseconds; calling a service is milliseconds (or seconds). Don't make too many remote calls." },
+            { title: "3. Bandwidth is infinite", icon: "fa-tachograph-digital", desc: "Data compression matters. Sending a 50MB JSON payload will clog your network pipe under heavy load." },
+            { title: "4. The network is secure", icon: "fa-lock", desc: "Assume the network is hostile. Use TLS, authenticate every request, and validate inputs." },
+            { title: "5. Topology doesn't change", icon: "fa-sitemap", desc: "IP addresses change, servers move, load balancers reroute. Don't hardcode IPs; use service discovery." },
+            { title: "6. There is one administrator", icon: "fa-user-tie", desc: "In large systems, multiple teams manage different parts. Coordination is hard; standards are necessary." },
+            { title: "7. Transport cost is zero", icon: "fa-money-bill", desc: "Serializing data (JSON/Binary) costs CPU. Network traffic costs money on cloud providers (egress fees)." },
+            { title: "8. The network is homogeneous", icon: "fa-network-wired", desc: "You have Linux, Windows, iOS, Android, IoT devices. They speak different protocols and have different capabilities." }
+        ];
+
+        const fallaciesContainer = document.getElementById('fallacies-container');
+        
+        fallacies.forEach((f, index) => {
+            const card = document.createElement('div');
+            card.className = "glass-panel p-5 rounded-xl border border-gray-800 hover:border-gray-600 transition-all group cursor-pointer";
+            card.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white group-hover:bg-accent-blue transition-colors">
+                        <i class="fa-solid ${f.icon}"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-200 group-hover:text-accent-blue transition-colors">${f.title}</h4>
+                        <div class="h-0 overflow-hidden group-hover:h-auto transition-all duration-300 opacity-0 group-hover:opacity-100">
+                            <p class="text-sm text-gray-400 mt-2 leading-relaxed">${f.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            fallaciesContainer.appendChild(card);
+        });
+
+        // --- 3. CAP Theorem Logic ---
+        let capState = {
+            consistency: false,
+            availability: false,
+            partition: false
+        };
+
+        const capExplanations = {
+            ca: {
+                title: "CA (Consistency + Availability)",
+                text: "You give up Partition Tolerance. This means if the network splits, the system stops working. This is essentially a single-node database (like a standard RDBMS on one server). It can't handle network failures.",
+                db: "Example: Traditional Relational Databases (PostgreSQL, MySQL) on a single node.",
+                color: "text-yellow-400"
+            },
+            cp: {
+                title: "CP (Consistency + Partition Tolerance)",
+                text: "You give up Availability. If a partition occurs, the system shuts down the inconsistent node rather than risk returning stale data. Users might see errors, but data is always correct.",
+                db: "Example: MongoDB, HBase, Redis Cluster.",
+                color: "text-red-400"
+            },
+            ap: {
+                title: "AP (Availability + Partition Tolerance)",
+                text: "You give up Consistency. The system stays up during a partition, but nodes might return different versions of the data. Data is 'eventually consistent'.",
+                db: "Example: Cassandra, DynamoDB, Couchbase.",
+                color: "text-green-400"
+            },
+            default: {
+                title: "The Trade-off",
+                text: "Select exactly two properties on the left to see the result.",
+                db: "",
+                color: "text-gray-400"
+            }
+        };
+
+        function toggleCap(prop) {
+            // Toggle the state
+            capState[prop] = !capState[prop];
+            
+            // Enforce rule: Only 2 can be selected at a time
+            const activeCount = Object.values(capState).filter(Boolean).length;
+            
+            if (activeCount > 2) {
+                // If 3 are selected, deselect the one that was clicked (revert toggle) 
+                // OR deselect the oldest one. Let's deselect the one clicked to prevent 3.
+                capState[prop] = false;
+                alert("You can only pick 2! In a network partition, you MUST give up one.");
+                renderCap();
+                return;
+            }
+
+            renderCap();
+            updateCapText();
+        }
+
+        function renderCap() {
+            // Reset styles
+            ['c', 'a', 'p'].forEach(key => {
+                const el = document.getElementById(`node-${key}`);
+                const lineMap = {'c': 'ca', 'a': 'ap', 'p': 'cp'}; // Simplified mapping logic needed for lines
+                
+                if (capState[getFullKey(key)]) {
+                    el.setAttribute('fill', '#3b82f6'); // Active color
+                    el.setAttribute('stroke', '#60a5fa');
+                    el.classList.add('shadow-lg');
+                } else {
+                    el.setAttribute('fill', '#1f2937'); // Inactive color
+                    el.setAttribute('stroke', '#4b5563');
+                    el.classList.remove('shadow-lg');
+                }
+            });
+
+            // Highlight lines between active nodes (Visual polish)
+            // This is a simplified visual representation
+            const c = capState.consistency, a = capState.availability, p = capState.partition;
+            
+            setLine('line-ca', c && a);
+            setLine('line-ap', a && p);
+            setLine('line-cp', c && p);
+        }
+
+        function setLine(id, isActive) {
+            const line = document.getElementById(id);
+            if (isActive) {
+                line.setAttribute('stroke', '#3b82f6');
+                line.setAttribute('stroke-width', '6');
+            } else {
+                line.setAttribute('stroke', '#374151');
+                line.setAttribute('stroke-width', '4');
+            }
+        }
+
+        function getFullKey(short) {
+            if (short === 'c') return 'consistency';
+            if (short === 'a') return 'availability';
+            if (short === 'p') return 'partition';
+        }
+
+        function updateCapText() {
+            const c = capState.consistency, a = capState.availability, p = capState.partition;
+            const container = document.getElementById('cap-explanation');
+            const badge = document.getElementById('cap-badge');
+            
+            let data = capExplanations.default;
+
+            if (c && a && !p) data = capExplanations.ca;
+            else if (c && p && !a) data = capExplanations.cp;
+            else if (a && p && !c) data = capExplanations.ap;
+
+            if (activeCount() === 2) {
+                badge.className = `px-2 py-1 rounded text-xs border ${data.color.replace('text', 'border')} ${data.color.replace('text', 'bg')}/10 ${data.color}`;
+                badge.innerText = data.title.split(' ')[0]; // Just the acronym
+            } else {
+                badge.className = "px-2 py-1 rounded text-xs bg-gray-800 text-gray-400 border border-gray-700";
+                badge.innerText = "SELECT TWO";
+            }
+
+            container.innerHTML = `
+                <h4 class="text-lg font-bold ${data.color} mb-2">${data.title}</h4>
+                <p class="text-gray-300 mb-4">${data.text}</p>
+                ${data.db ? `<div class="p-3 bg-gray-800 rounded border border-gray-700"><span class="text-xs text-gray-500 uppercase font-bold">Real World</span><p class="text-sm text-white mt-1">${data.db}</p></div>` : ''}
+            `;
+        }
+
+        function activeCount() {
+            return Object.values(capState).filter(Boolean).length;
+        }
+
+        // --- 4. Scaling Simulation Logic ---
+        
+        // Vertical Scaling
+        let vCpu = 2;
+        let vRam = 8;
+        function simulateVertical() {
+            const server = document.getElementById('v-server');
+            
+            // Update Data
+            vCpu += 2;
+            vRam += 8;
+            document.getElementById('v-cpu').innerText = vCpu;
+            document.getElementById('v-ram').innerText = vRam;
+
+            // Animate
+            server.classList.remove('scale-up-anim');
+            void server.offsetWidth; // Trigger reflow
+            server.classList.add('scale-up-anim');
+            
+            // Visual flair: Create "Upgrade" particles
+            createParticles('v-traffic', 'up');
+        }
+
+        // Horizontal Scaling
+        let hCount = 1;
+        function simulateHorizontal() {
+            const pool = document.getElementById('h-pool');
+            hCount++;
+            
+            const newServer = document.createElement('div');
+            newServer.className = "server-box w-16 h-24 bg-gray-700 rounded border-2 border-gray-600 flex flex-col items-center justify-center text-[10px] text-gray-400 animate-float";
+            newServer.style.animationDelay = `${Math.random()}s`;
+            newServer.innerHTML = `
+                <i class="fa-solid fa-server mb-1"></i>
+                <span>Node ${hCount}</span>
+            `;
+            
+            pool.appendChild(newServer);
+            
+            // Visual flair
+            createParticles(hCount % 2 === 0 ? 'h-pool' : 'h-pool', 'out');
+        }
+
+        function createParticles(parentId, type) {
+            // Simple visual effect placeholder
+            // In a full app, this would spawn DOM elements that float up and fade out
+        }
+
+        // --- 5. Glossary Logic (Pipe Analogy) ---
+        function updatePipe(widthPercent) {
+            const flow = document.getElementById('pipe-flow');
+            const widthDisplay = document.getElementById('width-val');
+            const latencyDisplay = document.getElementById('latency-display');
+            const throughputDisplay = document.getElementById('throughput-display');
+
+            // Update Visual Width
+            flow.style.width = widthPercent + '%';
+            widthDisplay.innerText = widthPercent + '%';
+
+            // Calculate Fake Metrics
+            // Logic: Wider pipe = Higher Throughput. 
+            // We assume Latency (length) is constant for this analogy, but let's pretend wider pipes reduce friction slightly.
+            
+            const throughput = Math.floor(widthPercent * 10); // 100 -> 1000 Mbps
+            const latency = Math.max(5, 20 - (widthPercent / 10)); // 100 width -> 10ms latency
+
+            throughputDisplay.innerText = throughput + " Mbps";
+            latencyDisplay.innerText = latency + "ms";
+            
+            // Color change based on capacity
+            if(widthPercent > 80) {
+                flow.classList.remove('bg-accent-blue/50');
+                flow.classList.add('bg-accent-green/50');
+            } else {
+                flow.classList.add('bg-accent-blue/50');
+                flow.classList.remove('bg-accent-green/50');
+            }
+        }
+
+        // Initialize
+        renderCap();
+    </script>
+</body>
+</html>

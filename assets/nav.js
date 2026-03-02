@@ -48,11 +48,21 @@ const CATEGORIES = {
         path: './guides/machine-learning/cs270-math/',
         meta: 'Calculation practice · KNN, trees, regression',
       },
+      {
+        title: 'Neural Networks',
+        path: './guides/machine-learning/neural-networks/',
+        meta: 'Interactive · MLP, activation functions, scikit-learn',
+      },
     ],
   },
   'computer-science': {
     label: 'Computer Science',
     lessons: [
+      {
+        title: 'From Source to Silicon',
+        path: './guides/computer-science/system_info/',
+        meta: 'Interactive guide · Systems programming pipeline',
+      },
       {
         title: 'Thread Safety & Concurrency',
         path: './guides/computer-science/concurrency/',
@@ -63,6 +73,11 @@ const CATEGORIES = {
         path: './guides/computer-science/package_managers/',
         meta: 'Interactive guide · Environments & dependencies',
       },
+      {
+        title: 'What Is an Executable?',
+        path: './guides/computer-science/executables/',
+        meta: 'Interactive guide · Binary format, loading, and runtime',
+      },
     ],
   },
   'data-science': {
@@ -72,6 +87,16 @@ const CATEGORIES = {
         title: 'Data Science Review',
         path: './guides/data-science/data-science-review/',
         meta: 'Flashcards · Stats, sampling, Seaborn',
+      },
+    ],
+  },
+  'test-prep': {
+    label: 'Test Prep',
+    lessons: [
+      {
+        title: '15-Minute Pre-Test Study Plan',
+        path: './guides/test-prep/',
+        meta: 'Study plan · Quick review before any exam',
       },
     ],
   },

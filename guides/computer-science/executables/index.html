@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executables — Interactive Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b121b;
+    --surface: #111c2a;
+    --surface-2: #142236;
+    --border: #27384d;
+    --text: #dfe9f5;
+    --muted: #90a2b8;
+    --accent: #4fc3f7;
+    --accent-2: #ffb454;
+    --ok: #62d394;
+    --bad: #ff7d7d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 0% 0%, rgba(79,195,247,0.16), transparent 34%),
+      radial-gradient(circle at 100% 100%, rgba(255,180,84,0.14), transparent 30%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.6;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 34px 20px 70px;
+  }
+
+  .back {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .back:hover { color: var(--accent); }
+
+  header { margin: 28px 0 30px; }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(2rem, 5.8vw, 3.2rem);
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    max-width: 690px;
+  }
+
+  .status {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(17, 28, 42, 0.7);
+  }
+  .status strong { color: var(--accent); font-weight: 500; }
+
+  .card {
+    background: rgba(17, 28, 42, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(4px);
+  }
+
+  h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.35rem;
+    margin-bottom: 10px;
+  }
+
+  p { margin-bottom: 10px; }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9em;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+  }
+
+  .list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .list-item {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 14px;
+    background: var(--surface);
+  }
+  .list-item strong { color: var(--accent); }
+
+  .quiz-q {
+    border-top: 1px dashed var(--border);
+    padding-top: 14px;
+    margin-top: 14px;
+  }
+  .quiz-q:first-of-type {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .question {
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  .answers {
+    display: grid;
+    gap: 8px;
+  }
+
+  label.option {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: var(--surface);
+  }
+
+  label.option:hover { border-color: var(--accent); }
+  label.option input { margin-right: 8px; }
+
+  .result {
+    min-height: 22px;
+    margin-top: 8px;
+    font-size: 0.94rem;
+  }
+
+  .result.ok { color: var(--ok); }
+  .result.bad { color: var(--bad); }
+
+  .btn {
+    margin-top: 16px;
+    border: 1px solid var(--accent);
+    background: rgba(79,195,247,0.12);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .btn:hover { background: rgba(79,195,247,0.2); }
+
+  .whatif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+
+  .whatif {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 14px;
+  }
+
+  .whatif p {
+    margin-bottom: 12px;
+    color: #d5e3f2;
+  }
+
+  .whatif button {
+    width: 100%;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+  }
+  .whatif button:hover { border-color: var(--accent-2); }
+
+  .whatif-outcome {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    min-height: 38px;
+  }
+
+  @media (max-width: 700px) {
+    .wrap { padding: 24px 14px 50px; }
+    .card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">← Computer Science guides</a>
+
+    <header>
+      <div class="eyebrow">Interactive CS Primer</div>
+      <h1>What Is an Executable?</h1>
+      <p class="subtitle">
+        An executable is a file the operating system can load into memory and run as instructions.
+        This guide focuses on one idea: how source code becomes something your OS can actually execute.
+      </p>
+      <div class="status">Quiz score: <strong id="score">0/3</strong></div>
+    </header>
+
+    <section class="card">
+      <h2>Core Concept</h2>
+      <p>
+        A source file like <code>main.c</code> or <code>app.py</code> is text. The CPU cannot run text directly.
+        It runs machine code bytes. An executable packages that machine code with metadata so the OS knows how to run it.
+      </p>
+      <div class="list">
+        <div class="list-item"><strong>Compile step:</strong> converts source code into machine code.</div>
+        <div class="list-item"><strong>Link step:</strong> connects your code to required libraries/functions.</div>
+        <div class="list-item"><strong>Load step:</strong> OS loader maps executable segments into memory and jumps to the entry point.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>One File, Different Formats</h2>
+      <p>
+        Executable formats vary by OS: <code>ELF</code> (Linux), <code>PE</code> (Windows), <code>Mach-O</code> (macOS).
+        Same idea, different headers and loader rules.
+      </p>
+      <div class="list">
+        <div class="list-item"><strong>Header:</strong> tells the OS what architecture this binary targets.</div>
+        <div class="list-item"><strong>Sections/segments:</strong> code, constants, and writable data live in separate regions.</div>
+        <div class="list-item"><strong>Entry point:</strong> first address where execution begins.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Quick Multiple Choice</h2>
+
+      <div class="quiz-q" data-correct="b">
+        <div class="question">1) What makes a file executable to the OS?</div>
+        <div class="answers">
+          <label class="option"><input type="radio" name="q1" value="a"> It has a <code>.txt</code> extension.</label>
+          <label class="option"><input type="radio" name="q1" value="b"> It contains machine code and a valid executable format.</label>
+          <label class="option"><input type="radio" name="q1" value="c"> It was written in C instead of Python.</label>
+        </div>
+        <div class="result" id="r1"></div>
+      </div>
+
+      <div class="quiz-q" data-correct="c">
+        <div class="question">2) During loading, what does the OS primarily do?</div>
+        <div class="answers">
+          <label class="option"><input type="radio" name="q2" value="a"> Rewrites your source code comments.</label>
+          <label class="option"><input type="radio" name="q2" value="b"> Deletes unused functions from disk.</label>
+          <label class="option"><input type="radio" name="q2" value="c"> Maps code/data into memory and jumps to the entry point.</label>
+        </div>
+        <div class="result" id="r2"></div>
+      </div>
+
+      <div class="quiz-q" data-correct="a">
+        <div class="question">3) Why can architecture mismatch fail (x86 binary on ARM)?</div>
+        <div class="answers">
+          <label class="option"><input type="radio" name="q3" value="a"> Machine instructions are architecture-specific.</label>
+          <label class="option"><input type="radio" name="q3" value="b"> File names are case-sensitive.</label>
+          <label class="option"><input type="radio" name="q3" value="c"> The executable is always missing a README.</label>
+        </div>
+        <div class="result" id="r3"></div>
+      </div>
+
+      <button class="btn" id="grade-btn">Check Answers</button>
+    </section>
+
+    <section class="card">
+      <h2>What-If Scenarios</h2>
+      <div class="whatif-grid">
+        <div class="whatif">
+          <p><strong>What if</strong> you copy a Linux ELF binary to Windows and double-click it?</p>
+          <button data-outcome="Windows expects PE format, so it will fail unless you use compatibility tooling like WSL or a VM.">Reveal outcome</button>
+          <div class="whatif-outcome"></div>
+        </div>
+        <div class="whatif">
+          <p><strong>What if</strong> execute permission is removed on Linux (<code>chmod -x</code>)?</p>
+          <button data-outcome="The shell refuses to run it directly: you get a permission error even if the binary itself is valid.">Reveal outcome</button>
+          <div class="whatif-outcome"></div>
+        </div>
+        <div class="whatif">
+          <p><strong>What if</strong> a program depends on a shared library that is missing?</p>
+          <button data-outcome="Load can fail at runtime with a dynamic linker error, because symbols cannot be resolved.">Reveal outcome</button>
+          <div class="whatif-outcome"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const scoreEl = document.getElementById('score');
+  const quizQs = Array.from(document.querySelectorAll('.quiz-q'));
+
+  document.getElementById('grade-btn').addEventListener('click', () => {
+    let score = 0;
+
+    quizQs.forEach((q, idx) => {
+      const correct = q.dataset.correct;
+      const chosen = q.querySelector('input[type="radio"]:checked');
+      const result = document.getElementById(`r${idx + 1}`);
+
+      if (!chosen) {
+        result.className = 'result bad';
+        result.textContent = 'Choose an option first.';
+        return;
+      }
+
+      if (chosen.value === correct) {
+        score += 1;
+        result.className = 'result ok';
+        result.textContent = 'Correct.';
+      } else {
+        result.className = 'result bad';
+        result.textContent = `Not quite. Correct answer: ${correct.toUpperCase()}.`;
+      }
+    });
+
+    scoreEl.textContent = `${score}/3`;
+  });
+
+  document.querySelectorAll('.whatif button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const out = btn.nextElementSibling;
+      out.textContent = btn.dataset.outcome;
+    });
+  });
+</script>
+</body>
+</html>

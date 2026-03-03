@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>From Source to Silicon: The Systems Programming Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.6); }
+        }
+        .glow-effect {
+            animation: pulse-glow 3s infinite;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-syntax-keyword { color: #c678dd; }
+        .code-syntax-func { color: #61afef; }
+        .code-syntax-string { color: #98c379; }
+        .code-syntax-comment { color: #5c6370; font-style: italic; }
+
+        /* Circuit Background Pattern */
+        .circuit-bg {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-white">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-slate-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span class="ml-2 font-mono text-cyan-400 font-bold">systems_guide.exe</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#translation" class="hover:text-cyan-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">The Gap</a>
+                        <a href="#pipeline" class="hover:text-cyan-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">The Pipeline</a>
+                        <a href="#metal" class="hover:text-cyan-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">The Metal</a>
+                        <a href="#learning" class="hover:text-cyan-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Path</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 circuit-bg z-0"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/80 to-slate-900 z-0"></div>
+        
+        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
+            <div class="inline-block mb-4 px-4 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-sm font-mono animate-float">
+                Systems Programming 101
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
+                From Source to Silicon
+            </h1>
+            <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+                A visual, interactive journey into how your code transforms from human-readable text into electrical signals running on bare metal.
+            </p>
+            <a href="#translation" class="group relative inline-flex items-center justify-center px-8 py-3 text-base font-medium text-white bg-cyan-600 rounded-full overflow-hidden transition-all hover:bg-cyan-500 hover:scale-105 shadow-lg shadow-cyan-500/30">
+                <span class="absolute w-0 h-0 transition-all duration-500 ease-out bg-white rounded-full group-hover:w-56 group-hover:h-56 opacity-10"></span>
+                <span class="relative flex items-center gap-2">
+                    Start Execution
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                </span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Section 1: The Translation Gap -->
+    <section id="translation" class="py-24 relative border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The Translation Gap</h2>
+                <p class="text-slate-400 text-lg max-w-3xl">
+                    Before a computer can run your code, it must be translated. There are two primary philosophies for this translation: <span class="text-cyan-400 font-semibold">Interpreting</span> and <span class="text-purple-400 font-semibold">Compiling</span>.
+                </p>
+            </div>
+
+            <!-- Interactive Analogy Widget -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- Controls -->
+                <div class="space-y-8">
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-cyan-500">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            The Interpreter (The Simultaneous Translator)
+                        </h3>
+                        <p class="text-slate-300 mb-4">
+                            Like a UN interpreter whispering in your ear in real-time. It reads one line, translates it to machine code, executes it immediately, then forgets it.
+                        </p>
+                        <ul class="space-y-2 text-sm text-slate-400 font-mono">
+                            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Fast startup (no waiting)</li>
+                            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Platform independent</li>
+                            <li class="flex items-center gap-2"><span class="text-red-400">✗</span> Slower execution (translates every time)</li>
+                        </ul>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-2xl border-l-4 border-purple-500">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                            The Compiler (The Novel Translator)
+                        </h3>
+                        <p class="text-slate-300 mb-4">
+                            Like translating an entire book from English to French first. You wait for the book, but once you have it, you can read it extremely fast without the translator present.
+                        </p>
+                        <ul class="space-y-2 text-sm text-slate-400 font-mono">
+                            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Extremely fast execution</li>
+                            <li class="flex items-center gap-2"><span class="text-green-400">✓</span> Optimizes the whole story</li>
+                            <li class="flex items-center gap-2"><span class="text-red-400">✗</span> Slow startup (translation time)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Visual Simulation -->
+                <div class="bg-slate-900 rounded-xl border border-slate-700 p-1 shadow-2xl relative overflow-hidden h-[400px] flex flex-col">
+                    <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                        <span class="text-xs font-mono text-slate-400">SIMULATION_MODE: ACTIVE</span>
+                        <div class="flex gap-2">
+                            <button onclick="setMode('interpreter')" id="btn-interpreter" class="px-3 py-1 text-xs rounded bg-cyan-600 text-white hover:bg-cyan-500 transition-colors">Interpreter</button>
+                            <button onclick="setMode('compiler')" id="btn-compiler" class="px-3 py-1 text-xs rounded bg-slate-700 text-slate-300 hover:bg-purple-600 hover:text-white transition-colors">Compiler</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 p-6 relative font-mono text-sm flex flex-col justify-between" id="sim-container">
+                        <!-- Source Code Display -->
+                        <div class="space-y-1 opacity-50 transition-opacity duration-300" id="source-code">
+                            <div class="flex"><span class="text-slate-600 w-6">1</span><span class="code-syntax-keyword">let</span> x = <span class="text-orange-400">10</span>;</div>
+                            <div class="flex"><span class="text-slate-600 w-6">2</span><span class="code-syntax-keyword">let</span> y = <span class="text-orange-400">20</span>;</div>
+                            <div class="flex"><span class="text-slate-600 w-6">3</span><span class="code-syntax-func">print</span>(x + y);</div>
+                        </div>
+
+                        <!-- Dynamic Visuals -->
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div id="translator-bot" class="w-16 h-16 bg-slate-700 rounded-full flex items-center justify-center border-2 border-slate-500 z-20 shadow-lg transition-all duration-500">
+                                <span class="text-xl">🤖</span>
+                            </div>
+                        </div>
+
+                        <!-- Output / Binary Display -->
+                        <div class="border-t border-slate-700 pt-4 mt-auto">
+                            <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider">Output Stream</div>
+                            <div id="output-stream" class="h-8 bg-black/50 rounded flex items-center px-3 text-green-400 font-bold overflow-hidden">
+                                Waiting...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: The Pipeline -->
+    <section id="pipeline" class="py-24 bg-slate-900 relative">
+        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The Compilation Pipeline</h2>
+                <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+                    A compiler isn't a black box. It's a factory assembly line. Click the stages below to see how raw text is refined into logic.
+                </p>
+            </div>
+
+            <!-- Pipeline Visualizer -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Stage Selector -->
+                <div class="lg:col-span-4 space-y-4">
+                    <button onclick="setPipelineStage(0)" class="pipeline-btn w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-all group active-stage" data-index="0">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white group-hover:text-cyan-400 transition-colors">1. Lexing</span>
+                            <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">Scanner</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Breaking text into "Tokens".</p>
+                    </button>
+
+                    <button onclick="setPipelineStage(1)" class="pipeline-btn w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-all group" data-index="1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white group-hover:text-cyan-400 transition-colors">2. Parsing</span>
+                            <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">Parser</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Building the Abstract Syntax Tree (AST).</p>
+                    </button>
+
+                    <button onclick="setPipelineStage(2)" class="pipeline-btn w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-all group" data-index="2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white group-hover:text-cyan-400 transition-colors">3. Semantic Analysis</span>
+                            <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">Type Checker</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Checking logic and types.</p>
+                    </button>
+
+                    <button onclick="setPipelineStage(3)" class="pipeline-btn w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-all group" data-index="3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-bold text-white group-hover:text-cyan-400 transition-colors">4. Code Generation</span>
+                            <span class="text-xs bg-slate-700 px-2 py-0.5 rounded text-slate-300">Emitter</span>
+                        </div>
+                        <p class="text-xs text-slate-400">Spitting out Assembly/Machine code.</p>
+                    </button>
+                </div>
+
+                <!-- Visualization Area -->
+                <div class="lg:col-span-8 bg-black rounded-xl border border-slate-700 p-6 relative min-h-[400px] flex flex-col">
+                    <!-- Header -->
+                    <div class="flex justify-between items-end border-b border-slate-800 pb-4 mb-4">
+                        <div>
+                            <h3 id="stage-title" class="text-2xl font-bold text-cyan-400">Lexical Analysis</h3>
+                            <p id="stage-desc" class="text-slate-400 text-sm mt-1">The lexer scans the raw source code and groups characters into meaningful units called tokens.</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-slate-500 uppercase">Input</div>
+                            <div id="stage-input-label" class="text-sm font-mono text-slate-300">Raw Source Code</div>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Input View -->
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-800 font-mono text-sm overflow-auto">
+                            <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Source</div>
+                            <pre id="code-display"><code><span class="code-syntax-keyword">if</span> (x <span class="text-blue-400">==</span> <span class="text-orange-400">10</span>) {
+  <span class="code-syntax-func">print</span>(<span class="code-syntax-string">"Hello"</span>);
+}</code></pre>
+                        </div>
+
+                        <!-- Output View -->
+                        <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-800 relative overflow-hidden">
+                            <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Transformation</div>
+                            
+                            <!-- Dynamic Content Container -->
+                            <div id="viz-canvas" class="h-full flex items-center justify-center">
+                                <!-- Content injected via JS -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <div class="mt-6 flex justify-end">
+                        <button onclick="nextStage()" class="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm font-bold uppercase tracking-wider transition-colors">
+                            Next Stage <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: The Metal -->
+    <section id="metal" class="py-24 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black opacity-50"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">The Metal: Memory & Registers</h2>
+                <p class="text-slate-400 text-lg">
+                    High-level logic eventually becomes simple math and memory moves. Where does data live?
+                </p>
+            </div>
+
+            <!-- Memory Layout Visualizer -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Controls/Code -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h3 class="text-lg font-bold text-white mb-4">Simulate a Function Call</h3>
+                        <div class="bg-black/50 p-4 rounded-lg font-mono text-sm mb-4 border border-slate-700">
+                            <div class="text-slate-500">// Click 'Run' to visualize</div>
+                            <div><span class="code-syntax-keyword">function</span> <span class="code-syntax-func">calculate</span>() {</div>
+                            <div class="pl-4"><span class="code-syntax-keyword">let</span> a = <span class="text-orange-400">5</span>; <span class="text-slate-500">// Stack</span></div>
+                            <div class="pl-4"><span class="code-syntax-keyword">let</span> b = <span class="text-orange-400">10</span>; <span class="text-slate-500">// Stack</span></div>
+                            <div class="pl-4"><span class="code-syntax-keyword">let</span> obj = <span class="code-syntax-keyword">new</span> Object(); <span class="text-slate-500">// Heap</span></div>
+                            <div class="pl-4"><span class="code-syntax-keyword">return</span> a + b;</div>
+                            <div>}</div>
+                        </div>
+                        <button onclick="runMemorySim()" id="run-mem-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-bold transition-all shadow-lg shadow-cyan-500/20">
+                            Execute Code
+                        </button>
+                        <button onclick="resetMemorySim()" class="w-full mt-2 py-2 border border-slate-600 hover:bg-slate-800 text-slate-300 rounded text-sm transition-all">
+                            Reset Memory
+                        </button>
+                    </div>
+
+                    <div class="p-4 rounded-lg bg-blue-900/20 border border-blue-500/30">
+                        <h4 class="text-blue-400 font-bold text-sm mb-2">Did you know?</h4>
+                        <p class="text-slate-300 text-sm">
+                            The <strong>Stack</strong> is lightning fast because it just moves a pointer. The <strong>Heap</strong> is slower because it has to find an empty spot and manage garbage collection.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Visual RAM -->
+                <div class="lg:col-span-2 bg-slate-900 rounded-xl border border-slate-700 p-6 relative h-[500px] flex flex-col">
+                    <div class="absolute top-4 right-4 flex gap-4 text-xs font-mono">
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 bg-cyan-500/20 border border-cyan-500"></div> Stack (Fast, Ordered)</div>
+                        <div class="flex items-center gap-2"><div class="w-3 h-3 bg-purple-500/20 border border-purple-500"></div> Heap (Dynamic, Scattered)</div>
+                    </div>
+
+                    <div class="flex-1 flex gap-8 mt-8 relative">
+                        <!-- Stack Visualization -->
+                        <div class="flex-1 flex flex-col-reverse border-b-2 border-l-2 border-cyan-500/30 rounded-bl-lg p-2 relative">
+                            <div class="absolute -left-8 bottom-0 text-cyan-500 font-bold text-xs rotate-90 origin-bottom-left">STACK</div>
+                            <div id="stack-container" class="flex flex-col-reverse gap-2 w-full">
+                                <!-- Stack items go here -->
+                            </div>
+                        </div>
+
+                        <!-- Heap Visualization -->
+                        <div class="flex-1 border border-purple-500/30 rounded-lg p-4 relative bg-purple-900/5 grid grid-cols-4 gap-2 content-start">
+                            <div class="absolute -top-6 left-0 text-purple-500 font-bold text-xs">HEAP</div>
+                            <div id="heap-container" class="contents">
+                                <!-- Heap items go here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Register Bar -->
+                    <div class="h-16 mt-6 border-t border-slate-700 pt-4 flex items-center gap-4 overflow-x-auto">
+                        <span class="text-xs text-slate-500 font-mono uppercase shrink-0">CPU Registers:</span>
+                        <div class="flex gap-2" id="register-container">
+                            <div class="w-16 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center text-xs font-mono text-slate-500">R1</div>
+                            <div class="w-16 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center text-xs font-mono text-slate-500">R2</div>
+                            <div class="w-16 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center text-xs font-mono text-slate-500">R3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Learning Path -->
+    <section id="learning" class="py-24 bg-gradient-to-b from-slate-900 to-black">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Your Systems Journey</h2>
+                <p class="text-slate-400">Ready to build your own language? Master these three pillars first.</p>
+            </div>
+
+            <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
+                
+                <!-- Step 1 -->
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 bg-slate-900 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                        <span class="text-cyan-400 font-bold">1</span>
+                    </div>
+                    <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-xl hover:border-cyan-500/50 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-white text-lg">Recursive Descent Parsing</h3>
+                            <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-3">
+                            Don't start with tools like Yacc or ANTLR. Learn how to write a parser by hand. It teaches you how grammar rules map directly to code logic.
+                        </p>
+                        <div class="bg-black/30 p-2 rounded font-mono text-xs text-green-400">
+                            Concept: Grammar -> Function
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 bg-slate-900 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                        <span class="text-purple-400 font-bold">2</span>
+                    </div>
+                    <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-xl hover:border-purple-500/50 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-white text-lg">Tree Walking Interpreters</h3>
+                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path></svg>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-3">
+                            Before compiling to assembly, build an interpreter that executes the AST directly. It simplifies the process and gives you instant feedback.
+                        </p>
+                        <div class="bg-black/30 p-2 rounded font-mono text-xs text-purple-400">
+                            Concept: Visitor Pattern
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 bg-slate-900 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                        <span class="text-pink-400 font-bold">3</span>
+                    </div>
+                    <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-xl hover:border-pink-500/50 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-white text-lg">Bytecode VMs</h3>
+                            <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        </div>
+                        <p class="text-slate-400 text-sm mb-3">
+                            The middle ground. Instead of machine code, compile to a simple intermediate representation (Bytecode) and write a VM to execute it. (Like Python or Java).
+                        </p>
+                        <div class="bg-black/30 p-2 rounded font-mono text-xs text-pink-400">
+                            Concept: Stack Machines
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-slate-500 font-mono text-sm">
+                // End of transmission. Happy Hacking.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- Section 1: Translation Gap Logic ---
+        let currentMode = 'interpreter';
+        let simInterval;
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update Buttons
+            document.getElementById('btn-interpreter').className = mode === 'interpreter' 
+                ? "px-3 py-1 text-xs rounded bg-cyan-600 text-white hover:bg-cyan-500 transition-colors"
+                : "px-3 py-1 text-xs rounded bg-slate-700 text-slate-300 hover:bg-purple-600 hover:text-white transition-colors";
+            
+            document.getElementById('btn-compiler').className = mode === 'compiler'
+                ? "px-3 py-1 text-xs rounded bg-purple-600 text-white hover:bg-purple-500 transition-colors"
+                : "px-3 py-1 text-xs rounded bg-slate-700 text-slate-300 hover:bg-purple-600 hover:text-white transition-colors";
+
+            resetSim();
+            startSim();
+        }
+
+        function resetSim() {
+            clearInterval(simInterval);
+            document.getElementById('output-stream').innerHTML = 'Waiting...';
+            document.getElementById('translator-bot').style.transform = 'translate(0,0)';
+            document.getElementById('source-code').classList.remove('opacity-100');
+            document.getElementById('source-code').classList.add('opacity-50');
+        }
+
+        function startSim() {
+            const output = document.getElementById('output-stream');
+            const bot = document.getElementById('translator-bot');
+            const source = document.getElementById('source-code');
+            let step = 0;
+
+            // Initial State
+            source.classList.remove('opacity-50');
+            source.classList.add('opacity-100');
+
+            if (currentMode === 'interpreter') {
+                // Interpreter Loop: Line by Line
+                let lines = ["LOAD 10", "LOAD 20", "ADD", "PRINT 30"];
+                let yPos = [-60, -20, 20, 60]; // Relative Y positions for lines
+                
+                let i = 0;
+                simInterval = setInterval(() => {
+                    if (i >= lines.length) {
+                        i = 0; // Loop
+                        output.innerHTML = '';
+                    }
+                    
+                    // Animate Bot
+                    bot.style.transform = `translate(0, ${yPos[i]}px)`;
+                    bot.style.borderColor = i % 2 === 0 ? '#22d3ee' : '#818cf8';
+                    
+                    // Output
+                    output.innerHTML += `<span class="mr-2">${lines[i]}</span>`;
+                    
+                    i++;
+                }, 1200);
+
+            } else {
+                // Compiler Loop: All at once after delay
+                bot.style.transform = `translate(0, 0)`;
+                bot.innerHTML = '<span class="text-xl">📚</span>'; // Book icon
+                
+                output.innerHTML = '<span class="text-yellow-500">Compiling...</span>';
+                
+                setTimeout(() => {
+                    output.innerHTML = '<span class="text-purple-400">BINARY.EXE GENERATED</span>';
+                    bot.innerHTML = '<span class="text-xl">🚀</span>'; // Rocket icon
+                    bot.style.transform = `translate(100px, 0)`; // Move to output
+                }, 2000);
+            }
+        }
+
+        // --- Section 2: Pipeline Logic ---
+        const stages = [
+            {
+                title: "1. Lexical Analysis (Lexing)",
+                desc: "The lexer scans the raw source code and groups characters into meaningful units called tokens. It strips whitespace and comments.",
+                inputLabel: "Raw Source Code",
+                code: `<span class="code-syntax-keyword">if</span> (x <span class="text-blue-400">==</span> <span class="text-orange-400">10</span>) {\n  <span class="code-syntax-func">print</span>(<span class="code-syntax-string">"Hello"</span>);\n}`,
+                viz: `<div class="flex flex-wrap gap-2 justify-center items-center h-full">
+                        <div class="px-2 py-1 bg-cyan-900/50 border border-cyan-500 rounded text-cyan-300 text-xs">IF</div>
+                        <div class="px-2 py-1 bg-slate-700 border border-slate-500 rounded text-white text-xs">LPAREN</div>
+                        <div class="px-2 py-1 bg-yellow-900/50 border border-yellow-500 rounded text-yellow-300 text-xs">IDENTIFIER(x)</div>
+                        <div class="px-2 py-1 bg-purple-900/50 border border-purple-500 rounded text-purple-300 text-xs">EQ</div>
+                        <div class="px-2 py-1 bg-orange-900/50 border border-orange-500 rounded text-orange-300 text-xs">NUMBER(10)</div>
+                        <div class="px-2 py-1 bg-slate-700 border border-slate-500 rounded text-white text-xs">RPAREN</div>
+                        <div class="px-2 py-1 bg-slate-700 border border-slate-500 rounded text-white text-xs">LBRACE</div>
+                        <div class="px-2 py-1 bg-blue-900/50 border border-blue-500 rounded text-blue-300 text-xs">PRINT</div>
+                        <div class="px-2 py-1 bg-green-900/50 border border-green-500 rounded text-green-300 text-xs">STRING</div>
+                      </div>`
+            },
+            {
+                title: "2. Syntax Analysis (Parsing)",
+                desc: "The parser takes the flat list of tokens and builds a tree structure (AST) representing the hierarchy of operations.",
+                inputLabel: "Token Stream",
+                code: `[IF, LPAREN, IDENTIFIER(x), EQ, NUMBER(10), RPAREN, ...]`,
+                viz: `<div class="flex flex-col items-center justify-center h-full text-xs scale-90">
+                        <div class="px-4 py-2 bg-purple-600 rounded text-white font-bold mb-2">IfStatement</div>
+                        <div class="h-4 w-0.5 bg-slate-500"></div>
+                        <div class="flex gap-8">
+                            <div class="flex flex-col items-center">
+                                <div class="px-3 py-1 bg-cyan-600 rounded text-white mb-1">Condition</div>
+                                <div class="h-2 w-0.5 bg-slate-500"></div>
+                                <div class="px-3 py-1 bg-slate-700 rounded text-white">x == 10</div>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="px-3 py-1 bg-cyan-600 rounded text-white mb-1">Body</div>
+                                <div class="h-2 w-0.5 bg-slate-500"></div>
+                                <div class="px-3 py-1 bg-slate-700 rounded text-white">print("Hello")</div>
+                            </div>
+                        </div>
+                      </div>`
+            },
+            {
+                title: "3. Semantic Analysis",
+                desc: "The compiler checks if the tree makes sense. Is 'x' defined? Can you compare a string to a number? It adds type info to the tree.",
+                inputLabel: "Abstract Syntax Tree",
+                code: `IfStatement\n  Condition: BinaryOp(==)\n    Left: Identifier(x)\n    Right: Number(10)`,
+                viz: `<div class="flex flex-col items-center justify-center h-full">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-black text-xs">✓</div>
+                            <span class="text-green-400 text-xs font-mono">Scope Check: 'x' found</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-black text-xs">✓</div>
+                            <span class="text-green-400 text-xs font-mono">Type Check: Int == Int</span>
+                        </div>
+                        <div class="mt-2 p-2 border border-dashed border-slate-500 rounded bg-slate-800">
+                            <span class="text-slate-400 text-xs">Decorated AST Node:</span>
+                            <div class="text-purple-400 text-xs font-mono">Identifier(x) -> Type: Int</div>
+                        </div>
+                      </div>`
+            },
+            {
+                title: "4. Code Generation",
+                desc: "The tree is traversed to output low-level code (Assembly or Bytecode). This is where high-level concepts become CPU instructions.",
+                inputLabel: "Decorated AST",
+                code: `IfStatement (verified)`,
+                viz: `<div class="font-mono text-xs text-left w-full p-4 bg-black/40 rounded text-green-400">
+                        <div>LOAD_VAR x       <span class="text-slate-500">; Push x to stack</span></div>
+                        <div>LOAD_CONST 10    <span class="text-slate-500">; Push 10 to stack</span></div>
+                        <div>COMPARE_EQ       <span class="text-slate-500">; Pop two, compare, push result</span></div>
+                        <div>JUMP_IF_FALSE end_if <span class="text-slate-500">; Conditional jump</span></div>
+                        <div>LOAD_STRING "Hello"</div>
+                        <div>CALL_FUNC print</div>
+                        <div>end_if:</div>
+                      </div>`
+            }
+        ];
+
+        let currentStage = 0;
+
+        function setPipelineStage(index) {
+            currentStage = index;
+            const data = stages[index];
+            
+            // Update UI Text
+            document.getElementById('stage-title').innerText = data.title;
+            document.getElementById('stage-desc').innerText = data.desc;
+            document.getElementById('stage-input-label').innerText = data.inputLabel;
+            document.getElementById('code-display').innerHTML = `<code>${data.code}</code>`;
+            document.getElementById('viz-canvas').innerHTML = data.viz;
+
+            // Update Buttons
+            document.querySelectorAll('.pipeline-btn').forEach((btn, idx) => {
+                if (idx === index) {
+                    btn.classList.add('border-cyan-500', 'bg-slate-800');
+                    btn.classList.remove('border-slate-700', 'bg-slate-800/50');
+                } else {
+                    btn.classList.remove('border-cyan-500', 'bg-slate-800');
+                    btn.classList.add('border-slate-700', 'bg-slate-800/50');
+                }
+            });
+        }
+
+        function nextStage() {
+            setPipelineStage((currentStage + 1) % stages.length);
+        }
+
+        // --- Section 3: Memory Simulation ---
+        let memStep = 0;
+        
+        function resetMemorySim() {
+            memStep = 0;
+            document.getElementById('stack-container').innerHTML = '';
+            document.getElementById('heap-container').innerHTML = '';
+            document.getElementById('run-mem-btn').innerText = "Execute Code";
+            document.getElementById('run-mem-btn').disabled = false;
+            document.getElementById('run-mem-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            // Reset registers
+            const regs = document.getElementById('register-container').children;
+            for(let reg of regs) {
+                reg.innerHTML = reg.innerText; // Reset to label
+                reg.classList.remove('bg-cyan-900', 'border-cyan-500', 'text-white');
+                reg.classList.add('bg-slate-800', 'border-slate-600', 'text-slate-500');
+            }
+        }
+
+        function runMemorySim() {
+            if (memStep > 3) return;
+            
+            const btn = document.getElementById('run-mem-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const stack = document.getElementById('stack-container');
+            const heap = document.getElementById('heap-container');
+            const regs = document.getElementById('register-container').children;
+
+            // Helper to create blocks
+            const createBlock = (text, colorClass) => {
+                const div = document.createElement('div');
+                div.className = `p-2 rounded text-xs font-mono text-center animate-float ${colorClass}`;
+                div.style.animationDuration = '0.5s'; // quick pop
+                div.innerText = text;
+                return div;
+            };
+
+            if (memStep === 0) {
+                // Step 1: let a = 5
+                stack.appendChild(createBlock('a: 5', 'bg-cyan-900/80 border border-cyan-500 text-cyan-100'));
+                regs[0].innerHTML = '5';
+                regs[0].classList.add('bg-cyan-900', 'border-cyan-500', 'text-white');
+                regs[0].classList.remove('bg-slate-800', 'border-slate-600', 'text-slate-500');
+                btn.innerText = "Next: let b = 10";
+            } 
+            else if (memStep === 1) {
+                // Step 2: let b = 10
+                stack.appendChild(createBlock('b: 10', 'bg-cyan-900/80 border border-cyan-500 text-cyan-100'));
+                regs[1].innerHTML = '10';
+                regs[1].classList.add('bg-cyan-900', 'border-cyan-500', 'text-white');
+                regs[1].classList.remove('bg-slate-800', 'border-slate-600', 'text-slate-500');
+                btn.innerText = "Next: new Object()";
+            }
+            else if (memStep === 2) {
+                // Step 3: new Object() -> Heap
+                const objAddr = createBlock('Object@0x4F2', 'bg-purple-900/80 border border-purple-500 text-purple-100');
+                heap.appendChild(objAddr);
+                
+                // Add reference to stack
+                stack.appendChild(createBlock('obj: ref(0x4F2)', 'bg-cyan-900/80 border border-cyan-500 text-cyan-100'));
+                
+                btn.innerText = "Next: Return a + b";
+            }
+            else if (memStep === 3) {
+                // Step 4: Calculation
+                regs[2].innerHTML = '15';
+                regs[2].classList.add('bg-cyan-900', 'border-cyan-500', 'text-white');
+                regs[2].classList.remove('bg-slate-800', 'border-slate-600', 'text-slate-500');
+                
+                // Visualize pop
+                setTimeout(() => {
+                    stack.innerHTML = ''; // Clear stack (function ended)
+                    btn.innerText = "Execution Complete";
+                }, 1000);
+            }
+
+            memStep++;
+            if (memStep <= 3) {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }, 600);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            startSim();
+            setPipelineStage(0);
+        });
+
+    </script>
+</body>
+</html>

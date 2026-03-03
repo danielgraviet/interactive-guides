@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15-Minute Pre-Test Study Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --gold: #c9a84c;
+    --cream: #f5f0e8;
+    --sage: #7a9e87;
+    --light-gold: #f0e6cc;
+    --text: #2c2c2c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'Jost', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(122,158,135,0.08) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  .header-ornament {
+    font-size: 24px;
+    color: var(--gold);
+    letter-spacing: 8px;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--cream);
+    margin-bottom: 10px;
+  }
+
+  h1 span { color: var(--gold); }
+
+  .subtitle {
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-top: 8px;
+  }
+
+  .timeline {
+    position: relative;
+    padding-left: 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .step:nth-child(1) { animation-delay: 0.1s; }
+  .step:nth-child(2) { animation-delay: 0.2s; }
+  .step:nth-child(3) { animation-delay: 0.3s; }
+  .step:nth-child(4) { animation-delay: 0.4s; }
+  .step:nth-child(5) { animation-delay: 0.5s; }
+
+  .step-time {
+    flex-shrink: 0;
+    width: 72px;
+    text-align: right;
+  }
+
+  .time-badge {
+    display: inline-block;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .step-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+    margin-top: 4px;
+    box-shadow: 0 0 12px rgba(201,168,76,0.5);
+  }
+
+  .line {
+    width: 1px;
+    flex: 1;
+    background: linear-gradient(to bottom, rgba(201,168,76,0.4), rgba(201,168,76,0.1));
+    min-height: 40px;
+    margin-top: 4px;
+  }
+
+  .step:last-child .line { display: none; }
+
+  .step-content {
+    flex: 1;
+    padding-bottom: 8px;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .step-icon {
+    font-size: 1.2rem;
+  }
+
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .step-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 12px;
+    padding: 20px;
+    line-height: 1.7;
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: rgba(245,240,232,0.85);
+  }
+
+  .step-card p + p { margin-top: 10px; }
+
+  .scripture-block {
+    margin: 14px 0 4px;
+    padding: 14px 18px;
+    background: rgba(201,168,76,0.08);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+  }
+
+  .scripture-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    color: var(--light-gold);
+    line-height: 1.6;
+  }
+
+  .scripture-ref {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 6px;
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .action-list {
+    list-style: none;
+    margin-top: 10px;
+  }
+
+  .action-list li {
+    padding: 5px 0 5px 20px;
+    position: relative;
+  }
+
+  .action-list li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--sage);
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  .tag {
+    display: inline-block;
+    background: rgba(122,158,135,0.2);
+    border: 1px solid rgba(122,158,135,0.4);
+    color: var(--sage);
+    border-radius: 4px;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    margin-bottom: 10px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 52px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(201,168,76,0.2);
+    animation: fadeUp 0.6s ease 0.6s both;
+  }
+
+  .footer-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--light-gold);
+    margin-bottom: 6px;
+  }
+
+  .footer-ref {
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--sage);
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    .step-time { width: 56px; }
+    .time-badge { font-size: 0.62rem; padding: 3px 7px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-ornament">✦ ✦ ✦</div>
+    <h1>15-Minute <span>Pre-Test</span><br>Study Plan</h1>
+    <p class="subtitle">Anchored in faith · Guided by the Spirit</p>
+  </header>
+
+  <div class="timeline">
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="step-time"><span class="time-badge">0–2 min</span></div>
+      <div class="step-connector"><div class="dot"></div><div class="line"></div></div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-icon">🙏</span>
+          <span class="step-title">Opening Prayer</span>
+        </div>
+        <div class="step-card">
+          <span class="tag">Doctrine &amp; Covenants 9:8</span>
+          <p>Begin with a sincere, brief prayer. Ask Heavenly Father to calm your mind, sharpen your memory, and help the Spirit guide your thoughts. Express gratitude for the opportunity to learn.</p>
+          <div class="scripture-block">
+            <p class="scripture-text">"You must study it out in your mind; then you must ask me if it be right…"</p>
+            <span class="scripture-ref">D&amp;C 9:8</span>
+          </div>
+          <p>Remember: you've done the studying. Now invite the Spirit to be your companion through the test.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="step-time"><span class="time-badge">2–5 min</span></div>
+      <div class="step-connector"><div class="dot"></div><div class="line"></div></div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-icon">📖</span>
+          <span class="step-title">A Calming Scripture</span>
+        </div>
+        <div class="step-card">
+          <span class="tag">Joshua 1:9 · Philippians 4:13</span>
+          <p>Read one or two short scriptures slowly. Let the words sink in. Don't rush — feel the reassurance they offer.</p>
+          <div class="scripture-block">
+            <p class="scripture-text">"Be strong and of good courage; be not afraid, neither be thou dismayed: for the Lord thy God is with thee whithersoever thou goest."</p>
+            <span class="scripture-ref">Joshua 1:9</span>
+          </div>
+          <div class="scripture-block">
+            <p class="scripture-text">"I can do all things through Christ which strengtheneth me."</p>
+            <span class="scripture-ref">Philippians 4:13</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <div class="step-time"><span class="time-badge">5–10 min</span></div>
+      <div class="step-connector"><div class="dot"></div><div class="line"></div></div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-icon">🧠</span>
+          <span class="step-title">Quick Review</span>
+        </div>
+        <div class="step-card">
+          <span class="tag">D&amp;C 88:118</span>
+          <p>Spend five focused minutes reviewing your most important notes — key terms, formulas, or concepts. Keep it light and confidence-building, not stress-inducing.</p>
+          <ul class="action-list">
+            <li>Glance at chapter headings or your summary sheet</li>
+            <li>Recite 3–5 key facts aloud from memory</li>
+            <li>If something feels fuzzy, breathe and move on — trust your preparation</li>
+          </ul>
+          <div class="scripture-block">
+            <p class="scripture-text">"Seek ye out of the best books words of wisdom; seek learning, even by study and also by faith."</p>
+            <span class="scripture-ref">D&amp;C 88:118</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="step-time"><span class="time-badge">10–13 min</span></div>
+      <div class="step-connector"><div class="dot"></div><div class="line"></div></div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-icon">🌬️</span>
+          <span class="step-title">Breathe &amp; Center</span>
+        </div>
+        <div class="step-card">
+          <span class="tag">Alma 37:37 · Isaiah 26:3</span>
+          <p>Set your notes aside. Place your feet flat on the floor. Do three slow, deep breaths — inhale for 4 counts, hold for 4, exhale for 6. Let your shoulders drop.</p>
+          <p>Silently repeat a short affirmation rooted in faith:</p>
+          <div class="scripture-block">
+            <p class="scripture-text">"Counsel with the Lord in all thy doings… and he will direct thee for good."</p>
+            <span class="scripture-ref">Alma 37:37</span>
+          </div>
+          <p>Picture yourself walking calmly into the test, mind clear, Spirit present.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="step-time"><span class="time-badge">13–15 min</span></div>
+      <div class="step-connector"><div class="dot"></div><div class="line"></div></div>
+      <div class="step-content">
+        <div class="step-header">
+          <span class="step-icon">✨</span>
+          <span class="step-title">Closing Affirmation &amp; Go</span>
+        </div>
+        <div class="step-card">
+          <span class="tag">2 Nephi 4:35 · D&amp;C 6:36</span>
+          <p>Offer a brief, grateful closing prayer. Thank Heavenly Father for your mind, your teachers, and your preparation. Ask for peace and confidence to carry with you.</p>
+          <div class="scripture-block">
+            <p class="scripture-text">"Look unto me in every thought; doubt not, fear not."</p>
+            <span class="scripture-ref">D&amp;C 6:36</span>
+          </div>
+          <p>Stand up, take one more breath, and go forward with faith. You are ready.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end timeline -->
+
+  <footer>
+    <p class="footer-quote">"For God hath not given us the spirit of fear;<br>but of power, and of love, and of a sound mind."</p>
+    <p class="footer-ref">2 Timothy 1:7</p>
+  </footer>
+
+</div>
+</body>
+</html>

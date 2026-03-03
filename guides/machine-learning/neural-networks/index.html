@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Mastery - Interactive Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #e2e8f0; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .neuron {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 12px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease; position: relative;
+        }
+        .neuron:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6); }
+        .neuron.input { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .neuron.hidden { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .neuron.output { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+        .connection {
+            position: absolute; height: 2px; background: #475569;
+            transform-origin: left center; transition: all 0.3s;
+        }
+        .connection.active { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; height: 3px; }
+        .math-box {
+            background: rgba(30, 41, 59, 0.8); border: 1px solid #334155;
+            border-radius: 8px; padding: 16px; font-family: 'JetBrains Mono', monospace;
+        }
+        .slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 5px; background: #334155; outline: none; }
+        .slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #3b82f6; cursor: pointer; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .code-block { background: #1e293b; border-radius: 8px; padding: 16px; overflow-x: auto; }
+        .highlight { background: rgba(59, 130, 246, 0.2); padding: 2px 4px; border-radius: 4px; }
+    </style>
+<base target="_blank">
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                🧠 Neural Network Mastery
+            </h1>
+            <nav class="flex gap-6 text-sm font-medium">
+                <button onclick="scrollToSection('basics')" class="hover:text-blue-400 transition">Basics</button>
+                <button onclick="scrollToSection('activation')" class="hover:text-blue-400 transition">Activation</button>
+                <button onclick="scrollToSection('calculator')" class="hover:text-blue-400 transition">Calculator</button>
+                <button onclick="scrollToSection('mlp')" class="hover:text-blue-400 transition">MLP</button>
+                <button onclick="scrollToSection('sklearn')" class="hover:text-blue-400 transition">Scikit-Learn</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-12">
+
+        <!-- Section 1: Definitions & Components -->
+        <section id="basics" class="space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h2 class="text-3xl font-bold mb-4 text-blue-400">What is a Neural Network?</h2>
+                <p class="text-lg text-slate-300 mb-6 leading-relaxed">
+                    A <span class="highlight font-semibold">neural network</span> is a computational model inspired by biological neurons. 
+                    It consists of interconnected nodes (neurons) organized in layers that process information and learn patterns from data.
+                </p>
+                
+                <!-- Interactive Architecture Diagram -->
+                <div class="bg-slate-900 rounded-xl p-6 mb-6 relative overflow-hidden">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Interactive Architecture</h3>
+                    <div class="flex justify-around items-center h-80 relative" id="architecture-diagram">
+                        <!-- Input Layer -->
+                        <div class="flex flex-col gap-4 items-center">
+                            <div class="text-sm text-green-400 font-semibold mb-2">Input Layer</div>
+                            <div class="neuron input cursor-pointer" onclick="showNeuronInfo('input')" title="x₁">x₁</div>
+                            <div class="neuron input cursor-pointer" onclick="showNeuronInfo('input')" title="x₂">x₂</div>
+                            <div class="neuron input cursor-pointer" onclick="showNeuronInfo('input')" title="x₃">x₃</div>
+                            <div class="text-xs text-slate-400 mt-2">Features</div>
+                        </div>
+                        
+                        <!-- Hidden Layer -->
+                        <div class="flex flex-col gap-4 items-center">
+                            <div class="text-sm text-amber-400 font-semibold mb-2">Hidden Layer</div>
+                            <div class="neuron hidden cursor-pointer" onclick="showNeuronInfo('hidden')" title="h₁">h₁</div>
+                            <div class="neuron hidden cursor-pointer" onclick="showNeuronInfo('hidden')" title="h₂">h₂</div>
+                            <div class="text-xs text-slate-400 mt-2">Processing</div>
+                        </div>
+                        
+                        <!-- Output Layer -->
+                        <div class="flex flex-col gap-4 items-center">
+                            <div class="text-sm text-red-400 font-semibold mb-2">Output Layer</div>
+                            <div class="neuron output cursor-pointer" onclick="showNeuronInfo('output')" title="ŷ">ŷ</div>
+                            <div class="text-xs text-slate-400 mt-2">Prediction</div>
+                        </div>
+                        
+                        <!-- SVG Connections -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 0;">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div id="neuron-info" class="mt-4 p-4 bg-slate-800 rounded-lg text-sm hidden"></div>
+                </div>
+
+                <!-- Key Terms -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-slate-700/50 p-4 rounded-lg border-l-4 border-green-500">
+                        <h4 class="font-bold text-green-400 mb-2">Input Layer</h4>
+                        <p class="text-sm text-slate-300">Receives raw data features (x₁, x₂, x₃...). No computation happens here—just passes data forward.</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-4 rounded-lg border-l-4 border-amber-500">
+                        <h4 class="font-bold text-amber-400 mb-2">Hidden Layers</h4>
+                        <p class="text-sm text-slate-300">Intermediate layers that extract features and patterns. The "magic" happens here through weighted sums and activation functions.</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-4 rounded-lg border-l-4 border-red-500">
+                        <h4 class="font-bold text-red-400 mb-2">Output Layer</h4>
+                        <p class="text-sm text-slate-300">Produces final prediction (classification or regression value). Number of nodes = number of output classes/values.</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-4 rounded-lg border-l-4 border-purple-500">
+                        <h4 class="font-bold text-purple-400 mb-2">Deep Learning</h4>
+                        <p class="text-sm text-slate-300">Neural networks with <span class="font-bold">2+ hidden layers</span>. "Deep" refers to the depth of the network architecture.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Counter Game -->
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h3 class="text-2xl font-bold mb-4 text-purple-400">🎯 Practice: Counting Connections</h3>
+                <p class="mb-4 text-slate-300">In a fully connected (dense) layer, every neuron connects to every neuron in the next layer.</p>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Input Layer Nodes: <span id="input-count" class="text-blue-400 font-bold">3</span></label>
+                            <input type="range" min="1" max="10" value="3" class="slider" id="input-slider" oninput="updateConnectionCalc()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Hidden Layer Nodes: <span id="hidden-count" class="text-amber-400 font-bold">4</span></label>
+                            <input type="range" min="1" max="10" value="4" class="slider" id="hidden-slider" oninput="updateConnectionCalc()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Output Layer Nodes: <span id="output-count" class="text-red-400 font-bold">2</span></label>
+                            <input type="range" min="1" max="5" value="2" class="slider" id="output-slider" oninput="updateConnectionCalc()">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-900 p-6 rounded-xl flex flex-col justify-center">
+                        <div class="text-center space-y-2">
+                            <div class="text-sm text-slate-400">Input → Hidden Connections</div>
+                            <div class="text-2xl font-bold text-blue-400" id="conn1">12</div>
+                            <div class="text-xs text-slate-500">(3 × 4)</div>
+                        </div>
+                        <div class="text-center space-y-2 mt-4">
+                            <div class="text-sm text-slate-400">Hidden → Output Connections</div>
+                            <div class="text-2xl font-bold text-amber-400" id="conn2">8</div>
+                            <div class="text-xs text-slate-500">(4 × 2)</div>
+                        </div>
+                        <div class="border-t border-slate-700 mt-4 pt-4 text-center">
+                            <div class="text-sm text-slate-400">Total Weights</div>
+                            <div class="text-3xl font-bold text-green-400" id="total-conn">20</div>
+                            <div class="text-xs text-slate-500 mt-1">Plus bias terms: <span id="bias-count" class="text-purple-400">6</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Activation Functions -->
+        <section id="activation" class="space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h2 class="text-3xl font-bold mb-4 text-amber-400">Activation Functions</h2>
+                <p class="text-lg text-slate-300 mb-6">
+                    Activation functions introduce <span class="highlight">non-linearity</span> into the network. Without them, a neural network would just be a linear regression model, 
+                    no matter how many layers it has! They decide whether a neuron should "fire" (activate) or not.
+                </p>
+
+                <!-- Activation Function Visualizer -->
+                <div class="grid lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-slate-900 p-4 rounded-xl">
+                        <canvas id="activationChart" width="400" height="300"></canvas>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="plotActivation('step')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Step</button>
+                            <button onclick="plotActivation('sigmoid')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Sigmoid</button>
+                            <button onclick="plotActivation('relu')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">ReLU</button>
+                            <button onclick="plotActivation('leaky_relu')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Leaky ReLU</button>
+                            <button onclick="plotActivation('tanh')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Tanh</button>
+                            <button onclick="plotActivation('softmax')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Softmax*</button>
+                            <button onclick="plotActivation('linear')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition">Linear</button>
+                        </div>
+                        
+                        <div id="activation-info" class="bg-slate-800 p-4 rounded-lg border border-slate-600">
+                            <h4 class="font-bold text-lg mb-2" id="act-name">Sigmoid</h4>
+                            <div class="math-box text-sm mb-3" id="act-formula">f(x) = 1 / (1 + e^(-x))</div>
+                            <ul class="space-y-2 text-sm text-slate-300" id="act-props">
+                                <li>• Range: (0, 1)</li>
+                                <li>• Smooth gradient</li>
+                                <li>• Good for binary classification output</li>
+                                <li>• ❌ Vanishing gradient problem</li>
+                            </ul>
+                        </div>
+                        <p class="text-xs text-slate-500">*Softmax is typically used for multi-class classification outputs, converting logits to probabilities that sum to 1.</p>
+                    </div>
+                </div>
+
+                <!-- Comparison Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-700 text-slate-300">
+                            <tr>
+                                <th class="p-3 rounded-tl-lg">Function</th>
+                                <th class="p-3">Output Range</th>
+                                <th class="p-3">Pros</th>
+                                <th class="p-3">Cons</th>
+                                <th class="p-3 rounded-tr-lg">Best For</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700">
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="p-3 font-mono text-blue-400">Step</td>
+                                <td class="p-3">{0, 1}</td>
+                                <td class="p-3">Simple, binary</td>
+                                <td class="p-3 text-red-400">Not differentiable</td>
+                                <td class="p-3">Perceptrons (historical)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="p-3 font-mono text-blue-400">Sigmoid</td>
+                                <td class="p-3">(0, 1)</td>
+                                <td class="p-3">Smooth, probabilistic</td>
+                                <td class="p-3 text-red-400">Vanishing gradient</td>
+                                <td class="p-3">Binary classification output</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="p-3 font-mono text-blue-400">Tanh</td>
+                                <td class="p-3">(-1, 1)</td>
+                                <td class="p-3">Zero-centered</td>
+                                <td class="p-3 text-red-400">Still has vanishing gradient</td>
+                                <td class="p-3">Hidden layers (RNNs)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50 bg-blue-900/20">
+                                <td class="p-3 font-mono text-blue-400 font-bold">ReLU</td>
+                                <td class="p-3">[0, ∞)</td>
+                                <td class="p-3 text-green-400">No vanishing gradient, fast</td>
+                                <td class="p-3 text-red-400">"Dying ReLU" problem</td>
+                                <td class="p-3 font-bold">Hidden layers (default choice)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="p-3 font-mono text-blue-400">Leaky ReLU</td>
+                                <td class="p-3">(-∞, ∞)</td>
+                                <td class="p-3">Fixes dying ReLU</td>
+                                <td class="p-3 text-red-400">Slightly slower</td>
+                                <td class="p-3">When ReLU dies</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/50">
+                                <td class="p-3 font-mono text-blue-400">Softmax</td>
+                                <td class="p-3">(0, 1) sum=1</td>
+                                <td class="p-3">Multi-class probabilities</td>
+                                <td class="p-3 text-red-400">Only for output layer</td>
+                                <td class="p-3">Multi-class classification</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Interactive Calculator (The Soccer Problem) -->
+        <section id="calculator" class="space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h2 class="text-3xl font-bold mb-4 text-green-400">🧮 Forward Pass Calculator</h2>
+                <p class="text-slate-300 mb-6">
+                    Understand exactly how values flow through a network. This demonstrates your soccer match example and lets you experiment with different values.
+                </p>
+
+                <!-- The Soccer Problem Solution -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-xl border border-slate-600 mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-yellow-400">⚽ Your Example Problem Solved</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="space-y-3 text-sm">
+                            <p><strong>Given:</strong> Hidden layer outputs f(Z₁)=0.1, f(Z₂)=0.8, f(Z₃)=0.3</p>
+                            <p><strong>Output weights:</strong> w₀=-0.3, w₁=0.4, w₂=-0.9, w₃=0</p>
+                            <p><strong>Activation:</strong> Step function (threshold = 0)</p>
+                        </div>
+                        <div class="math-box text-sm space-y-2">
+                            <div class="text-slate-400">Calculate Z_output:</div>
+                            <div>Z = w₀ + w₁·f(Z₁) + w₂·f(Z₂) + w₃·f(Z₃)</div>
+                            <div>Z = -0.3 + (0.4 × 0.1) + (-0.9 × 0.8) + (0 × 0.3)</div>
+                            <div>Z = -0.3 + 0.04 - 0.72 + 0</div>
+                            <div class="text-yellow-400 font-bold">Z = -0.98</div>
+                            <div class="mt-2 text-slate-400">Apply Step Function:</div>
+                            <div>f(Z) = 1 if Z ≥ 0, else 0</div>
+                            <div class="text-red-400 font-bold text-lg">f(-0.98) = 0 → LOSE</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Calculator -->
+                <div class="bg-slate-900 p-6 rounded-xl">
+                    <h3 class="text-lg font-bold mb-4">Interactive Network Calculator</h3>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Inputs -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-amber-400">Hidden Layer Outputs (f(Z))</h4>
+                            <div>
+                                <label class="text-xs text-slate-400">Node 1 (h₁)</label>
+                                <input type="number" id="calc-h1" value="0.1" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Node 2 (h₂)</label>
+                                <input type="number" id="calc-h2" value="0.8" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Node 3 (h₃)</label>
+                                <input type="number" id="calc-h3" value="0.3" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                        </div>
+
+                        <!-- Weights -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-blue-400">Output Layer Weights</h4>
+                            <div>
+                                <label class="text-xs text-slate-400">Bias (w₀)</label>
+                                <input type="number" id="calc-w0" value="-0.3" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Weight 1 (w₁)</label>
+                                <input type="number" id="calc-w1" value="0.4" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Weight 2 (w₂)</label>
+                                <input type="number" id="calc-w2" value="-0.9" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                            <div>
+                                <label class="text-xs text-slate-400">Weight 3 (w₃)</label>
+                                <input type="number" id="calc-w3" value="0" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm" oninput="calculateForward()">
+                            </div>
+                        </div>
+
+                        <!-- Output -->
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-green-400">Calculation Steps</h4>
+                            <div class="math-box text-xs space-y-2 h-full flex flex-col justify-center">
+                                <div>Weighted Sum (Z):</div>
+                                <div id="step-calc" class="text-slate-300 break-all">Z = -0.3 + 0.4(0.1) + -0.9(0.8) + 0(0.3)</div>
+                                <div id="step-result" class="text-yellow-400 font-bold">Z = -0.98</div>
+                                
+                                <div class="mt-4 pt-4 border-t border-slate-600">
+                                    <div class="mb-2">Activation Function:</div>
+                                    <select id="calc-activation" class="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-xs w-full mb-2" onchange="calculateForward()">
+                                        <option value="step">Step (≥0 → 1)</option>
+                                        <option value="sigmoid">Sigmoid</option>
+                                        <option value="relu">ReLU</option>
+                                        <option value="tanh">Tanh</option>
+                                    </select>
+                                    <div id="final-output" class="text-2xl font-bold text-red-400">Output: 0 (Lose)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Concept Check -->
+                <div class="mt-6 bg-blue-900/30 border border-blue-700/50 p-4 rounded-lg">
+                    <h4 class="font-bold text-blue-400 mb-2">💡 Conceptual Check</h4>
+                    <p class="text-sm text-slate-300">
+                        <strong>What is Z?</strong> The weighted sum of inputs plus bias (linear transformation).<br>
+                        <strong>What is f(Z)?</strong> The activation function applied to Z (non-linear transformation).<br>
+                        <strong>How do weights affect the result?</strong> Positive weights amplify features, negative weights inhibit them. 
+                        The bias (w₀) shifts the activation threshold.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: MLP & Image Classification -->
+        <section id="mlp" class="space-y-6">
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h2 class="text-3xl font-bold mb-4 text-purple-400">Multilayer Perceptron (MLP)</h2>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-lg border-l-4 border-purple-500">
+                            <h4 class="font-bold text-purple-400 mb-2">Definition</h4>
+                            <p class="text-sm text-slate-300">
+                                An MLP is a <span class="highlight">fully connected</span> feedforward neural network with at least one hidden layer. 
+                                It's the classic "vanilla" neural network.
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <h4 class="font-semibold text-slate-200">Key Characteristics:</h4>
+                            <ul class="space-y-2 text-sm text-slate-300">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span><strong>Fully Connected:</strong> Every neuron in layer L connects to every neuron in layer L+1</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span><strong>Feedforward:</strong> Data flows in one direction (input → hidden → output)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span><strong>Non-linear:</strong> Uses non-linear activation functions (enables learning complex patterns)</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span><strong>Supervised Learning:</strong> Trained with backpropagation on labeled data</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 p-4 rounded-xl">
+                        <h4 class="text-center mb-4 font-semibold">MLP vs Other Architectures</h4>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center p-2 bg-slate-800 rounded">
+                                <span>Perceptron</span>
+                                <span class="text-slate-400">No hidden layers (linear)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-purple-900/30 rounded border border-purple-500/50">
+                                <span class="font-bold text-purple-400">MLP</span>
+                                <span>1+ hidden layers (universal approximator)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-slate-800 rounded">
+                                <span>CNN</span>
+                                <span class="text-slate-400">Convolutional layers (spatial data)</span>
+                            </div>
+                            <div class="flex justify-between items-center p-2 bg-slate-800 rounded">
+                                <span>RNN/LSTM</span>
+                                <span class="text-slate-400">Recurrent (sequential data)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Classification Explanation -->
+                <div class="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-6 rounded-xl border border-indigo-700/50">
+                    <h3 class="text-xl font-bold mb-4 text-indigo-300">🖼️ Why Neural Networks for Image Classification?</h3>
+                    
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <div class="text-center p-3">
+                            <div class="text-3xl mb-2">🔢</div>
+                            <h4 class="font-semibold text-sm mb-1">Pixel Input</h4>
+                            <p class="text-xs text-slate-300">Each pixel becomes an input feature (28×28 image = 784 inputs)</p>
+                        </div>
+                        <div class="text-center p-3">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <h4 class="font-semibold text-sm mb-1">Feature Learning</h4>
+                            <p class="text-xs text-slate-300">Hidden layers automatically learn edges, textures, shapes, objects</p>
+                        </div>
+                        <div class="text-center p-3">
+                            <div class="text-3xl mb-2">🎲</div>
+                            <h4 class="font-semibold text-sm mb-1">Probability Output</h4>
+                            <p class="text-xs text-slate-300">Softmax output gives probability for each class (cat: 0.9, dog: 0.1)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-lg text-sm text-slate-300">
+                        <strong>Why not traditional ML?</strong> Traditional algorithms (SVM, Random Forest) struggle with high-dimensional image data and require manual feature extraction. 
+                        Neural networks learn hierarchical features automatically: <span class="text-indigo-400">Layer 1 (edges) → Layer 2 (shapes) → Layer 3 (objects)</span>.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Scikit-Learn Implementation -->
+        <section id="sklearn" class="space-y-6 mb-12">
+            <div class="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
+                <h2 class="text-3xl font-bold mb-4 text-orange-400">🐍 Scikit-Learn Implementation</h2>
+                
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-600">
+                            <h4 class="font-bold text-orange-400 mb-2">MLPClassifier</h4>
+                            <p class="text-sm text-slate-300 mb-3">For classification tasks (predicting categories)</p>
+                            <div class="code-block text-xs mono text-slate-300">
+<pre>from sklearn.neural_network import MLPClassifier
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+
+# Load data
+X, y = load_iris(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Create MLP
+<span class="text-orange-400">mlp = MLPClassifier(
+    hidden_layer_sizes=(100, 50),  # 2 hidden layers: 100, 50 neurons
+    activation='relu',              # Activation function
+    solver='adam',                  # Optimizer
+    max_iter=500,                   # Training iterations
+    random_state=42
+)</span>
+
+# Train
+mlp.fit(X_train, y_train)
+
+# Predict
+predictions = mlp.predict(X_test)
+score = mlp.score(X_test, y_test)</pre>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 p-4 rounded-lg border border-slate-600">
+                            <h4 class="font-bold text-blue-400 mb-2">MLPRegressor</h4>
+                            <p class="text-sm text-slate-300 mb-3">For regression tasks (predicting continuous values)</p>
+                            <div class="code-block text-xs mono text-slate-300">
+<pre>from sklearn.neural_network import MLPRegressor
+
+<span class="text-blue-400">mlp_reg = MLPRegressor(
+    hidden_layer_sizes=(64, 32),
+    activation='tanh',
+    solver='lbfgs',          # Good for small datasets
+    alpha=0.001,             # L2 regularization
+    learning_rate='adaptive'
+)</span>
+
+mlp_reg.fit(X_train, y_continuous)
+predictions = mlp_reg.predict(X_test)</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="font-semibold text-slate-200">Key Parameters Explained</h4>
+                        
+                        <div class="space-y-3 text-sm">
+                            <div class="bg-slate-900/50 p-3 rounded border-l-2 border-orange-400">
+                                <code class="text-orange-400 font-bold">hidden_layer_sizes</code>
+                                <p class="text-slate-300 mt-1">Tuple representing number of neurons in each hidden layer. (100,) = 1 layer with 100 neurons. (100, 50) = 2 layers.</p>
+                            </div>
+                            
+                            <div class="bg-slate-900/50 p-3 rounded border-l-2 border-blue-400">
+                                <code class="text-blue-400 font-bold">activation</code>
+                                <p class="text-slate-300 mt-1">{'identity', 'logistic', 'tanh', 'relu'} - ReLU is default and recommended for hidden layers.</p>
+                            </div>
+                            
+                            <div class="bg-slate-900/50 p-3 rounded border-l-2 border-green-400">
+                                <code class="text-green-400 font-bold">solver</code>
+                                <p class="text-slate-300 mt-1">'adam' (default, fast for large data), 'sgd' (stochastic gradient descent), 'lbfgs' (small datasets).</p>
+                            </div>
+                            
+                            <div class="bg-slate-900/50 p-3 rounded border-l-2 border-purple-400">
+                                <code class="text-purple-400 font-bold">alpha</code>
+                                <p class="text-slate-300 mt-1">L2 regularization penalty (prevents overfitting). Default is 0.0001.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-900/30 border border-yellow-700/50 p-3 rounded-lg mt-4">
+                            <h5 class="font-bold text-yellow-400 text-sm mb-1">⚠️ Common Exam Traps</h5>
+                            <ul class="text-xs text-slate-300 space-y-1">
+                                <li>• MLPClassifier uses Softmax automatically for multi-class</li>
+                                <li>• Always scale your data (StandardScaler) before training!</li>
+                                <li>• Default max_iter (200) might not converge—check warnings</li>
+                                <li>• random_state for reproducibility in exams</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Review Flashcards -->
+        <section class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700">
+            <h2 class="text-2xl font-bold mb-6 text-center">🎓 Quick Concept Check</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: What makes a network "deep"?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        Having 2 or more hidden layers. (1 hidden layer = shallow neural network)
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+                
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: Why do we need activation functions?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        To introduce non-linearity. Without them, stacking layers would be equivalent to linear regression.
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+                
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: What does "fully connected" mean?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        Every neuron in layer L connects to every neuron in layer L+1. Dense layer.
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+                
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: When to use Softmax vs Sigmoid?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        Softmax for multi-class (mutually exclusive), Sigmoid for binary or multi-label classification.
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+                
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: What is the vanishing gradient problem?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        In deep networks, gradients become extremely small in early layers during backprop, preventing learning. Sigmoid/Tanh suffer from this.
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+                
+                <div class="bg-slate-800 p-4 rounded-lg cursor-pointer hover:bg-slate-700 transition group" onclick="this.querySelector('.answer').classList.toggle('hidden')">
+                    <div class="font-semibold text-blue-400 mb-2">Q: What is w₀ (bias) in the formula?</div>
+                    <div class="answer hidden text-sm text-slate-300 mt-2 pt-2 border-t border-slate-600">
+                        The intercept term. It allows the activation function to shift left/right, giving the model more flexibility.
+                    </div>
+                    <div class="text-xs text-slate-500 mt-2 group-hover:text-slate-400">Click to reveal</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Smooth scroll
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Neuron info popup
+        function showNeuronInfo(type) {
+            const info = document.getElementById('neuron-info');
+            const texts = {
+                input: "Input Layer: Receives raw features. No weights or activation here. Just passes data forward.",
+                hidden: "Hidden Layer: Computes weighted sum of inputs, applies activation function. Extracts features.",
+                output: "Output Layer: Produces final prediction. Uses activation appropriate for task (Sigmoid for binary, Softmax for multi-class)."
+            };
+            info.textContent = texts[type];
+            info.classList.remove('hidden');
+        }
+
+        // Connection calculator
+        function updateConnectionCalc() {
+            const input = parseInt(document.getElementById('input-slider').value);
+            const hidden = parseInt(document.getElementById('hidden-slider').value);
+            const output = parseInt(document.getElementById('output-slider').value);
+            
+            document.getElementById('input-count').textContent = input;
+            document.getElementById('hidden-count').textContent = hidden;
+            document.getElementById('output-count').textContent = output;
+            
+            const conn1 = input * hidden;
+            const conn2 = hidden * output;
+            const total = conn1 + conn2;
+            const biases = hidden + output;
+            
+            document.getElementById('conn1').textContent = conn1;
+            document.getElementById('conn1').nextElementSibling.textContent = `(${input} × ${hidden})`;
+            document.getElementById('conn2').textContent = conn2;
+            document.getElementById('conn2').nextElementSibling.textContent = `(${hidden} × ${output})`;
+            document.getElementById('total-conn').textContent = total;
+            document.getElementById('bias-count').textContent = biases;
+        }
+
+        // Activation function plotter
+        let chart;
+        const activationData = {
+            step: {
+                name: 'Step Function',
+                formula: 'f(x) = 0 if x < 0, 1 if x ≥ 0',
+                props: ['• Binary output (0 or 1)', '• Not differentiable at 0', '• Used in perceptrons', '• ❌ Cannot use gradient descent'],
+                fn: x => x >= 0 ? 1 : 0
+            },
+            sigmoid: {
+                name: 'Sigmoid',
+                formula: 'f(x) = 1 / (1 + e^(-x))',
+                props: ['• Range: (0, 1)', '• Smooth S-curve', '• Good for binary output', '• ❌ Vanishing gradient for extreme values'],
+                fn: x => 1 / (1 + Math.exp(-x))
+            },
+            relu: {
+                name: 'ReLU (Rectified Linear Unit)',
+                formula: 'f(x) = max(0, x)',
+                props: ['• Range: [0, ∞)', '• No vanishing gradient for x > 0', '• Computationally efficient', '• ❌ "Dying ReLU" (neurons stuck at 0)'],
+                fn: x => Math.max(0, x)
+            },
+            leaky_relu: {
+                name: 'Leaky ReLU',
+                formula: 'f(x) = max(αx, x) where α = 0.01',
+                props: ['• Range: (-∞, ∞)', '• Fixes dying ReLU', '• Small negative slope', '• Slightly more computation'],
+                fn: x => x > 0 ? x : 0.01 * x
+            },
+            tanh: {
+                name: 'Hyperbolic Tangent (Tanh)',
+                formula: 'f(x) = (e^x - e^(-x)) / (e^x + e^(-x))',
+                props: ['• Range: (-1, 1)', '• Zero-centered (better than sigmoid)', '• Still has vanishing gradient', '• Good for RNNs'],
+                fn: x => Math.tanh(x)
+            },
+            linear: {
+                name: 'Linear (Identity)',
+                formula: 'f(x) = x',
+                props: ['• Range: (-∞, ∞)', '• No transformation', '• Used in regression output', '• ❌ No non-linearity'],
+                fn: x => x
+            },
+            softmax: {
+                name: 'Softmax',
+                formula: 'f(xᵢ) = e^xᵢ / Σe^xⱼ',
+                props: ['• Range: (0, 1) for each output', '• Sum of all outputs = 1', '• Multi-class probabilities', '• Only for output layer'],
+                fn: x => 1 / (1 + Math.exp(-x)) // Simplified for visualization
+            }
+        };
+
+        function plotActivation(type) {
+            const ctx = document.getElementById('activationChart').getContext('2d');
+            const data = activationData[type];
+            
+            document.getElementById('act-name').textContent = data.name;
+            document.getElementById('act-formula').textContent = data.formula;
+            document.getElementById('act-props').innerHTML = data.props.map(p => `<li>${p}</li>`).join('');
+            
+            const xValues = [];
+            const yValues = [];
+            for (let x = -5; x <= 5; x += 0.1) {
+                xValues.push(x.toFixed(1));
+                yValues.push(data.fn(x));
+            }
+            
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        label: data.name,
+                        data: yValues,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false },
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { 
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: { 
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' },
+                            suggestedMin: -1,
+                            suggestedMax: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        // Forward pass calculator
+        function calculateForward() {
+            const h1 = parseFloat(document.getElementById('calc-h1').value) || 0;
+            const h2 = parseFloat(document.getElementById('calc-h2').value) || 0;
+            const h3 = parseFloat(document.getElementById('calc-h3').value) || 0;
+            const w0 = parseFloat(document.getElementById('calc-w0').value) || 0;
+            const w1 = parseFloat(document.getElementById('calc-w1').value) || 0;
+            const w2 = parseFloat(document.getElementById('calc-w2').value) || 0;
+            const w3 = parseFloat(document.getElementById('calc-w3').value) || 0;
+            const activation = document.getElementById('calc-activation').value;
+            
+            const z = w0 + (w1 * h1) + (w2 * h2) + (w3 * h3);
+            
+            document.getElementById('step-calc').textContent = 
+                `Z = ${w0} + ${w1}(${h1}) + ${w2}(${h2}) + ${w3}(${h3})`;
+            document.getElementById('step-result').textContent = `Z = ${z.toFixed(4)}`;
+            
+            let output;
+            let outputText;
+            
+            switch(activation) {
+                case 'step':
+                    output = z >= 0 ? 1 : 0;
+                    outputText = output === 1 ? "WIN (1)" : "LOSE (0)";
+                    break;
+                case 'sigmoid':
+                    output = 1 / (1 + Math.exp(-z));
+                    outputText = output.toFixed(4);
+                    break;
+                case 'relu':
+                    output = Math.max(0, z);
+                    outputText = output.toFixed(4);
+                    break;
+                case 'tanh':
+                    output = Math.tanh(z);
+                    outputText = output.toFixed(4);
+                    break;
+            }
+            
+            const outputEl = document.getElementById('final-output');
+            outputEl.textContent = `Output: ${outputText}`;
+            outputEl.className = `text-2xl font-bold ${output > 0.5 || (activation === 'step' && output === 1) ? 'text-green-400' : 'text-red-400'}`;
+        }
+
+        // Initialize
+        window.onload = function() {
+            updateConnectionCalc();
+            plotActivation('sigmoid');
+            calculateForward();
+        };
+    </script>
+</body>
+</html>

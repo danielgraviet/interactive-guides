@@ -80,8 +80,13 @@ const CATEGORIES = {
       },
       {
         title: 'Web Architecture Meets ML',
-        path: './guides/computer-science/web-architecture',
+        path: './guides/computer-science/web-architecture/',
         meta: 'Interactive guide · An interactive deep-dive into 6 fundamental web concepts and their surprisingly direct parallels in machine learning. Complete quizzes, explore what-if scenarios, and build real intuition.',
+      },
+      {
+        title: 'Mastering Distributed Systems',
+        path: './guides/computer-science/distributed-systems/',
+        meta: 'Interactive guide · 8 fallacies, CAP theorem, scaling tradeoffs, consensus, and latency vs. throughput.',
       },
     ],
   },

@@ -1,4 +1,5 @@
 .dmux/
+.dmux-hooks/
 .DS_Store
 Thumbs.db
 *.log

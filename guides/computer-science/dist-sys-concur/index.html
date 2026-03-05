@@ -1,0 +1,2861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributed Systems & Concurrency — Masterclass</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;600;700;800&family=Lora:ital,wght@0,400;1,400&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1218;
+    --bg3: #151a22;
+    --border: #1e2530;
+    --border2: #2a3340;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7cfc00;
+    --accent4: #bf5af2;
+    --text: #e8edf5;
+    --text2: #8a97aa;
+    --text3: #4a5568;
+    --warn: #ffcc00;
+    --danger: #ff4d4d;
+    --success: #00e676;
+    --sidebar-w: 280px;
+    --header-h: 60px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* ─── HEADER ─── */
+  #header {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+    background: rgba(10,12,16,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+    z-index: 200;
+  }
+
+  #header .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  #header .logo .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+
+  #header .progress-bar-wrap {
+    flex: 1; max-width: 300px; margin: 0 24px;
+    height: 3px; background: var(--border);
+    border-radius: 2px; overflow: hidden;
+  }
+  #header .progress-bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent4));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  #header .score-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent3);
+    background: rgba(124,252,0,0.1);
+    border: 1px solid rgba(124,252,0,0.3);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  #menu-toggle {
+    display: none;
+    background: none; border: none; color: var(--text); cursor: pointer;
+    font-size: 1.2rem; padding: 6px;
+  }
+
+  /* ─── LAYOUT ─── */
+  #layout {
+    display: flex;
+    margin-top: var(--header-h);
+    min-height: calc(100vh - var(--header-h));
+  }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: fixed; top: var(--header-h); left: 0;
+    height: calc(100vh - var(--header-h));
+    overflow-y: auto;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  #sidebar .sidebar-header {
+    padding: 20px 20px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-section {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-section-title {
+    padding: 8px 20px 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 20px;
+    color: var(--text2);
+    text-decoration: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+  }
+
+  .nav-link:hover { color: var(--text); background: var(--bg3); }
+  .nav-link.active { color: var(--accent); border-left-color: var(--accent); background: rgba(0,212,255,0.06); }
+  .nav-link .nav-icon { font-size: 0.9rem; width: 18px; text-align: center; }
+  .nav-link .nav-check { margin-left: auto; color: var(--accent3); font-size: 0.7rem; opacity: 0; transition: opacity 0.3s; }
+  .nav-link.completed .nav-check { opacity: 1; }
+
+  /* ─── MAIN ─── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 48px 48px 80px;
+    max-width: calc(100% - var(--sidebar-w));
+  }
+
+  /* ─── SECTIONS ─── */
+  .module-section {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .module-section.active { display: block; }
+
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ─── TYPOGRAPHY ─── */
+  .module-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.25);
+    padding: 3px 10px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--text2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    margin: 40px 0 16px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 28px 0 10px;
+    color: var(--accent2);
+  }
+
+  p { margin-bottom: 16px; color: var(--text2); font-size: 0.97rem; }
+  p strong { color: var(--text); font-style: italic; }
+
+  .lead {
+    font-size: 1.1rem;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: 16px;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card.accent-blue { border-left: 3px solid var(--accent); }
+  .card.accent-orange { border-left: 3px solid var(--accent2); }
+  .card.accent-green { border-left: 3px solid var(--accent3); }
+  .card.accent-purple { border-left: 3px solid var(--accent4); }
+
+  .card h3 { margin-top: 0; font-size: 1rem; }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-block {
+    background: #070910;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg3);
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-header .lang-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .code-header .dots { display: flex; gap: 6px; }
+  .code-header .dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .code-header .dots span:nth-child(1) { background: #ff5f57; }
+  .code-header .dots span:nth-child(2) { background: #febc2e; }
+  .code-header .dots span:nth-child(3) { background: #28c840; }
+
+  pre {
+    padding: 20px 24px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+
+  code { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Syntax highlight classes */
+  .kw { color: #bf5af2; font-weight: 600; }    /* keyword */
+  .fn { color: #5ac8fa; }                       /* function */
+  .st { color: #ff9f0a; }                       /* string */
+  .cm { color: #5c6b7a; font-style: italic; }  /* comment */
+  .nm { color: #ff6b35; }                       /* number */
+  .bi { color: #00d4ff; }                       /* builtin */
+  .op { color: #7cfc00; }                       /* operator */
+  .dc { color: #7cfc00; }                       /* decorator */
+
+  /* inline code */
+  p code, li code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.82em;
+    color: var(--accent);
+  }
+
+  /* ─── CALLOUT BOXES ─── */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    display: flex; gap: 12px;
+    align-items: flex-start;
+  }
+  .callout .icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+  .callout p { margin: 0; font-size: 0.88rem; }
+
+  .callout.info { background: rgba(0,212,255,0.07); border: 1px solid rgba(0,212,255,0.2); }
+  .callout.warn { background: rgba(255,204,0,0.07); border: 1px solid rgba(255,204,0,0.25); }
+  .callout.warn p { color: var(--warn); }
+  .callout.danger { background: rgba(255,77,77,0.07); border: 1px solid rgba(255,77,77,0.25); }
+  .callout.danger p { color: var(--danger); }
+  .callout.success { background: rgba(0,230,118,0.07); border: 1px solid rgba(0,230,118,0.25); }
+  .callout.success p { color: var(--success); }
+  .callout.analogy { background: rgba(191,90,242,0.07); border: 1px solid rgba(191,90,242,0.25); }
+  .callout.analogy p { color: #d4a0ff; }
+
+  /* ─── DEEP DIVE TOGGLE ─── */
+  .deep-dive {
+    margin: 24px 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .deep-dive-trigger {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px;
+    background: var(--bg3);
+    cursor: pointer;
+    border: none;
+    color: var(--accent4);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    width: 100%;
+    text-align: left;
+    transition: background 0.2s;
+  }
+  .deep-dive-trigger:hover { background: rgba(191,90,242,0.1); }
+  .deep-dive-trigger .dd-arrow { transition: transform 0.3s; margin-left: auto; }
+  .deep-dive-trigger.open .dd-arrow { transform: rotate(180deg); }
+  .deep-dive-trigger .dd-icon { font-size: 0.9rem; }
+
+  .deep-dive-content {
+    display: none;
+    padding: 20px 24px;
+    background: rgba(191,90,242,0.03);
+    border-top: 1px solid var(--border);
+    animation: fadeIn 0.3s ease;
+  }
+  .deep-dive-content.open { display: block; }
+
+  /* ─── QUIZ ─── */
+  .quiz-section {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent2);
+    border-radius: 10px;
+    padding: 28px;
+    margin-top: 40px;
+  }
+
+  .quiz-section .quiz-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .quiz-section .quiz-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--accent2);
+  }
+
+  .quiz-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,107,53,0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(255,107,53,0.3);
+    padding: 3px 10px;
+    border-radius: 3px;
+  }
+
+  .question {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .question:last-of-type { border-bottom: none; }
+
+  .question-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 8px; }
+
+  .option-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); background: rgba(0,212,255,0.05); }
+  .option-btn.correct { border-color: var(--success); color: var(--success); background: rgba(0,230,118,0.08); }
+  .option-btn.incorrect { border-color: var(--danger); color: var(--danger); background: rgba(255,77,77,0.08); }
+  .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+  .option-btn .opt-letter { color: var(--text3); font-weight: 600; min-width: 18px; }
+
+  .feedback-box {
+    display: none;
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .feedback-box.correct { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25); color: var(--success); }
+  .feedback-box.incorrect { background: rgba(255,77,77,0.08); border: 1px solid rgba(255,77,77,0.25); color: var(--danger); }
+  .feedback-box.show { display: block; animation: fadeIn 0.3s ease; }
+
+  /* ─── SIMULATIONS / VISUALS ─── */
+  .sim-container {
+    background: #070910;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 24px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sim-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 20px;
+  }
+
+  /* Thread Race Sim */
+  .thread-sim {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .thread-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .thread-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    width: 80px;
+    color: var(--text2);
+    flex-shrink: 0;
+  }
+
+  .thread-track {
+    flex: 1;
+    height: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .thread-bar {
+    position: absolute; top: 0; left: 0; height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: width 0.15s linear;
+    display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem;
+  }
+
+  .thread-bar.t1 { background: linear-gradient(90deg, rgba(0,212,255,0.4), rgba(0,212,255,0.8)); }
+  .thread-bar.t2 { background: linear-gradient(90deg, rgba(255,107,53,0.4), rgba(255,107,53,0.8)); }
+
+  .shared-var-display {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  .shared-var-display .var-label { color: var(--text3); }
+  .shared-var-display .var-value {
+    color: var(--accent3); font-weight: 600; font-size: 1.1rem;
+    min-width: 40px; text-align: center;
+    transition: color 0.2s;
+  }
+  .shared-var-display .var-value.flash { color: var(--danger); }
+
+  .sim-controls { display: flex; gap: 10px; margin-top: 16px; }
+
+  .sim-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .sim-btn.primary {
+    background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent);
+  }
+  .sim-btn.primary:hover { background: rgba(0,212,255,0.2); }
+  .sim-btn.danger {
+    background: rgba(255,77,77,0.1); border-color: var(--danger); color: var(--danger);
+  }
+  .sim-btn.danger:hover { background: rgba(255,77,77,0.2); }
+  .sim-btn.secondary {
+    background: rgba(138,151,170,0.1); border-color: var(--border2); color: var(--text2);
+  }
+
+  .sim-log {
+    margin-top: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    height: 100px;
+    overflow-y: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text2);
+    line-height: 1.8;
+  }
+
+  .sim-log .log-t1 { color: var(--accent); }
+  .sim-log .log-t2 { color: var(--accent2); }
+  .sim-log .log-warn { color: var(--danger); }
+  .sim-log .log-ok { color: var(--accent3); }
+
+  /* CAP / PACELC Sim */
+  .cap-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .cap-cell {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: var(--bg3);
+  }
+
+  .cap-cell:hover { border-color: var(--accent); }
+  .cap-cell.selected { border-color: var(--accent); background: rgba(0,212,255,0.08); }
+  .cap-cell.ca { border-top: 3px solid var(--accent); }
+  .cap-cell.cp { border-top: 3px solid var(--accent4); }
+  .cap-cell.ap { border-top: 3px solid var(--accent2); }
+
+  .cap-cell .cell-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  .cap-cell .cell-desc {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem; color: var(--text3); line-height: 1.5;
+  }
+
+  .tradeoff-display {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    min-height: 80px;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: all 0.3s;
+  }
+  .tradeoff-display .tradeoff-title { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 6px; }
+  .tradeoff-display .example-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--bg3); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 3px; color: var(--text3);
+    margin-right: 6px;
+  }
+
+  /* Mutex / Deadlock Sim */
+  .resource-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px;
+    align-items: center; margin: 16px 0;
+  }
+
+  .process-box {
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+    text-align: center; background: var(--bg3);
+    transition: all 0.3s;
+  }
+
+  .process-box .proc-name {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.9rem; margin-bottom: 8px;
+  }
+
+  .process-box .proc-state {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem; color: var(--text3);
+  }
+
+  .process-box.holding { border-color: var(--accent3); }
+  .process-box.waiting { border-color: var(--warn); }
+  .process-box.deadlocked { border-color: var(--danger); animation: deadlock-pulse 0.5s ease-in-out infinite alternate; }
+
+  @keyframes deadlock-pulse {
+    from { box-shadow: 0 0 0 var(--danger); }
+    to { box-shadow: 0 0 12px rgba(255,77,77,0.5); }
+  }
+
+  .resource-box {
+    border: 1px solid var(--border2); border-radius: 50%;
+    width: 60px; height: 60px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg2); font-size: 0.7rem;
+    font-family: 'IBM Plex Mono', monospace; color: var(--text3);
+    transition: all 0.3s;
+  }
+
+  .resource-box.locked { border-color: var(--danger); color: var(--danger); }
+  .resource-box.free { border-color: var(--accent3); color: var(--accent3); }
+
+  /* TTL Visual */
+  .ttl-bar-wrap {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .ttl-item {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .ttl-item-header {
+    display: flex; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+    color: var(--text2);
+  }
+
+  .ttl-track {
+    height: 16px; background: var(--bg3);
+    border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+  }
+
+  .ttl-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.1s linear;
+  }
+
+  .ttl-fill.redis { background: linear-gradient(90deg, #dc382d, #ff6b6b); }
+  .ttl-fill.mongo { background: linear-gradient(90deg, #13aa52, #5af078); }
+  .ttl-fill.dns { background: linear-gradient(90deg, #0080ff, #00d4ff); }
+
+  /* Semaphore Visual */
+  .semaphore-visual {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .sem-pool {
+    display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap;
+    padding: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .sem-slot {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; transition: all 0.3s;
+  }
+
+  .sem-slot.available { border-color: var(--accent3); background: rgba(124,252,0,0.1); }
+  .sem-slot.taken { border-color: var(--danger); background: rgba(255,77,77,0.1); }
+
+  .sem-queue {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px dashed var(--border2);
+    border-radius: 6px;
+    min-height: 54px;
+  }
+
+  .sem-waiter {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+    padding: 4px 10px; border-radius: 4px;
+    background: rgba(255,204,0,0.1); border: 1px solid rgba(255,204,0,0.3);
+    color: var(--warn);
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Table */
+  .comparison-table {
+    width: 100%; border-collapse: collapse; margin: 20px 0;
+    font-size: 0.85rem;
+  }
+  .comparison-table th {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px; text-align: left;
+    background: var(--bg3);
+  }
+  .comparison-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table tr:hover td { background: var(--bg3); }
+  .comparison-table td:first-child { color: var(--text); font-weight: 600; }
+
+  /* ─── DIVIDER ─── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* ─── NEXT BUTTON ─── */
+  .nav-buttons { display: flex; gap: 12px; margin-top: 40px; justify-content: flex-end; }
+
+  .nav-btn {
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.85rem;
+    padding: 10px 22px;
+    border-radius: 6px;
+    border: none; cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .nav-btn.next {
+    background: var(--accent); color: #000;
+  }
+  .nav-btn.next:hover { background: #33ddff; transform: translateY(-1px); }
+  .nav-btn.prev {
+    background: var(--bg3); color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .nav-btn.prev:hover { color: var(--text); border-color: var(--border2); }
+
+  /* ─── INTRO ─── */
+  #intro-section .hero {
+    padding: 32px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .feature-list {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin: 28px 0;
+  }
+
+  .feature-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .feature-item .fi-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .feature-item .fi-text { font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; color: var(--text2); line-height: 1.5; }
+  .feature-item .fi-text strong { display: block; color: var(--text); margin-bottom: 3px; font-size: 0.78rem; }
+
+  /* ─── PACELC slider ─── */
+  .slider-group {
+    display: flex; flex-direction: column; gap: 18px;
+    margin: 20px 0;
+  }
+
+  .slider-row {
+    display: flex; align-items: center; gap: 14px;
+  }
+
+  .slider-row label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+    width: 120px; flex-shrink: 0;
+    color: var(--text2);
+  }
+
+  .slider-row input[type=range] {
+    flex: 1; -webkit-appearance: none;
+    height: 4px; background: var(--border2); border-radius: 2px; outline: none;
+    cursor: pointer;
+  }
+
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,212,255,0.4);
+  }
+
+  .slider-row .slider-val {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+    width: 36px; text-align: right; color: var(--accent);
+  }
+
+  .pacelc-result {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+    line-height: 1.7; color: var(--text2);
+    min-height: 60px;
+    transition: all 0.3s;
+  }
+
+  /* ─── GIL diagram ─── */
+  .gil-diagram {
+    display: flex; gap: 0; margin: 20px 0;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+
+  .gil-thread {
+    flex: 1; padding: 16px; text-align: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+    position: relative; border-right: 1px solid var(--border);
+    transition: background 0.3s;
+  }
+  .gil-thread:last-child { border-right: none; }
+
+  .gil-thread .t-name {
+    font-weight: 600; font-size: 0.8rem; margin-bottom: 10px;
+  }
+
+  .gil-token {
+    display: inline-block;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px rgba(0,212,255,0.6);
+    margin: 8px auto;
+    transition: all 0.5s ease;
+    font-size: 0;
+  }
+  .gil-token.hidden { opacity: 0; transform: scale(0); }
+
+  .gil-status {
+    color: var(--text3); font-size: 0.65rem; margin-top: 6px;
+    min-height: 14px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; max-width: 100%; padding: 24px 20px 60px; }
+    #menu-toggle { display: flex; }
+    .cap-grid { grid-template-columns: 1fr 1fr; }
+    .resource-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .cap-grid { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<header id="header">
+  <div class="logo">
+    <span class="dot"></span>
+    <span>DISTRIBUTED SYSTEMS &amp; CONCURRENCY</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-fill"></div>
+  </div>
+  <div class="score-badge" id="score-badge">Score: 0 / 0</div>
+  <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
+</header>
+
+<!-- ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ -->
+<div id="sidebar">
+  <div class="sidebar-header">// Navigation</div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Introduction</div>
+    <a class="nav-link active" onclick="showSection('intro')">
+      <span class="nav-icon">🏠</span> Welcome
+      <span class="nav-check">✓</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Module 1 — Concurrency</div>
+    <a class="nav-link" onclick="showSection('processes')">
+      <span class="nav-icon">⚙️</span> Processes vs Threads
+      <span class="nav-check">✓</span>
+    </a>
+    <a class="nav-link" onclick="showSection('gil')">
+      <span class="nav-icon">🔒</span> Python GIL
+      <span class="nav-check">✓</span>
+    </a>
+    <a class="nav-link" onclick="showSection('race')">
+      <span class="nav-icon">🏎️</span> Race Conditions
+      <span class="nav-check">✓</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Module 2 — Synchronization</div>
+    <a class="nav-link" onclick="showSection('mutex')">
+      <span class="nav-icon">🔐</span> Mutex &amp; Locks
+      <span class="nav-check">✓</span>
+    </a>
+    <a class="nav-link" onclick="showSection('semaphore')">
+      <span class="nav-icon">🚦</span> Semaphores
+      <span class="nav-check">✓</span>
+    </a>
+    <a class="nav-link" onclick="showSection('deadlock')">
+      <span class="nav-icon">💀</span> Deadlock Prevention
+      <span class="nav-check">✓</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Module 3 — Distributed</div>
+    <a class="nav-link" onclick="showSection('cap')">
+      <span class="nav-icon">🌐</span> CAP Theorem
+      <span class="nav-check">✓</span>
+    </a>
+    <a class="nav-link" onclick="showSection('pacelc')">
+      <span class="nav-icon">⚖️</span> PACELC
+      <span class="nav-check">✓</span>
+    </a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Module 4 — Data Management</div>
+    <a class="nav-link" onclick="showSection('ttl')">
+      <span class="nav-icon">⏱️</span> TTL Mechanisms
+      <span class="nav-check">✓</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAIN ═══════════════════════════════════ -->
+<div id="layout">
+<main id="main">
+
+<!-- ──────────── INTRO ──────────── -->
+<section id="intro-section" class="module-section active">
+  <div class="hero">
+    <div class="module-tag">Masterclass Guide</div>
+    <h1>Distributed Systems<br>&amp; Concurrency</h1>
+    <p class="lead">Everything that can go wrong when computers try to cooperate — and the elegant patterns that stop them from burning down.</p>
+    <p>This interactive guide covers the core challenges of modern backend systems: from two threads fighting over a single integer, to databases scattered across continents trying to agree on reality. Expect code, analogies, animations, and the occasional moment of existential dread about shared mutable state.</p>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <span class="fi-icon">⚡</span>
+        <div class="fi-text"><strong>4 Deep Modules</strong>Concurrency, sync, distributed theory, data TTL</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🎮</span>
+        <div class="fi-text"><strong>Live Simulations</strong>Animate race conditions, deadlocks, and TTL decay</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🧪</span>
+        <div class="fi-text"><strong>Quiz Each Module</strong>Test your knowledge with instant feedback</div>
+      </div>
+      <div class="feature-item">
+        <span class="fi-icon">🔬</span>
+        <div class="fi-text"><strong>Deep Dives</strong>Toggle advanced edge cases for each concept</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>How to Use This Guide</h2>
+  <p>Navigate using the sidebar on the left. Each module builds on the previous one — but feel free to jump around if you're already familiar with the basics. Code examples are annotated with syntax highlighting. Look for the <strong>🔬 Deep Dive</strong> buttons to expand into advanced territory.</p>
+
+  <div class="callout analogy">
+    <span class="icon">💡</span>
+    <p><strong>The Big Picture Analogy:</strong> Think of a distributed system as a restaurant with multiple cooks, one shared cutting board, and a head chef who keeps forgetting things. Concurrency problems happen at the cutting board. CAP Theorem is about whether the chef can give you accurate menu information when the kitchen network goes down. TTL is the expiry date on your mise en place.</p>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn next" onclick="showSection('processes')">Start: Processes vs Threads →</button>
+  </div>
+</section>
+
+<!-- ──────────── PROCESSES VS THREADS ──────────── -->
+<section id="processes-section" class="module-section">
+  <div class="module-tag">Module 1.1 — Concurrency</div>
+  <h1>Processes vs. Threads</h1>
+  <p class="lead">Two ways to do many things at once. One involves walls. The other involves a dangerously shared fridge.</p>
+
+  <h2>The Mental Model</h2>
+  <p>When your OS runs a program, it creates a <strong>process</strong> — an isolated bubble containing its own memory, file handles, and execution state. Processes don't share memory by default. If Process A corrupts its heap, Process B doesn't care. Blissful isolation.</p>
+  <p>A <strong>thread</strong> is a unit of execution <em>inside</em> a process. All threads in a process share the same memory space, heap, and file descriptors. This makes communication fast but introduces the possibility of threads stepping on each other's toes — or rather, clobbering each other's data.</p>
+
+  <div class="callout analogy">
+    <span class="icon">🏠</span>
+    <p><strong>Analogy:</strong> Processes are separate apartments. Each tenant has their own kitchen, bedroom, locks, and TV. Threads are roommates sharing the same apartment. Super convenient for passing the TV remote — catastrophic when two people simultaneously try to use the same bathroom with no lock on the door.</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card accent-blue">
+      <h3>🏠 Process</h3>
+      <ul style="padding-left:16px;color:var(--text2);font-size:0.85rem;line-height:1.9">
+        <li>Isolated memory space</li>
+        <li>Separate heap + stack</li>
+        <li>High context-switch cost</li>
+        <li>IPC needed to communicate</li>
+        <li>Crash isolation ✓</li>
+        <li>Heavy to spawn</li>
+      </ul>
+    </div>
+    <div class="card accent-orange">
+      <h3>🧵 Thread</h3>
+      <ul style="padding-left:16px;color:var(--text2);font-size:0.85rem;line-height:1.9">
+        <li>Shared memory space</li>
+        <li>Own stack, shared heap</li>
+        <li>Low context-switch cost</li>
+        <li>Direct memory access</li>
+        <li>One crash can kill all ✗</li>
+        <li>Lightweight to spawn</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>In Python</h2>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="lang-badge">python — multiprocessing vs threading</span>
+    </div>
+    <pre><code><span class="kw">import</span> multiprocessing
+<span class="kw">import</span> threading
+<span class="kw">import</span> os
+
+<span class="cm"># ── Process: each gets its own memory space ──────────────────</span>
+<span class="kw">def</span> <span class="fn">process_worker</span>(name):
+    <span class="bi">print</span>(<span class="st">f"Process {name} | PID: {os.getpid()}"</span>)
+    <span class="cm"># Modifications to data here won't be seen by other processes</span>
+
+p1 = multiprocessing.Process(target=process_worker, args=(<span class="st">"Alpha"</span>,))
+p2 = multiprocessing.Process(target=process_worker, args=(<span class="st">"Beta"</span>,))
+p1.start(); p2.start()
+p1.join();  p2.join()
+
+<span class="cm"># ── Thread: all share the same memory space ───────────────────</span>
+shared_counter = <span class="nm">0</span>  <span class="cm"># ⚠️  DANGER: this is shared!</span>
+
+<span class="kw">def</span> <span class="fn">thread_worker</span>(name):
+    <span class="kw">global</span> shared_counter
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(<span class="nm">100_000</span>):
+        shared_counter += <span class="nm">1</span>  <span class="cm"># NOT atomic — race condition here!</span>
+
+t1 = threading.Thread(target=thread_worker, args=(<span class="st">"T1"</span>,))
+t2 = threading.Thread(target=thread_worker, args=(<span class="st">"T2"</span>,))
+t1.start(); t2.start()
+t1.join();  t2.join()
+
+<span class="bi">print</span>(<span class="st">f"Expected: 200000 | Got: {shared_counter}"</span>)
+<span class="cm"># Output might be: Expected: 200000 | Got: 143221  💥</span>
+</code></pre>
+  </div>
+
+  <table class="comparison-table">
+    <thead>
+      <tr><th>Property</th><th>Process</th><th>Thread</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Memory</td><td>Separate address space</td><td>Shared address space</td></tr>
+      <tr><td>Spawn cost</td><td>High (fork + copy-on-write)</td><td>Low (~10x cheaper)</td></tr>
+      <tr><td>Communication</td><td>Pipes, queues, sockets</td><td>Shared variables, queues</td></tr>
+      <tr><td>Python GIL?</td><td>Not affected — each has its own</td><td>Affected — GIL serializes them</td></tr>
+      <tr><td>Best for</td><td>CPU-bound, isolated tasks</td><td>I/O-bound, concurrent tasks</td></tr>
+      <tr><td>Fault isolation</td><td>Excellent — crash stays contained</td><td>Poor — segfault kills all threads</td></tr>
+    </tbody>
+  </table>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Context Switching &amp; Cache Thrashing
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p>When the OS switches between threads, it must save and restore the CPU registers, program counter, and stack pointer — the "context." For threads within the same process this is <strong>fast</strong> (~1–10 µs). For processes, the OS must also switch the virtual memory mapping (TLB flush), which can be 10–100× more expensive.</p>
+      <p><strong>Cache Thrashing:</strong> Modern CPUs use L1/L2 caches that are core-local. When thread A runs on Core 0 and has hot data in cache, then gets preempted and Thread B takes over Core 0, Thread B's working set evicts Thread A's cache lines. When Thread A resumes, it suffers cache misses. High thread counts on CPU-bound work can dramatically worsen this — a phenomenon known as <strong>cache thrashing</strong>.</p>
+      <div class="callout warn">
+        <span class="icon">⚠️</span>
+        <p>Rule of thumb: for CPU-bound work, use <code>multiprocessing.Pool(os.cpu_count())</code>. More threads than cores = context switch overhead with no throughput gain.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ 1 -->
+  <div class="quiz-section" id="quiz-processes">
+    <div class="quiz-header">
+      <span>🧠</span>
+      <h2>Test Your Knowledge</h2>
+      <span class="quiz-badge">Module 1.1</span>
+    </div>
+
+    <div class="question" id="q-proc-1">
+      <div class="question-text">Q1. Two Python threads increment a global counter 100,000 times each. You expect 200,000 but get ~143,000. What's the root cause?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-1','B')"><span class="opt-letter">A</span>The GIL prevents both threads from running</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-1','B')"><span class="opt-letter">B</span>The <code>+=</code> operation is not atomic — read-modify-write interleaving causes lost updates</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-1','B')"><span class="opt-letter">C</span>Python integers are immutable so the counter can't grow</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-1','B')"><span class="opt-letter">D</span>The OS throttles threads that run for too long</button>
+      </div>
+      <div class="feedback-box" id="q-proc-1-feedback"></div>
+    </div>
+
+    <div class="question" id="q-proc-2">
+      <div class="question-text">Q2. Which is the best choice for a CPU-bound image processing task that needs to saturate all 8 cores?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-2','A')"><span class="opt-letter">A</span><code>multiprocessing.Pool(8)</code> — bypasses the GIL, true parallelism</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-2','A')"><span class="opt-letter">B</span><code>threading.Thread</code> × 8 — lightweight and cheap</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-2','A')"><span class="opt-letter">C</span><code>asyncio</code> — event loop is fastest</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-proc-2','A')"><span class="opt-letter">D</span>Single-threaded with SIMD — Python handles it natively</button>
+      </div>
+      <div class="feedback-box" id="q-proc-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('intro')">← Welcome</button>
+    <button class="nav-btn next" onclick="showSection('gil')">Next: Python GIL →</button>
+  </div>
+</section>
+
+<!-- ──────────── GIL ──────────── -->
+<section id="gil-section" class="module-section">
+  <div class="module-tag">Module 1.2 — Concurrency</div>
+  <h1>The Python GIL</h1>
+  <p class="lead">The one mutex that governs all of Python. Beloved by memory allocators. Despised by parallel programmers.</p>
+
+  <h2>What Is the GIL?</h2>
+  <p>The <strong>Global Interpreter Lock</strong> (GIL) is a mutex that protects CPython's internal state — particularly the reference counting system used for garbage collection. Only <em>one thread</em> can hold the GIL at a time, meaning only one thread can execute Python bytecode at any given moment.</p>
+
+  <div class="callout analogy">
+    <span class="icon">🎤</span>
+    <p><strong>Analogy:</strong> The GIL is like a single microphone at a conference panel. No matter how many panelists (threads) are seated, only the one holding the mic can speak. Switching is fast — but at no point are two voices heard simultaneously. Great for avoiding crosstalk; terrible for getting things done faster.</p>
+  </div>
+
+  <h2>GIL Token — Live Animation</h2>
+  <p>Watch the GIL token bounce between threads. Notice that only one thread "runs" at a time:</p>
+
+  <div class="sim-container">
+    <div class="sim-title">// GIL Token Handoff Simulation</div>
+    <div class="gil-diagram" id="gil-diagram">
+      <div class="gil-thread" id="gil-t1">
+        <div class="t-name" style="color:var(--accent)">Thread 1</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text3)">I/O: Network request</div>
+        <div class="gil-token" id="gil-token"></div>
+        <div class="gil-status" id="gil-s1">▶ Running</div>
+      </div>
+      <div class="gil-thread" id="gil-t2">
+        <div class="t-name" style="color:var(--accent2)">Thread 2</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text3)">CPU: Data processing</div>
+        <div class="gil-token hidden" id="gil-token2"></div>
+        <div class="gil-status" id="gil-s2">⏸ Waiting</div>
+      </div>
+      <div class="gil-thread">
+        <div class="t-name" style="color:var(--accent4)">Thread 3</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text3)">CPU: Image resize</div>
+        <div class="gil-token hidden" id="gil-token3"></div>
+        <div class="gil-status" id="gil-s3">⏸ Waiting</div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn primary" onclick="startGilSim()">▶ Simulate</button>
+      <button class="sim-btn secondary" onclick="stopGilSim()">■ Stop</button>
+    </div>
+  </div>
+
+  <h2>When Does the GIL Matter?</h2>
+
+  <div class="card-grid">
+    <div class="card accent-green">
+      <h3>✅ I/O-Bound Tasks</h3>
+      <p style="font-size:0.84rem">The GIL is <strong>released</strong> during I/O operations (reading files, network calls, database queries). Threads waiting on I/O give up the GIL willingly. Threading works great here — threads "take turns" effectively.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent3)">Web scrapers, API clients, DB queries ✓</div>
+    </div>
+    <div class="card accent-orange">
+      <h3>❌ CPU-Bound Tasks</h3>
+      <p style="font-size:0.84rem">Pure computation never releases the GIL. Even on 8 cores, 8 Python threads execute <em>serially</em>. You get all the overhead of threads with none of the parallelism. Use <code>multiprocessing</code> instead.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent2)">Matrix ops, image processing, crypto ✗</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="lang-badge">python — GIL release via ctypes / C extension</span>
+    </div>
+    <pre><code><span class="kw">import</span> threading
+<span class="kw">import</span> time
+
+<span class="cm"># The GIL is released for I/O ─────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">io_bound_task</span>():
+    time.sleep(<span class="nm">1</span>)  <span class="cm"># GIL released here — other threads can run!</span>
+
+<span class="cm"># Truly parallel I/O threads</span>
+threads = [threading.Thread(target=io_bound_task) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(<span class="nm">10</span>)]
+start = time.perf_counter()
+[t.start() <span class="kw">for</span> t <span class="kw">in</span> threads]
+[t.join()  <span class="kw">for</span> t <span class="kw">in</span> threads]
+<span class="bi">print</span>(<span class="st">f"10 × 1s I/O tasks in: {time.perf_counter()-start:.2f}s"</span>)
+<span class="cm"># Output: ~1.00s  (not 10s — GIL released during sleep!)</span>
+
+<span class="cm"># Numpy releases the GIL too (C extension with Py_BEGIN_ALLOW_THREADS)</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">def</span> <span class="fn">numpy_task</span>():
+    <span class="cm"># This C extension releases the GIL during computation</span>
+    result = np.dot(np.random.rand(<span class="nm">1000</span>, <span class="nm">1000</span>),
+                    np.random.rand(<span class="nm">1000</span>, <span class="nm">1000</span>))
+</code></pre>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Python 3.13 Free-Threaded Mode (no GIL!)
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p>Python 3.13 (PEP 703) introduced an <strong>experimental free-threaded build</strong> of CPython — no GIL. You can enable it with <code>python3.13t</code> (the "t" suffix). This is a massive change: reference counting is now done with atomic operations, and the interpreter uses biased locking for object-level thread safety.</p>
+      <div class="callout warn">
+        <span class="icon">⚠️</span>
+        <p>Free-threaded Python is still experimental. Many C extensions assume the GIL exists and will have data races without it. Expect 10–50% overhead per thread even in serial code (due to atomic ref counts) until the ecosystem catches up.</p>
+      </div>
+      <p>The old approach was <strong>Gilectomy</strong> (Larry Hastings, 2016), which removed the GIL and suffered a ~60% single-thread performance regression. PEP 703 uses a more surgical approach — biased reference counting with deferred RC for objects unlikely to be shared.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ 2 -->
+  <div class="quiz-section">
+    <div class="quiz-header">
+      <span>🧠</span>
+      <h2>Test Your Knowledge</h2>
+      <span class="quiz-badge">Module 1.2</span>
+    </div>
+
+    <div class="question" id="q-gil-1">
+      <div class="question-text">Q1. You have a Python script that makes 50 concurrent HTTP requests. Which is fastest?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-1','C')"><span class="opt-letter">A</span>Single-threaded loop — no overhead</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-1','C')"><span class="opt-letter">B</span><code>multiprocessing.Pool(50)</code> — most parallelism</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-1','C')"><span class="opt-letter">C</span><code>asyncio</code> or <code>ThreadPoolExecutor</code> — I/O releases GIL, so threads or async both win</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-1','C')"><span class="opt-letter">D</span>Cannot be parallelized due to GIL</button>
+      </div>
+      <div class="feedback-box" id="q-gil-1-feedback"></div>
+    </div>
+
+    <div class="question" id="q-gil-2">
+      <div class="question-text">Q2. The GIL is primarily a lock that protects:</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-2','B')"><span class="opt-letter">A</span>The filesystem from concurrent writes</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-2','B')"><span class="opt-letter">B</span>CPython's reference counting / internal interpreter state</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-2','B')"><span class="opt-letter">C</span>Python's <code>dict</code> and <code>list</code> from modification</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-gil-2','B')"><span class="opt-letter">D</span>Socket connections from interleaving</button>
+      </div>
+      <div class="feedback-box" id="q-gil-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('processes')">← Processes vs Threads</button>
+    <button class="nav-btn next" onclick="showSection('race')">Next: Race Conditions →</button>
+  </div>
+</section>
+
+<!-- ──────────── RACE CONDITIONS ──────────── -->
+<section id="race-section" class="module-section">
+  <div class="module-tag">Module 1.3 — Concurrency</div>
+  <h1>Race Conditions</h1>
+  <p class="lead">When two threads attempt the same Read-Modify-Write and only one of them matters. The other's update goes into the void.</p>
+
+  <h2>The Read-Modify-Write Problem</h2>
+  <p>The expression <code>counter += 1</code> looks atomic but it's secretly three operations:</p>
+
+  <div class="card accent-orange">
+    <h3 style="margin-top:0">The Three-Step Trap</h3>
+    <ol style="padding-left:20px;color:var(--text2);font-size:0.88rem;line-height:2.1">
+      <li><strong>READ</strong> — Load <code>counter</code> from memory into a CPU register (e.g., register = 5)</li>
+      <li><strong>MODIFY</strong> — Increment the register value (register = 6)</li>
+      <li><strong>WRITE</strong> — Store register back to memory (counter = 6)</li>
+    </ol>
+    <p style="font-size:0.84rem;margin-top:8px">If Thread 2 READs the old value (5) <em>before</em> Thread 1 WRITEs (6), both threads write 6 — and one increment is silently lost.</p>
+  </div>
+
+  <!-- RACE CONDITION SIM -->
+  <div class="sim-container">
+    <div class="sim-title">// Race Condition Simulator — Read-Modify-Write</div>
+    <div class="thread-sim">
+      <div class="thread-row">
+        <span class="thread-label" style="color:var(--accent)">Thread 1</span>
+        <div class="thread-track">
+          <div class="thread-bar t1" id="race-t1-bar">T1</div>
+        </div>
+      </div>
+      <div class="thread-row">
+        <span class="thread-label" style="color:var(--accent2)">Thread 2</span>
+        <div class="thread-track">
+          <div class="thread-bar t2" id="race-t2-bar">T2</div>
+        </div>
+      </div>
+      <div class="shared-var-display">
+        <span class="var-label">shared_counter =</span>
+        <span class="var-value" id="race-counter-display">0</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;color:var(--text3);margin-left:auto">expected: <span id="race-expected">0</span></span>
+      </div>
+    </div>
+    <div class="sim-log" id="race-log">// Click "Run Unsafe" to see race condition...<br></div>
+    <div class="sim-controls">
+      <button class="sim-btn danger" onclick="runRaceSim(false)">⚡ Run Unsafe</button>
+      <button class="sim-btn primary" onclick="runRaceSim(true)">🔒 Run Safe (Lock)</button>
+      <button class="sim-btn secondary" onclick="resetRaceSim()">↺ Reset</button>
+    </div>
+  </div>
+
+  <h2>The Python Bytecode Explanation</h2>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <span class="lang-badge">python bytecode — why += is not atomic</span>
+    </div>
+    <pre><code><span class="kw">import</span> dis
+
+<span class="kw">def</span> <span class="fn">increment</span>():
+    counter += <span class="nm">1</span>
+
+dis.<span class="fn">dis</span>(increment)
+<span class="cm"># Output (simplified):
+#   LOAD_GLOBAL   counter    ← READ
+#   LOAD_CONST    1
+#   BINARY_ADD                ← MODIFY
+#   STORE_GLOBAL  counter    ← WRITE
+#
+# The GIL can be released between ANY two bytecodes!
+# Thread switch happens between BINARY_ADD and STORE_GLOBAL
+# → both threads read 5, both write 6, counter is wrong</span>
+
+<span class="cm"># The fix: use threading.Lock</span>
+<span class="kw">import</span> threading
+
+lock = threading.Lock()
+counter = <span class="nm">0</span>
+
+<span class="kw">def</span> <span class="fn">safe_increment</span>():
+    <span class="kw">global</span> counter
+    <span class="kw">with</span> lock:          <span class="cm"># acquires lock, guarantees atomicity</span>
+        counter += <span class="nm">1</span>   <span class="cm"># only one thread runs this at a time</span>
+                        <span class="cm"># lock released on exit (even if exception!)</span>
+</code></pre>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — TOCTOU: The Race Condition in Your Filesystem
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p><strong>Time-of-Check / Time-of-Use (TOCTOU)</strong> is the filesystem equivalent of the RMW race. Classic vulnerable pattern:</p>
+      <div class="code-block" style="margin:12px 0">
+        <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">python — TOCTOU vulnerability</span></div>
+        <pre><code><span class="kw">import</span> os
+
+<span class="cm"># ❌ VULNERABLE: attacker can swap /tmp/file between check and open</span>
+<span class="kw">if</span> os.path.<span class="fn">exists</span>(<span class="st">"/tmp/user_upload"</span>):   <span class="cm"># ← TIME OF CHECK</span>
+    <span class="kw">with</span> <span class="bi">open</span>(<span class="st">"/tmp/user_upload"</span>) <span class="kw">as</span> f:  <span class="cm"># ← TIME OF USE (race window!)</span>
+        data = f.<span class="fn">read</span>()
+
+<span class="cm"># ✅ SAFE: open() atomically checks + opens</span>
+<span class="kw">try</span>:
+    <span class="kw">with</span> <span class="bi">open</span>(<span class="st">"/tmp/user_upload"</span>) <span class="kw">as</span> f:
+        data = f.<span class="fn">read</span>()
+<span class="kw">except</span> <span class="bi">FileNotFoundError</span>:
+    <span class="fn">handle_missing</span>()</code></pre>
+      </div>
+      <p>TOCTOU bugs in setuid binaries are a classic privilege escalation vector — an attacker replaces the file with a symlink to <code>/etc/shadow</code> between the check and the open.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ 3 -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 1.3</span></div>
+
+    <div class="question" id="q-race-1">
+      <div class="question-text">Q1. Two threads each call <code>counter += 1</code> starting from 0. The minimum possible result is:</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-1','B')"><span class="opt-letter">A</span>0 — both updates can be lost</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-1','B')"><span class="opt-letter">B</span>1 — at worst, one write overwrites the other's result</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-1','B')"><span class="opt-letter">C</span>2 — locks are implicit in Python</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-1','B')"><span class="opt-letter">D</span>The result is always 2 due to the GIL</button>
+      </div>
+      <div class="feedback-box" id="q-race-1-feedback"></div>
+    </div>
+
+    <div class="question" id="q-race-2">
+      <div class="question-text">Q2. Which Python structure has atomic <code>append()</code> — no lock needed for single-element appends?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-2','A')"><span class="opt-letter">A</span><code>list</code> — CPython's <code>list.append()</code> is atomic at the bytecode level</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-2','A')"><span class="opt-letter">B</span><code>dict</code> — dictionary updates are always atomic</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-2','A')"><span class="opt-letter">C</span><code>int</code> — integers are immutable so writes are safe</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-race-2','A')"><span class="opt-letter">D</span>None of the above — always use locks</button>
+      </div>
+      <div class="feedback-box" id="q-race-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('gil')">← Python GIL</button>
+    <button class="nav-btn next" onclick="showSection('mutex')">Next: Mutex &amp; Locks →</button>
+  </div>
+</section>
+
+<!-- ──────────── MUTEX / LOCKS ──────────── -->
+<section id="mutex-section" class="module-section">
+  <div class="module-tag">Module 2.1 — Synchronization</div>
+  <h1>Mutex &amp; Locks</h1>
+  <p class="lead">The bouncer at the door of your critical section. Only one thread gets in. Everyone else waits in line.</p>
+
+  <h2>What Is a Mutex?</h2>
+  <p>A <strong>mutex</strong> (mutual exclusion lock) is a synchronization primitive that ensures only one thread can access a protected resource at a time. It has two operations: <code>acquire()</code> (grab the lock) and <code>release()</code> (give it back). If a thread tries to acquire an already-held lock, it <em>blocks</em> until the lock is released.</p>
+
+  <div class="callout analogy">
+    <span class="icon">🚻</span>
+    <p><strong>Analogy:</strong> A single-occupancy bathroom with a lock. The person inside holds the mutex. Everyone else stands in a queue. When the lock clicks open, the next person gets in. The key insight: the bathroom guarantees <em>mutual exclusion</em> — at most one occupant.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">python — mutex patterns</span></div>
+    <pre><code><span class="kw">import</span> threading
+
+lock = threading.Lock()
+
+<span class="cm"># ── Pattern 1: context manager (preferred) ────────────────────</span>
+<span class="kw">with</span> lock:
+    <span class="cm"># Critical section — only one thread at a time</span>
+    shared_data.update(value)
+<span class="cm"># Lock automatically released even if exception occurs</span>
+
+<span class="cm"># ── Pattern 2: try/finally (avoid if possible) ────────────────</span>
+lock.<span class="fn">acquire</span>()
+<span class="kw">try</span>:
+    shared_data.update(value)
+<span class="kw">finally</span>:
+    lock.<span class="fn">release</span>()  <span class="cm"># MUST release — or deadlock forever</span>
+
+<span class="cm"># ── RLock: re-entrant lock ────────────────────────────────────</span>
+rlock = threading.RLock()
+
+<span class="kw">def</span> <span class="fn">recursive_task</span>(depth):
+    <span class="kw">with</span> rlock:          <span class="cm"># same thread can acquire multiple times</span>
+        <span class="kw">if</span> depth > <span class="nm">0</span>:
+            <span class="fn">recursive_task</span>(depth - <span class="nm">1</span>)  <span class="cm"># won't deadlock itself</span>
+
+<span class="cm"># ── Non-blocking acquire ──────────────────────────────────────</span>
+<span class="kw">if</span> lock.<span class="fn">acquire</span>(blocking=<span class="kw">False</span>):
+    <span class="kw">try</span>:
+        <span class="fn">do_work</span>()
+    <span class="kw">finally</span>:
+        lock.<span class="fn">release</span>()
+<span class="kw">else</span>:
+    <span class="bi">print</span>(<span class="st">"Lock busy, try later"</span>)
+</code></pre>
+  </div>
+
+  <h2>Lock Granularity Trade-Off</h2>
+  <div class="card-grid">
+    <div class="card accent-blue">
+      <h3>Coarse-Grained Lock</h3>
+      <p style="font-size:0.84rem">One big lock around everything. Simple, safe, but terrible throughput. All threads serialize.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent)">Easy to reason about · Hard to scale</div>
+    </div>
+    <div class="card accent-green">
+      <h3>Fine-Grained Locks</h3>
+      <p style="font-size:0.84rem">Many small locks on specific data structures. High throughput, but increased complexity and deadlock risk.</p>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--accent3)">High parallelism · Deadlock-prone</div>
+    </div>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Lock Contention &amp; Priority Inversion
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p><strong>Lock Contention</strong> occurs when multiple threads compete for the same lock. High contention means threads spend more time waiting than working — a sign you need either finer-grained locking or a lock-free data structure.</p>
+      <p><strong>Priority Inversion</strong> is a classic embedded systems bug: a high-priority thread (HP) waits on a lock held by a low-priority thread (LP). If a medium-priority thread (MP) preempts LP before it releases the lock, HP is effectively blocked by MP — priority inverted. This is what caused the Mars Pathfinder mission's mysterious resets in 1997.</p>
+      <p>The fix is <strong>Priority Inheritance</strong>: while LP holds a lock wanted by HP, LP temporarily inherits HP's priority so it can finish and release the lock quickly.</p>
+      <div class="callout warn">
+        <span class="icon">⚠️</span>
+        <p>Python's <code>threading.Lock</code> does not implement priority inheritance. In real-time systems on Linux, use <code>PTHREAD_PRIO_INHERIT</code> mutexes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 2.1</span></div>
+
+    <div class="question" id="q-mutex-1">
+      <div class="question-text">Q1. A thread calls <code>lock.acquire()</code> on an already-held lock. What happens?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-1','B')"><span class="opt-letter">A</span>It gets a second copy of the lock</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-1','B')"><span class="opt-letter">B</span>The calling thread blocks until the lock is released by the holder</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-1','B')"><span class="opt-letter">C</span>An exception is raised immediately</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-1','B')"><span class="opt-letter">D</span>The holder is preempted and the caller gets the lock</button>
+      </div>
+      <div class="feedback-box" id="q-mutex-1-feedback"></div>
+    </div>
+
+    <div class="question" id="q-mutex-2">
+      <div class="question-text">Q2. Why prefer <code>with lock:</code> over manual <code>acquire()/release()</code>?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-2','C')"><span class="opt-letter">A</span>It's slightly faster due to bytecode optimization</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-2','C')"><span class="opt-letter">B</span>It supports multiple locks simultaneously</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-2','C')"><span class="opt-letter">C</span>It guarantees release even if an exception is thrown in the critical section</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-mutex-2','C')"><span class="opt-letter">D</span>It uses a spin-lock internally</button>
+      </div>
+      <div class="feedback-box" id="q-mutex-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('race')">← Race Conditions</button>
+    <button class="nav-btn next" onclick="showSection('semaphore')">Next: Semaphores →</button>
+  </div>
+</section>
+
+<!-- ──────────── SEMAPHORES ──────────── -->
+<section id="semaphore-section" class="module-section">
+  <div class="module-tag">Module 2.2 — Synchronization</div>
+  <h1>Semaphores</h1>
+  <p class="lead">A mutex lets in one. A semaphore lets in N. Perfect for rate limiting, connection pools, and counting resources.</p>
+
+  <h2>Semaphore vs Mutex</h2>
+  <p>A semaphore maintains an internal counter. <code>acquire()</code> decrements it; <code>release()</code> increments it. If the counter is 0, <code>acquire()</code> blocks. A mutex is just a semaphore with N=1 — plus ownership semantics (only the acquirer can release it).</p>
+
+  <div class="callout analogy">
+    <span class="icon">🅿️</span>
+    <p><strong>Analogy:</strong> A parking lot with 10 spaces. The semaphore counter starts at 10. Each arriving car calls <code>acquire()</code> (counter → 9). Each departing car calls <code>release()</code> (counter → 10). When the lot is full (counter = 0), incoming cars wait. No single car "owns" the lot — anyone can leave and free up space for anyone waiting.</p>
+  </div>
+
+  <!-- SEMAPHORE SIMULATOR -->
+  <div class="sim-container">
+    <div class="sim-title">// Semaphore Pool Simulator — DB Connection Pool (N=4)</div>
+    <div class="semaphore-visual">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text3);margin-bottom:8px">Connection slots:</div>
+      <div class="sem-pool" id="sem-pool">
+        <div class="sem-slot available" id="sem-0">🔌</div>
+        <div class="sem-slot available" id="sem-1">🔌</div>
+        <div class="sem-slot available" id="sem-2">🔌</div>
+        <div class="sem-slot available" id="sem-3">🔌</div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--text3);margin-top:10px;margin-bottom:6px">Waiting queue:</div>
+      <div class="sem-queue" id="sem-queue">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:0.68rem;color:var(--text3)">// empty</span>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--text2)">
+        <span>Available: <strong id="sem-count" style="color:var(--accent3)">4</strong></span>
+        <span>Waiting: <strong id="sem-waiting" style="color:var(--warn)">0</strong></span>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn primary" onclick="semAcquire()">+ Acquire (new request)</button>
+      <button class="sim-btn danger" onclick="semRelease()">− Release (request done)</button>
+      <button class="sim-btn secondary" onclick="semReset()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">python — semaphore for connection pool</span></div>
+    <pre><code><span class="kw">import</span> threading
+<span class="kw">import</span> time
+
+<span class="cm"># Limit concurrent DB connections to 5</span>
+db_semaphore = threading.Semaphore(<span class="nm">5</span>)
+
+<span class="kw">def</span> <span class="fn">query_database</span>(worker_id):
+    <span class="bi">print</span>(<span class="st">f"Worker {worker_id}: waiting for connection..."</span>)
+    <span class="kw">with</span> db_semaphore:
+        <span class="bi">print</span>(<span class="st">f"Worker {worker_id}: connected! Querying..."</span>)
+        time.sleep(<span class="nm">0.5</span>)  <span class="cm"># simulate query time</span>
+        <span class="bi">print</span>(<span class="st">f"Worker {worker_id}: done, releasing connection"</span>)
+    <span class="cm"># connection slot automatically freed here</span>
+
+<span class="cm"># 20 workers trying to use a pool of 5 connections</span>
+threads = [
+    threading.Thread(target=query_database, args=(i,))
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(<span class="nm">20</span>)
+]
+[t.start() <span class="kw">for</span> t <span class="kw">in</span> threads]
+[t.join()  <span class="kw">for</span> t <span class="kw">in</span> threads]
+
+<span class="cm"># BoundedSemaphore prevents accidental over-release</span>
+bounded = threading.BoundedSemaphore(<span class="nm">5</span>)
+<span class="cm"># bounded.release() when already at max → raises ValueError</span>
+</code></pre>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Counting Semaphores for Producer/Consumer
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p>Semaphores are the classic solution to the <strong>Producer-Consumer problem</strong>. You need two semaphores: <code>empty</code> (initially N, number of free slots) and <code>full</code> (initially 0, items to consume):</p>
+      <div class="code-block" style="margin:12px 0">
+        <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">python — producer/consumer with semaphores</span></div>
+        <pre><code>BUFFER_SIZE = <span class="nm">5</span>
+empty = threading.Semaphore(BUFFER_SIZE)  <span class="cm"># free slots</span>
+full  = threading.Semaphore(<span class="nm">0</span>)          <span class="cm"># items available</span>
+mutex = threading.Lock()                 <span class="cm"># protect buffer access</span>
+buffer = []
+
+<span class="kw">def</span> <span class="fn">producer</span>():
+    <span class="kw">for</span> item <span class="kw">in</span> items_to_produce:
+        empty.<span class="fn">acquire</span>()   <span class="cm"># wait for free slot</span>
+        <span class="kw">with</span> mutex:
+            buffer.<span class="fn">append</span>(item)
+        full.<span class="fn">release</span>()    <span class="cm"># signal: item available</span>
+
+<span class="kw">def</span> <span class="fn">consumer</span>():
+    <span class="kw">while</span> <span class="kw">True</span>:
+        full.<span class="fn">acquire</span>()    <span class="cm"># wait for item</span>
+        <span class="kw">with</span> mutex:
+            item = buffer.<span class="fn">pop</span>(<span class="nm">0</span>)
+        empty.<span class="fn">release</span>()   <span class="cm"># signal: slot freed</span>
+        <span class="fn">process</span>(item)</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 2.2</span></div>
+    <div class="question" id="q-sem-1">
+      <div class="question-text">Q1. A semaphore initialized to 1 and a mutex: what's the key difference?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-sem-1','C')"><span class="opt-letter">A</span>There is no difference — they are identical</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-sem-1','C')"><span class="opt-letter">B</span>A semaphore(1) is faster because it doesn't track ownership</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-sem-1','C')"><span class="opt-letter">C</span>A mutex has ownership: only the acquirer can release it. A semaphore(1) can be released by any thread</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-sem-1','C')"><span class="opt-letter">D</span>A mutex supports priority inheritance; a semaphore does not by definition</button>
+      </div>
+      <div class="feedback-box" id="q-sem-1-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('mutex')">← Mutex &amp; Locks</button>
+    <button class="nav-btn next" onclick="showSection('deadlock')">Next: Deadlock Prevention →</button>
+  </div>
+</section>
+
+<!-- ──────────── DEADLOCK ──────────── -->
+<section id="deadlock-section" class="module-section">
+  <div class="module-tag">Module 2.3 — Synchronization</div>
+  <h1>Deadlock Prevention</h1>
+  <p class="lead">Four conditions. Any one broken = no deadlock. Easier said than done at 3 AM in production.</p>
+
+  <h2>The Four Coffman Conditions</h2>
+  <p>A deadlock requires <em>all four</em> of these conditions to hold simultaneously. Break any one and you break the deadlock.</p>
+
+  <div class="card-grid">
+    <div class="card accent-blue">
+      <h3>1. Mutual Exclusion</h3>
+      <p style="font-size:0.84rem">At least one resource must be non-shareable. Only one thread can use it at a time.</p>
+    </div>
+    <div class="card accent-orange">
+      <h3>2. Hold and Wait</h3>
+      <p style="font-size:0.84rem">A thread holds at least one resource while waiting to acquire additional resources held by other threads.</p>
+    </div>
+    <div class="card accent-purple">
+      <h3>3. No Preemption</h3>
+      <p style="font-size:0.84rem">Resources can't be forcibly taken. A thread must voluntarily release them.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--danger)">
+      <h3 style="color:var(--danger)">4. Circular Wait</h3>
+      <p style="font-size:0.84rem">There exists a circular chain: T1 waits for T2, T2 waits for T3, T3 waits for T1.</p>
+    </div>
+  </div>
+
+  <!-- DEADLOCK SIM -->
+  <div class="sim-container">
+    <div class="sim-title">// Deadlock Simulator — Dining Philosophers (2 Philosopher Edition)</div>
+    <div class="resource-grid" id="deadlock-grid">
+      <div class="process-box" id="dl-p1">
+        <div class="proc-name" style="color:var(--accent)">Process A</div>
+        <div class="proc-state" id="dl-p1-state">Idle</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+        <div class="resource-box free" id="dl-r1">Lock R1</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3)">↑↓</div>
+        <div class="resource-box free" id="dl-r2">Lock R2</div>
+      </div>
+      <div class="process-box" id="dl-p2">
+        <div class="proc-name" style="color:var(--accent2)">Process B</div>
+        <div class="proc-state" id="dl-p2-state">Idle</div>
+      </div>
+    </div>
+    <div class="sim-log" id="dl-log">// Run the simulation to see deadlock...<br></div>
+    <div class="sim-controls">
+      <button class="sim-btn danger" onclick="runDeadlockSim()">💀 Simulate Deadlock</button>
+      <button class="sim-btn primary" onclick="runSafeSim()">✅ Simulate Safe (Lock Ordering)</button>
+      <button class="sim-btn secondary" onclick="resetDeadlockSim()">↺ Reset</button>
+    </div>
+  </div>
+
+  <h2>Prevention Strategies</h2>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">python — lock ordering prevention</span></div>
+    <pre><code><span class="kw">import</span> threading
+
+lock_a = threading.Lock()
+lock_b = threading.Lock()
+
+<span class="cm"># ❌ DEADLOCK: A acquires lock_a then lock_b</span>
+<span class="cm">#              B acquires lock_b then lock_a</span>
+<span class="cm">#              → circular wait</span>
+
+<span class="cm"># ✅ PREVENTION: Always acquire in the same global order</span>
+<span class="kw">def</span> <span class="fn">transfer</span>(from_acct, to_acct, amount):
+    <span class="cm"># Sort locks by id() to enforce consistent ordering</span>
+    first, second = (
+        (from_acct.lock, to_acct.lock)
+        <span class="kw">if</span> <span class="bi">id</span>(from_acct) < <span class="bi">id</span>(to_acct)
+        <span class="kw">else</span> (to_acct.lock, from_acct.lock)
+    )
+    <span class="kw">with</span> first:
+        <span class="kw">with</span> second:
+            from_acct.balance -= amount
+            to_acct.balance   += amount
+
+<span class="cm"># ── Python 3.10+: contextlib for atomic multi-lock ────────────</span>
+<span class="kw">import</span> contextlib
+
+<span class="kw">with</span> contextlib.<span class="fn">ExitStack</span>() <span class="kw">as</span> stack:
+    <span class="cm"># Acquire all locks atomically (or fail cleanly)</span>
+    <span class="kw">for</span> lock <span class="kw">in</span> <span class="fn">sorted</span>([lock_a, lock_b], key=<span class="bi">id</span>):
+        stack.<span class="fn">enter_context</span>(lock)
+    <span class="fn">do_critical_work</span>()
+</code></pre>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Livelock, Starvation, and the Banker's Algorithm
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p><strong>Livelock</strong> is like a deadlock where the threads are actively doing something — but making no progress. Classic example: two people in a corridor both step aside in the same direction, both see the other, both step aside again, forever. The threads keep responding to each other but never complete.</p>
+      <p><strong>Starvation</strong>: a thread is perpetually denied access to a resource because other threads always get priority. Solution: aging — gradually increase the priority of waiting threads over time.</p>
+      <p><strong>Banker's Algorithm</strong> (Dijkstra, 1965): a deadlock <em>avoidance</em> algorithm that simulates all future resource allocations before granting any. The OS only grants a request if it can prove the system will remain in a "safe state" — one where all processes can eventually complete. Too expensive for general OSes, but used in specialized real-time systems.</p>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 2.3</span></div>
+    <div class="question" id="q-dl-1">
+      <div class="question-text">Q1. The simplest way to prevent deadlock when acquiring two locks A and B in Python:</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-1','B')"><span class="opt-letter">A</span>Use <code>RLock</code> instead of <code>Lock</code></button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-1','B')"><span class="opt-letter">B</span>Always acquire locks in the same predefined order (e.g., sorted by <code>id()</code>)</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-1','B')"><span class="opt-letter">C</span>Use <code>acquire(timeout=5)</code> to detect deadlocks</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-1','B')"><span class="opt-letter">D</span>Avoid using more than one lock at a time</button>
+      </div>
+      <div class="feedback-box" id="q-dl-1-feedback"></div>
+    </div>
+    <div class="question" id="q-dl-2">
+      <div class="question-text">Q2. Livelock differs from deadlock in that:</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-2','C')"><span class="opt-letter">A</span>Livelock is worse — it consumes CPU while deadlock does not</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-2','C')"><span class="opt-letter">B</span>Livelock only affects single-threaded programs</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-2','C')"><span class="opt-letter">C</span>In livelock, threads actively change state but make no real progress; in deadlock, threads are completely blocked</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-dl-2','C')"><span class="opt-letter">D</span>Livelock is automatically detected by the Python interpreter</button>
+      </div>
+      <div class="feedback-box" id="q-dl-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('semaphore')">← Semaphores</button>
+    <button class="nav-btn next" onclick="showSection('cap')">Next: CAP Theorem →</button>
+  </div>
+</section>
+
+<!-- ──────────── CAP THEOREM ──────────── -->
+<section id="cap-section" class="module-section">
+  <div class="module-tag">Module 3.1 — Distributed Systems</div>
+  <h1>CAP Theorem</h1>
+  <p class="lead">You can have Consistency, Availability, and Partition Tolerance. Pick two. (But you don't really get to pick.)</p>
+
+  <h2>The Three Guarantees</h2>
+  <div class="callout analogy">
+    <span class="icon">☎️</span>
+    <p><strong>Analogy:</strong> You run a bank with two branches connected by a phone line. <strong>Consistency</strong> means both branches always show the same balance. <strong>Availability</strong> means each branch always responds to customers. <strong>Partition Tolerance</strong> means the bank keeps operating even if the phone line is cut. When the line is cut, you must choose: keep serving (potentially with stale data = inconsistency) or refuse to serve until the line is restored (unavailability).</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="card accent-blue">
+      <h3>C — Consistency</h3>
+      <p style="font-size:0.84rem">Every read receives the most recent write or an error. All nodes see the same data at the same time. No stale reads.</p>
+    </div>
+    <div class="card accent-green">
+      <h3>A — Availability</h3>
+      <p style="font-size:0.84rem">Every request receives a (non-error) response. No guarantee it's the <em>latest</em> data. The system is always up.</p>
+    </div>
+    <div class="card accent-orange">
+      <h3>P — Partition Tolerance</h3>
+      <p style="font-size:0.84rem">The system continues operating despite network partitions (messages dropped/delayed between nodes). In practice, <strong>P is mandatory</strong> — networks fail.</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="icon">⚠️</span>
+    <p>Since network partitions are unavoidable in any distributed system, the real trade-off is <strong>CP vs AP</strong> during a partition. CA is only possible in single-node systems.</p>
+  </div>
+
+  <h2>Trade-off Simulator</h2>
+  <p>Click a system type to see its trade-offs and real-world examples:</p>
+
+  <div class="sim-container">
+    <div class="sim-title">// CAP Classification Simulator</div>
+    <div class="cap-grid">
+      <div class="cap-cell ca" onclick="selectCap('CA')">
+        <div class="cell-title">CA</div>
+        <div class="cell-desc">Consistency + Availability<br>No Partition Tolerance</div>
+      </div>
+      <div class="cap-cell cp" onclick="selectCap('CP')">
+        <div class="cell-title" style="color:var(--accent4)">CP</div>
+        <div class="cell-desc">Consistency + Partition<br>Sacrifices Availability</div>
+      </div>
+      <div class="cap-cell ap" onclick="selectCap('AP')">
+        <div class="cell-title" style="color:var(--accent2)">AP</div>
+        <div class="cell-desc">Availability + Partition<br>Sacrifices Consistency</div>
+      </div>
+    </div>
+    <div class="tradeoff-display" id="cap-result">
+      <div style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:0.75rem">← Click a cell above to explore the trade-off</div>
+    </div>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — Eric Brewer's Nuances &amp; When CAP Misleads
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p>CAP was formalized by Eric Brewer in 2000 and proved by Gilbert &amp; Lynch in 2002. But Brewer himself later clarified that the theorem is often misapplied. Key nuances:</p>
+      <ul style="padding-left:20px;color:var(--text2);font-size:0.85rem;line-height:1.9">
+        <li>CAP only applies during a <strong>network partition</strong>. Most of the time there's no partition, and systems can be both consistent and available simultaneously.</li>
+        <li>"Consistency" in CAP means <strong>linearizability</strong>, not the "C" in ACID (which is more about application invariants).</li>
+        <li>"2 of 3" framing is misleading — the real choice is "C vs A when P occurs."</li>
+        <li>Modern databases like <strong>CockroachDB</strong> and <strong>Spanner</strong> use consensus protocols (Raft/Paxos) to achieve CP but minimize unavailability windows.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 3.1</span></div>
+    <div class="question" id="q-cap-1">
+      <div class="question-text">Q1. During a network partition, your distributed database must choose. Which trade-off does Cassandra (AP) make?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-1','B')"><span class="opt-letter">A</span>Refuses all writes until partition heals (prefers consistency)</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-1','B')"><span class="opt-letter">B</span>Accepts writes on all reachable nodes, risking divergent data (prefers availability)</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-1','B')"><span class="opt-letter">C</span>Routes all requests to a single master node</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-1','B')"><span class="opt-letter">D</span>Uses two-phase commit to ensure consistency</button>
+      </div>
+      <div class="feedback-box" id="q-cap-1-feedback"></div>
+    </div>
+    <div class="question" id="q-cap-2">
+      <div class="question-text">Q2. Why is "CA" not a realistic classification for a distributed database?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-2','C')"><span class="opt-letter">A</span>Consistency and availability are always mutually exclusive</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-2','C')"><span class="opt-letter">B</span>CA systems are illegal under EU data regulations</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-2','C')"><span class="opt-letter">C</span>Network partitions are inevitable in distributed systems; ignoring P is only possible on single-node systems</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-cap-2','C')"><span class="opt-letter">D</span>CAP only applies to NoSQL databases</button>
+      </div>
+      <div class="feedback-box" id="q-cap-2-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('deadlock')">← Deadlock Prevention</button>
+    <button class="nav-btn next" onclick="showSection('pacelc')">Next: PACELC →</button>
+  </div>
+</section>
+
+<!-- ──────────── PACELC ──────────── -->
+<section id="pacelc-section" class="module-section">
+  <div class="module-tag">Module 3.2 — Distributed Systems</div>
+  <h1>PACELC Theorem</h1>
+  <p class="lead">CAP handles the dramatic partition scenario. PACELC handles the boring normal case — which is where your system spends 99.9% of its life.</p>
+
+  <h2>Extending CAP</h2>
+  <p>Daniel Abadi proposed PACELC in 2012 to address CAP's blind spot: what happens when there's <em>no</em> partition? Even under normal operation, distributed systems trade <strong>latency</strong> for <strong>consistency</strong>.</p>
+
+  <div class="card accent-blue">
+    <h3 style="margin-top:0;font-family:'IBM Plex Mono',monospace;font-size:1.1rem">PAC · ELC</h3>
+    <ul style="padding-left:20px;color:var(--text2);font-size:0.88rem;line-height:2.1">
+      <li><strong>P</strong> — Partition exists? → choose <strong>A</strong> (availability) or <strong>C</strong> (consistency)</li>
+      <li><strong>EL</strong>se (no partition) → choose <strong>L</strong> (low latency) or <strong>C</strong> (consistency)</li>
+    </ul>
+    <p style="font-size:0.84rem;margin-top:8px">Waiting for all replicas to acknowledge a write = consistent but slow. Returning after one replica acknowledges = fast but possibly stale.</p>
+  </div>
+
+  <h2>Interactive Trade-Off Simulator</h2>
+
+  <div class="sim-container">
+    <div class="sim-title">// PACELC Trade-Off Explorer</div>
+    <div class="slider-group">
+      <div class="slider-row">
+        <label>Replication Factor</label>
+        <input type="range" min="1" max="7" value="3" id="sl-rf" oninput="updatePacelc()">
+        <span class="slider-val" id="sl-rf-val">3</span>
+      </div>
+      <div class="slider-row">
+        <label>Write Quorum (W)</label>
+        <input type="range" min="1" max="7" value="2" id="sl-w" oninput="updatePacelc()">
+        <span class="slider-val" id="sl-w-val">2</span>
+      </div>
+      <div class="slider-row">
+        <label>Read Quorum (R)</label>
+        <input type="range" min="1" max="7" value="2" id="sl-r" oninput="updatePacelc()">
+        <span class="slider-val" id="sl-r-val">2</span>
+      </div>
+    </div>
+    <div class="pacelc-result" id="pacelc-result">Adjust sliders to analyze trade-offs...</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">cassandra cql — consistency tuning</span></div>
+    <pre><code><span class="cm">-- STRONG CONSISTENCY (ELC → prefers C over L)</span>
+<span class="cm">-- W + R > N guarantees no stale reads</span>
+<span class="cm">-- N=3 nodes: W=2, R=2 → 2+2=4 > 3 ✓</span>
+INSERT INTO orders (id, amount)
+  VALUES (uuid(), <span class="nm">99.99</span>)
+  USING CONSISTENCY QUORUM;  <span class="cm">-- writes to majority</span>
+
+SELECT * FROM orders WHERE id = ?
+  USING CONSISTENCY QUORUM;  <span class="cm">-- reads from majority → sees latest</span>
+
+<span class="cm">-- LOW LATENCY (ELC → prefers L over C)</span>
+<span class="cm">-- Eventual consistency: fast but may return stale data</span>
+INSERT INTO analytics_events (id, event)
+  VALUES (uuid(), <span class="st">'page_view'</span>)
+  USING CONSISTENCY ONE;  <span class="cm">-- writes to 1 node, returns fast</span>
+
+SELECT * FROM analytics_events
+  USING CONSISTENCY ONE;  <span class="cm">-- might read stale — acceptable for analytics</span>
+</code></pre>
+  </div>
+
+  <table class="comparison-table">
+    <thead>
+      <tr><th>System</th><th>PAC Choice</th><th>ELC Choice</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>DynamoDB (default)</td><td>PA</td><td>EL</td><td>Eventually consistent, low latency reads</td></tr>
+      <tr><td>DynamoDB (strong read)</td><td>PA</td><td>EC</td><td>2× read cost for linearizability</td></tr>
+      <tr><td>Cassandra (QUORUM)</td><td>PC</td><td>EC</td><td>Quorum writes + reads = consistent</td></tr>
+      <tr><td>Spanner / CockroachDB</td><td>PC</td><td>EC</td><td>TrueTime / HLC for global consistency</td></tr>
+      <tr><td>MongoDB (w:1, default)</td><td>PA</td><td>EL</td><td>Writes ack'd by primary only</td></tr>
+      <tr><td>MongoDB (w:majority)</td><td>PC</td><td>EC</td><td>Writes replicated to majority before ack</td></tr>
+    </tbody>
+  </table>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 3.2</span></div>
+    <div class="question" id="q-pac-1">
+      <div class="question-text">Q1. With N=5 replicas, W=3, R=3 — do reads always reflect the latest write?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-pac-1','A')"><span class="opt-letter">A</span>Yes — W+R=6 > N=5, so read and write quorums must overlap</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-pac-1','A')"><span class="opt-letter">B</span>No — quorum only helps with consistency under partition</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-pac-1','A')"><span class="opt-letter">C</span>Only if all nodes are in the same data center</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-pac-1','A')"><span class="opt-letter">D</span>No — you always need W=N for strong consistency</button>
+      </div>
+      <div class="feedback-box" id="q-pac-1-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('cap')">← CAP Theorem</button>
+    <button class="nav-btn next" onclick="showSection('ttl')">Next: TTL Mechanisms →</button>
+  </div>
+</section>
+
+<!-- ──────────── TTL ──────────── -->
+<section id="ttl-section" class="module-section">
+  <div class="module-tag">Module 4 — Data Management</div>
+  <h1>TTL Mechanisms</h1>
+  <p class="lead">Every piece of data has a shelf life. TTL is how systems enforce it — and the subtle differences between Redis, MongoDB, and DNS will bite you in prod.</p>
+
+  <h2>What is TTL?</h2>
+  <p><strong>Time-to-Live</strong> is a metadata field attached to data that specifies when it should be considered stale or deleted. It's the expiry date on your data's milk carton. But different systems implement TTL in very different ways — with very different precision and latency guarantees.</p>
+
+  <!-- TTL SIMULATOR -->
+  <div class="sim-container">
+    <div class="sim-title">// TTL Countdown — Conceptual Decay Visualization</div>
+    <div class="ttl-bar-wrap">
+      <div class="ttl-item">
+        <div class="ttl-item-header">
+          <span>Redis key (TTL: <span id="redis-ttl-label">10s</span>)</span>
+          <span id="redis-status" style="color:var(--accent3)">ALIVE</span>
+        </div>
+        <div class="ttl-track"><div class="ttl-fill redis" id="redis-fill" style="width:100%"></div></div>
+      </div>
+      <div class="ttl-item">
+        <div class="ttl-item-header">
+          <span>MongoDB doc (TTL index: <span id="mongo-ttl-label">25s</span>)</span>
+          <span id="mongo-status" style="color:var(--accent3)">ALIVE</span>
+        </div>
+        <div class="ttl-track"><div class="ttl-fill mongo" id="mongo-fill" style="width:100%"></div></div>
+      </div>
+      <div class="ttl-item">
+        <div class="ttl-item-header">
+          <span>DNS record (TTL: <span id="dns-ttl-label">60s</span>)</span>
+          <span id="dns-status" style="color:var(--accent3)">ALIVE</span>
+        </div>
+        <div class="ttl-track"><div class="ttl-fill dns" id="dns-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn primary" onclick="startTtlSim()">▶ Start Countdown</button>
+      <button class="sim-btn secondary" onclick="resetTtlSim()">↺ Reset</button>
+    </div>
+    <div class="sim-log" id="ttl-log">// Click Start to begin TTL countdown...<br></div>
+  </div>
+
+  <h2>Redis TTL</h2>
+  <p>Redis implements TTL with sub-millisecond precision. Expired keys are removed via two mechanisms running concurrently:</p>
+
+  <div class="card-grid">
+    <div class="card accent-blue">
+      <h3>Lazy Deletion</h3>
+      <p style="font-size:0.84rem">A key is only deleted when it's accessed. Redis checks expiry on <em>every read</em>. Zero background overhead — but expired keys linger until touched.</p>
+    </div>
+    <div class="card accent-purple">
+      <h3>Active Sampling</h3>
+      <p style="font-size:0.84rem">Every 100ms, Redis samples 20 random keys with TTL. If >25% are expired, it samples again. This bounds memory usage without scanning everything.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">redis cli + python — TTL operations</span></div>
+    <pre><code><span class="cm"># Redis CLI</span>
+SET session:<span class="nm">abc123</span> <span class="st">"user_data"</span> EX <span class="nm">3600</span>  <span class="cm"># expire in 1 hour</span>
+SET cache:<span class="nm">key</span>     <span class="st">"value"</span>      PX <span class="nm">500</span>   <span class="cm"># expire in 500ms</span>
+TTL session:<span class="nm">abc123</span>                      <span class="cm"># returns remaining seconds</span>
+PERSIST session:<span class="nm">abc123</span>                  <span class="cm"># remove TTL (make permanent)</span>
+
+<span class="cm"># Python via redis-py</span>
+<span class="kw">import</span> redis
+
+r = redis.<span class="fn">Redis</span>(host=<span class="st">'localhost'</span>, port=<span class="nm">6379</span>)
+
+<span class="cm"># Atomic SET + TTL</span>
+r.<span class="fn">setex</span>(<span class="st">'token:xyz'</span>, timedelta(hours=<span class="nm">1</span>), <span class="st">'valid'</span>)
+
+<span class="cm"># Extend TTL on access (sliding window expiry)</span>
+<span class="kw">def</span> <span class="fn">get_with_refresh</span>(key, ttl=<span class="nm">3600</span>):
+    <span class="kw">with</span> r.<span class="fn">pipeline</span>() <span class="kw">as</span> pipe:
+        pipe.<span class="fn">get</span>(key)
+        pipe.<span class="fn">expire</span>(key, ttl)  <span class="cm"># reset TTL on read</span>
+        value, _ = pipe.<span class="fn">execute</span>()
+    <span class="kw">return</span> value
+</code></pre>
+  </div>
+
+  <h2>MongoDB TTL</h2>
+  <p>MongoDB TTL works via a <strong>TTL index</strong> on a <code>Date</code> field. A background thread called the <em>TTL Monitor</em> runs every 60 seconds and deletes expired documents in batches.</p>
+
+  <div class="callout warn">
+    <span class="icon">⚠️</span>
+    <p>MongoDB TTL is <strong>not precise</strong>. Documents can live up to 60 seconds past their expiry time (TTL monitor interval) plus replication lag. Design your application to tolerate stale documents.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">mongodb — TTL index setup</span></div>
+    <pre><code><span class="cm">// Create TTL index — expires docs 3600s after createdAt</span>
+db.sessions.<span class="fn">createIndex</span>(
+  { createdAt: <span class="nm">1</span> },
+  { expireAfterSeconds: <span class="nm">3600</span> }
+)
+
+<span class="cm">// Per-document custom expiry: set expireAt to specific date</span>
+db.events.<span class="fn">createIndex</span>(
+  { expireAt: <span class="nm">1</span> },
+  { expireAfterSeconds: <span class="nm">0</span> }   <span class="cm">// delete when Date field is reached</span>
+)
+
+db.events.<span class="fn">insertOne</span>({
+  event: <span class="st">"user_login"</span>,
+  expireAt: <span class="kw">new</span> <span class="fn">Date</span>(<span class="kw">new</span> <span class="fn">Date</span>().getTime() + <span class="nm">24</span>*<span class="nm">60</span>*<span class="nm">60</span>*<span class="nm">1000</span>)
+})
+
+<span class="cm">// ⚠️  TTL monitor runs every 60s — plan for ~60s of latency</span>
+<span class="cm">// ⚠️  TTL index requires a Date field — not an integer timestamp</span>
+<span class="cm">// ⚠️  On sharded clusters, TTL monitor runs on each shard independently</span>
+</code></pre>
+  </div>
+
+  <h2>DNS TTL</h2>
+  <p>DNS TTL controls how long resolvers cache a record. Lower TTL = faster propagation of changes but higher DNS query load. The key insight: you can't force a client to re-query — you can only advise them how long to cache.</p>
+
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><span></span><span></span><span></span></div><span class="lang-badge">bind zone file + strategy</span></div>
+    <pre><code><span class="cm">; Zone file — api.example.com with 300s TTL</span>
+api.example.com.  <span class="nm">300</span>  IN  A  <span class="nm">203.0.113.10</span>
+
+<span class="cm">; Pre-migration strategy: lower TTL 24h before cutover</span>
+api.example.com.  <span class="nm">60</span>   IN  A  <span class="nm">203.0.113.10</span>
+<span class="cm">; → Wait 24h for old TTL (300s) to expire everywhere</span>
+<span class="cm">; → Update A record to new IP with TTL still 60</span>
+api.example.com.  <span class="nm">60</span>   IN  A  <span class="nm">198.51.100.20</span>
+<span class="cm">; → Max stale window = 60s (not 300s)</span>
+
+<span class="cm">; Negative TTL (NXDOMAIN caching) in SOA record:</span>
+@  IN  SOA  ns1.example.com.  admin.example.com. (
+              <span class="nm">2024010101</span>  <span class="cm">; serial</span>
+              <span class="nm">3600</span>        <span class="cm">; refresh</span>
+              <span class="nm">900</span>         <span class="cm">; retry</span>
+              <span class="nm">604800</span>      <span class="cm">; expire</span>
+              <span class="nm">300</span>         <span class="cm">; negative cache TTL ← cap this!</span>
+           )
+</code></pre>
+  </div>
+
+  <div class="deep-dive">
+    <button class="deep-dive-trigger" onclick="toggleDeepDive(this)">
+      <span class="dd-icon">🔬</span> Deep Dive — MongoDB TTL Monitor Latency &amp; Replica Sets
+      <span class="dd-arrow">▼</span>
+    </button>
+    <div class="deep-dive-content">
+      <p>The MongoDB TTL Monitor has several subtle behaviors that trip up engineers:</p>
+      <ul style="padding-left:20px;color:var(--text2);font-size:0.85rem;line-height:1.9">
+        <li><strong>60s + replication lag:</strong> The monitor deletes from the primary. Secondaries receive the delete op via oplog replication, which adds latency. A secondary read of an expired document may return it for longer than 60s.</li>
+        <li><strong>Heavy load throttling:</strong> Under high write load, the TTL Monitor backs off to avoid impacting foreground operations. Documents can survive significantly longer than expected.</li>
+        <li><strong>No partial batch atomicity:</strong> Deletions happen in batches. If the mongod crashes mid-batch, some documents may not be deleted until the next monitor run.</li>
+        <li><strong>Oplog replay on startup:</strong> On startup, the oplog is replayed — TTL deletes in the oplog are replayed, which can cause a burst of deletions.</li>
+      </ul>
+      <div class="callout danger">
+        <span class="icon">🔥</span>
+        <p>Never use MongoDB TTL for security-critical expiry (e.g., session invalidation). Use Redis with its immediate lazy-deletion guarantee instead. MongoDB TTL is "best effort."</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-section">
+    <div class="quiz-header"><span>🧠</span><h2>Test Your Knowledge</h2><span class="quiz-badge">Module 4</span></div>
+    <div class="question" id="q-ttl-1">
+      <div class="question-text">Q1. A MongoDB TTL index has <code>expireAfterSeconds: 3600</code>. A document is inserted at 12:00. When is the earliest it will actually be deleted?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-1','C')"><span class="opt-letter">A</span>Exactly 13:00:00</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-1','C')"><span class="opt-letter">B</span>Anywhere between 12:59:00 and 13:00:00</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-1','C')"><span class="opt-letter">C</span>Sometime between 13:00:00 and 13:01:00 (plus replication lag), due to the 60s monitor interval</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-1','C')"><span class="opt-letter">D</span>It is never automatically deleted without a scheduled job</button>
+      </div>
+      <div class="feedback-box" id="q-ttl-1-feedback"></div>
+    </div>
+    <div class="question" id="q-ttl-2">
+      <div class="question-text">Q2. You're doing a zero-downtime DNS cutover. The current A record has a 1-hour TTL. What should you do 25 hours before the cutover?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-2','B')"><span class="opt-letter">A</span>Change the IP immediately — resolvers will pick it up quickly</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-2','B')"><span class="opt-letter">B</span>Reduce the TTL to a low value (e.g., 60s) so that when you change the IP, stale cache windows are small</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-2','B')"><span class="opt-letter">C</span>Set TTL to 0 to force immediate propagation</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-2','B')"><span class="opt-letter">D</span>DNS TTL is advisory — no preparation needed</button>
+      </div>
+      <div class="feedback-box" id="q-ttl-2-feedback"></div>
+    </div>
+    <div class="question" id="q-ttl-3">
+      <div class="question-text">Q3. For session token invalidation requiring immediate effect, which mechanism is most appropriate?</div>
+      <div class="options">
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-3','A')"><span class="opt-letter">A</span>Redis with <code>SET key EX ttl</code> — lazy deletion ensures expired keys are caught immediately on access</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-3','A')"><span class="opt-letter">B</span>MongoDB TTL index — simple and built-in</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-3','A')"><span class="opt-letter">C</span>DNS TTL — can encode session validity in DNS records</button>
+        <button class="option-btn" onclick="checkAnswer(this,'q-ttl-3','A')"><span class="opt-letter">D</span>Application-level cron job every minute</button>
+      </div>
+      <div class="feedback-box" id="q-ttl-3-feedback"></div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn prev" onclick="showSection('pacelc')">← PACELC</button>
+    <button class="nav-btn next" onclick="showSection('intro')">↩ Back to Start</button>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const SECTIONS = ['intro','processes','gil','race','mutex','semaphore','deadlock','cap','pacelc','ttl'];
+let score = 0, totalQ = 0;
+let gilInterval = null, raceInterval = null, ttlInterval = null, dlInterval = null;
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+function showSection(id) {
+  document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+  const section = document.getElementById(id + '-section');
+  if (section) section.classList.add('active');
+
+  document.querySelectorAll('.nav-link').forEach(l => {
+    if (l.getAttribute('onclick') && l.getAttribute('onclick').includes(`'${id}'`)) {
+      l.classList.add('active');
+    }
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateProgress();
+
+  // Close mobile sidebar
+  if (window.innerWidth <= 900) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function updateProgress() {
+  const completed = document.querySelectorAll('.nav-link.completed').length;
+  const total = document.querySelectorAll('.nav-link').length;
+  const pct = totalQ === 0 ? 0 : Math.round((score / Math.max(totalQ, 1)) * 100);
+  document.getElementById('progress-fill').style.width = (completed / total * 100) + '%';
+  document.getElementById('score-badge').textContent = `Score: ${score} / ${totalQ}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUIZ ENGINE
+// ═══════════════════════════════════════════════════════════════
+const FEEDBACK = {
+  'q-proc-1': {
+    correct: 'B',
+    B: '✓ Correct! The += operation compiles to LOAD/ADD/STORE bytecodes. The GIL can switch threads between any two bytecodes, causing both threads to read the same old value and both write the same incremented value — one update is lost.',
+    wrong: '✗ The GIL doesn\'t prevent the bug — it can still switch threads between bytecodes. The root cause is the non-atomic read-modify-write sequence of +=.'
+  },
+  'q-proc-2': {
+    correct: 'A',
+    A: '✓ Correct! multiprocessing.Pool bypasses the GIL entirely — each process has its own Python interpreter. For CPU-bound work, this is the only way to achieve true parallelism in Python.',
+    wrong: '✗ Threads are GIL-bound for CPU work — 8 threads still run serially. asyncio is single-threaded. multiprocessing is the right answer for CPU-bound tasks.'
+  },
+  'q-gil-1': {
+    correct: 'C',
+    C: '✓ Correct! HTTP requests are I/O-bound. During the I/O wait, the GIL is released, allowing other threads to run. asyncio uses an event loop (no threads needed), and ThreadPoolExecutor also works well here.',
+    wrong: '✗ Since HTTP requests are I/O-bound, the GIL is released during the wait. Both threading and asyncio are effective. Multiprocessing would work but has high overhead for I/O tasks.'
+  },
+  'q-gil-2': {
+    correct: 'B',
+    B: '✓ Correct! CPython uses reference counting for garbage collection. Without the GIL, two threads could simultaneously modify an object\'s refcount — corrupting it. The GIL serializes all bytecode execution to protect this.',
+    wrong: '✗ The GIL\'s primary purpose is protecting CPython\'s reference counting mechanism and internal interpreter state, not filesystem or user data structures.'
+  },
+  'q-race-1': {
+    correct: 'B',
+    B: '✓ Correct! The worst case is one update overwriting the other: Thread 1 reads 0, Thread 2 reads 0, Thread 1 writes 1, Thread 2 writes 1. Result: 1 instead of 2. The minimum is 1 (not 0, since at least one write completes).',
+    wrong: '✗ The GIL can switch threads mid-operation. The minimum result is 1 — one thread\'s write overwrites the other\'s. Both updates can\'t both be lost from 0.'
+  },
+  'q-race-2': {
+    correct: 'A',
+    A: '✓ Correct! CPython\'s list.append() is implemented in C and is a single bytecode (CALL_FUNCTION). The GIL can\'t switch threads mid-bytecode, making single-element appends atomic in CPython. Note: this is an implementation detail, not a language guarantee.',
+    wrong: '✗ list.append() is a single C-level operation protected by the GIL in CPython — it\'s effectively atomic. But this is a CPython implementation detail; always use locks for correctness across all implementations.'
+  },
+  'q-mutex-1': {
+    correct: 'B',
+    B: '✓ Correct! The calling thread is put to sleep (blocked) by the OS until the lock holder calls release(). Only then does the OS wake up waiting threads to compete for the lock.',
+    wrong: '✗ A lock can only be held by one thread. The calling thread blocks (sleeps) until the holder releases it. No exceptions, no preemption, no second copies.'
+  },
+  'q-mutex-2': {
+    correct: 'C',
+    C: '✓ Correct! The context manager protocol calls __exit__() regardless of whether the block completes normally or raises an exception. Manual acquire/release requires explicit try/finally to achieve the same guarantee — easy to forget.',
+    wrong: '✗ The key benefit is exception safety. The context manager guarantees release even if an exception occurs inside the block. This is the main reason to always prefer "with lock:".'
+  },
+  'q-sem-1': {
+    correct: 'C',
+    C: '✓ Correct! A mutex has ownership — only the thread that acquired it can release it. Releasing a mutex from a different thread is undefined behavior (or an error). A Semaphore(1) has no ownership — any thread can call release(), making it useful for signaling between threads.',
+    wrong: '✗ The critical difference is ownership. A mutex enforces that only the acquirer can release it. A semaphore has no ownership concept — any thread can release, which enables different signaling patterns.'
+  },
+  'q-dl-1': {
+    correct: 'B',
+    B: '✓ Correct! Lock ordering is the simplest and most effective deadlock prevention. By sorting locks by id() (or any stable key), all threads acquire them in the same order, breaking the "circular wait" Coffman condition.',
+    wrong: '✗ Lock ordering (always acquiring locks in a predefined global order) breaks the circular wait condition and is the standard industry practice. RLock prevents self-deadlock but not cross-thread deadlock.'
+  },
+  'q-dl-2': {
+    correct: 'C',
+    C: '✓ Correct! In a livelock, threads respond to each other and keep changing state (so they\'re not "blocked" like in deadlock) but never make actual progress. Like two people in a corridor both stepping the same direction, each waiting for the other to move.',
+    wrong: '✗ Livelock is worse in CPU usage (threads actively spin) but similar in outcome — no progress. The key distinction is threads are active and responding, unlike deadlock where they\'re completely blocked.'
+  },
+  'q-cap-1': {
+    correct: 'B',
+    B: '✓ Correct! Cassandra is an AP system. During a partition, it continues accepting writes on all reachable nodes. When the partition heals, a "last-write-wins" (LWW) or anti-entropy repair process reconciles diverged data. Availability over consistency.',
+    wrong: '✗ Cassandra is designed for high availability. It accepts writes even during a partition, which can lead to divergent data. Consistency is sacrificed for availability — the AP trade-off.'
+  },
+  'q-cap-2': {
+    correct: 'C',
+    C: '✓ Correct! Network partitions are an inevitable physical reality. No distributed system can prevent packets from being dropped. Since P is mandatory, CA is only achievable on single-node systems (which aren\'t truly "distributed").',
+    wrong: '✗ CA is only achievable on a single node — the moment you have two nodes connected by a network, you must tolerate partition failures. The real choice in distributed systems is always CP vs AP.'
+  },
+  'q-pac-1': {
+    correct: 'A',
+    A: '✓ Correct! W+R > N guarantees that the read quorum and write quorum must overlap by at least one node. That node will have the latest write, so the read always sees it. This is the quorum consistency proof.',
+    wrong: '✗ When W+R > N, by the pigeonhole principle, at least one node must be in both the read and write quorums. That node has the latest write, guaranteeing the read sees it. W=3, R=3, N=5: 3+3=6 > 5 ✓'
+  },
+  'q-ttl-1': {
+    correct: 'C',
+    C: '✓ Correct! The MongoDB TTL Monitor runs every 60 seconds. After the document\'s 3600s lifetime, the next monitor run (up to 60s later) will delete it. Add replication lag for secondaries. Design for up to 13:01 on the primary.',
+    wrong: '✗ MongoDB TTL is not precise. The TTL Monitor runs every 60 seconds, so documents can survive up to 60 seconds past their expiry. This is a known limitation — MongoDB TTL is "best effort."'
+  },
+  'q-ttl-2': {
+    correct: 'B',
+    B: '✓ Correct! Resolvers cache the current TTL value for its duration. By lowering the TTL 25+ hours before (greater than the current 1-hour TTL), you ensure all resolvers are using the low TTL before you make the change. Then stale windows are only 60s.',
+    wrong: '✗ You must lower the TTL before changing the IP, and wait at least one full current-TTL duration for all resolvers to pick up the new, shorter TTL. Only then change the IP to minimize stale cache windows.'
+  },
+  'q-ttl-3': {
+    correct: 'A',
+    A: '✓ Correct! Redis lazy deletion means expired keys return nil immediately — the moment the TTL passes, any access fails. For security-critical invalidation, Redis is the right tool. MongoDB\'s 60s+ latency is unacceptable for session tokens.',
+    wrong: '✗ For security-critical session invalidation, Redis is the only correct answer. MongoDB TTL has up to 60s+ latency — an expired session token could still be accepted during that window. Redis deletes expire on access, instantly.'
+  }
+};
+
+function checkAnswer(btn, qId, correctLetter) {
+  const question = document.getElementById(qId);
+  const buttons = question.querySelectorAll('.option-btn');
+  const feedback = document.getElementById(qId + '-feedback');
+  const fData = FEEDBACK[qId];
+
+  // Disable all buttons
+  buttons.forEach(b => b.disabled = true);
+
+  // Determine which letter was clicked
+  const letters = ['A','B','C','D'];
+  const clickedIdx = Array.from(buttons).indexOf(btn);
+  const clickedLetter = letters[clickedIdx];
+
+  const isCorrect = clickedLetter === fData.correct;
+
+  totalQ++;
+  if (isCorrect) {
+    score++;
+    btn.classList.add('correct');
+    feedback.textContent = fData[fData.correct];
+    feedback.className = 'feedback-box correct show';
+  } else {
+    btn.classList.add('incorrect');
+    // Highlight correct
+    buttons.forEach((b, i) => {
+      if (letters[i] === fData.correct) b.classList.add('correct');
+    });
+    feedback.textContent = fData.wrong;
+    feedback.className = 'feedback-box incorrect show';
+  }
+
+  updateProgress();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEEP DIVE TOGGLES
+// ═══════════════════════════════════════════════════════════════
+function toggleDeepDive(btn) {
+  const content = btn.nextElementSibling;
+  btn.classList.toggle('open');
+  content.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GIL SIMULATION
+// ═══════════════════════════════════════════════════════════════
+let gilStep = 0;
+const GIL_THREADS = [
+  { token: 'gil-token', status: 'gil-s1', color: 'var(--accent)', label: 'T1', msg: '▶ Running — CPU burst' },
+  { token: 'gil-token2', status: 'gil-s2', color: 'var(--accent2)', label: 'T2', msg: '▶ Running — I/O released GIL' },
+  { token: 'gil-token3', status: 'gil-s3', color: 'var(--accent4)', label: 'T3', msg: '▶ Running — CPU burst' }
+];
+
+function startGilSim() {
+  stopGilSim();
+  gilInterval = setInterval(() => {
+    GIL_THREADS.forEach((t, i) => {
+      const tok = document.getElementById(t.token);
+      const sta = document.getElementById(t.status);
+      if (i === gilStep) {
+        tok.classList.remove('hidden');
+        sta.textContent = t.msg;
+      } else {
+        tok.classList.add('hidden');
+        sta.textContent = '⏸ Waiting for GIL';
+      }
+    });
+    gilStep = (gilStep + 1) % 3;
+  }, 1200);
+}
+
+function stopGilSim() {
+  if (gilInterval) { clearInterval(gilInterval); gilInterval = null; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RACE CONDITION SIMULATION
+// ═══════════════════════════════════════════════════════════════
+let raceRunning = false;
+
+function resetRaceSim() {
+  if (raceInterval) clearInterval(raceInterval);
+  raceRunning = false;
+  document.getElementById('race-t1-bar').style.width = '0%';
+  document.getElementById('race-t2-bar').style.width = '0%';
+  document.getElementById('race-counter-display').textContent = '0';
+  document.getElementById('race-counter-display').className = 'var-value';
+  document.getElementById('race-expected').textContent = '0';
+  document.getElementById('race-log').innerHTML = '// Click "Run Unsafe" to see race condition...<br>';
+}
+
+function runRaceSim(safe) {
+  resetRaceSim();
+  const log = document.getElementById('race-log');
+  const counter = document.getElementById('race-counter-display');
+  const expected = document.getElementById('race-expected');
+  const t1bar = document.getElementById('race-t1-bar');
+  const t2bar = document.getElementById('race-t2-bar');
+
+  const ITERS = 10;
+  let t1 = 0, t2 = 0, shared = 0, target = ITERS * 2;
+  let t1prog = 0, t2prog = 0;
+  log.innerHTML = `// Running ${safe ? '🔒 SAFE (locked)' : '⚡ UNSAFE (no lock)'}...<br>`;
+  expected.textContent = target;
+
+  raceInterval = setInterval(() => {
+    const t1done = t1 >= ITERS, t2done = t2 >= ITERS;
+    if (t1done && t2done) {
+      clearInterval(raceInterval);
+      const got = shared;
+      if (!safe && got < target) {
+        counter.classList.add('flash');
+        log.innerHTML += `<span class="log-warn">💥 RACE CONDITION! Expected ${target}, got ${got}. ${target - got} updates lost!</span><br>`;
+      } else {
+        log.innerHTML += `<span class="log-ok">✓ Final value: ${got}. ${safe ? 'Lock prevented race.' : 'Lucky — no race this time (GIL intervened).'}</span><br>`;
+      }
+      log.scrollTop = log.scrollHeight;
+      return;
+    }
+
+    if (!t1done) {
+      t1++;
+      t1prog = Math.round((t1 / ITERS) * 100);
+      t1bar.style.width = t1prog + '%';
+
+      if (!safe && Math.random() < 0.3) {
+        // simulate race: read old value
+        const stale = shared;
+        setTimeout(() => {
+          shared = stale + 1;
+          counter.textContent = shared;
+          log.innerHTML += `<span class="log-t1">T1 READ=${stale} → WRITE=${shared}</span><br>`;
+          log.scrollTop = log.scrollHeight;
+        }, 50);
+      } else {
+        shared++;
+        counter.textContent = shared;
+        log.innerHTML += `<span class="log-t1">T1 counter → ${shared}</span><br>`;
+      }
+    }
+
+    if (!t2done) {
+      t2++;
+      t2prog = Math.round((t2 / ITERS) * 100);
+      t2bar.style.width = t2prog + '%';
+
+      if (!safe && Math.random() < 0.3) {
+        const stale = shared;
+        setTimeout(() => {
+          shared = stale + 1;
+          counter.textContent = shared;
+          log.innerHTML += `<span class="log-t2">T2 READ=${stale} → WRITE=${shared} ⚡ COLLISION!</span><br>`;
+          log.scrollTop = log.scrollHeight;
+        }, 80);
+      } else {
+        shared++;
+        counter.textContent = shared;
+        log.innerHTML += `<span class="log-t2">T2 counter → ${shared}</span><br>`;
+      }
+    }
+    log.scrollTop = log.scrollHeight;
+  }, 300);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEMAPHORE SIMULATION
+// ═══════════════════════════════════════════════════════════════
+let semCount = 4, semWaiters = [];
+const SEM_MAX = 4;
+
+function updateSemDisplay() {
+  for (let i = 0; i < SEM_MAX; i++) {
+    const slot = document.getElementById('sem-' + i);
+    slot.className = 'sem-slot ' + (i < semCount ? 'available' : 'taken');
+    slot.textContent = i < semCount ? '🔌' : '⚡';
+  }
+  document.getElementById('sem-count').textContent = semCount;
+  document.getElementById('sem-waiting').textContent = semWaiters.length;
+
+  const q = document.getElementById('sem-queue');
+  if (semWaiters.length === 0) {
+    q.innerHTML = '<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.68rem;color:var(--text3)">// empty</span>';
+  } else {
+    q.innerHTML = semWaiters.map(w => `<span class="sem-waiter">Req-${w}</span>`).join('');
+  }
+}
+
+let semReqId = 1;
+function semAcquire() {
+  if (semCount > 0) {
+    semCount--;
+    updateSemDisplay();
+  } else {
+    semWaiters.push(semReqId++);
+    updateSemDisplay();
+  }
+}
+
+function semRelease() {
+  if (semWaiters.length > 0) {
+    semWaiters.shift();
+    updateSemDisplay();
+  } else if (semCount < SEM_MAX) {
+    semCount++;
+    updateSemDisplay();
+  }
+}
+
+function semReset() {
+  semCount = SEM_MAX; semWaiters = []; semReqId = 1;
+  updateSemDisplay();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEADLOCK SIMULATION
+// ═══════════════════════════════════════════════════════════════
+function resetDeadlockSim() {
+  if (dlInterval) clearInterval(dlInterval);
+  ['dl-p1','dl-p2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'process-box';
+  });
+  ['dl-r1','dl-r2'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'resource-box free';
+    el.textContent = id === 'dl-r1' ? 'Lock R1' : 'Lock R2';
+  });
+  document.getElementById('dl-p1-state').textContent = 'Idle';
+  document.getElementById('dl-p2-state').textContent = 'Idle';
+  document.getElementById('dl-log').innerHTML = '// Run the simulation to see deadlock...<br>';
+}
+
+function dlLog(msg, cls) {
+  const log = document.getElementById('dl-log');
+  log.innerHTML += `<span class="${cls || ''}">${msg}</span><br>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function runDeadlockSim() {
+  resetDeadlockSim();
+  const steps = [
+    () => { dlLog('Process A acquires Lock R1', 'log-t1');
+      document.getElementById('dl-r1').className = 'resource-box locked';
+      document.getElementById('dl-r1').textContent = '🔒 R1 (A)';
+      document.getElementById('dl-p1').className = 'process-box holding';
+      document.getElementById('dl-p1-state').textContent = 'Holds R1'; },
+    () => { dlLog('Process B acquires Lock R2', 'log-t2');
+      document.getElementById('dl-r2').className = 'resource-box locked';
+      document.getElementById('dl-r2').textContent = '🔒 R2 (B)';
+      document.getElementById('dl-p2').className = 'process-box holding';
+      document.getElementById('dl-p2-state').textContent = 'Holds R2'; },
+    () => { dlLog('Process A tries to acquire R2... BLOCKED (B holds it)', 'log-warn');
+      document.getElementById('dl-p1').className = 'process-box waiting';
+      document.getElementById('dl-p1-state').textContent = 'Waiting for R2 ⏳'; },
+    () => { dlLog('Process B tries to acquire R1... BLOCKED (A holds it)', 'log-warn');
+      document.getElementById('dl-p2').className = 'process-box waiting';
+      document.getElementById('dl-p2-state').textContent = 'Waiting for R1 ⏳'; },
+    () => { dlLog('💀 DEADLOCK! A waits for B. B waits for A. Forever.', 'log-warn');
+      document.getElementById('dl-p1').className = 'process-box deadlocked';
+      document.getElementById('dl-p2').className = 'process-box deadlocked';
+      document.getElementById('dl-p1-state').textContent = '💀 DEADLOCKED';
+      document.getElementById('dl-p2-state').textContent = '💀 DEADLOCKED'; }
+  ];
+  let i = 0;
+  dlInterval = setInterval(() => {
+    if (i < steps.length) { steps[i++](); } else clearInterval(dlInterval);
+  }, 1000);
+}
+
+function runSafeSim() {
+  resetDeadlockSim();
+  const steps = [
+    () => { dlLog('Lock ordering: always acquire R1 before R2', 'log-ok'); },
+    () => { dlLog('Process A acquires R1 (lower id first)', 'log-t1');
+      document.getElementById('dl-r1').className = 'resource-box locked';
+      document.getElementById('dl-r1').textContent = '🔒 R1 (A)';
+      document.getElementById('dl-p1').className = 'process-box holding';
+      document.getElementById('dl-p1-state').textContent = 'Holds R1'; },
+    () => { dlLog('Process B tries to acquire R1... BLOCKED (must wait for A)', 'log-t2');
+      document.getElementById('dl-p2').className = 'process-box waiting';
+      document.getElementById('dl-p2-state').textContent = 'Waiting for R1 ⏳'; },
+    () => { dlLog('Process A acquires R2, completes, releases R1 and R2', 'log-t1');
+      document.getElementById('dl-r2').className = 'resource-box locked';
+      document.getElementById('dl-r2').textContent = '🔒 R2 (A)';
+      document.getElementById('dl-p1-state').textContent = 'Working...'; },
+    () => { dlLog('Process A done — R1, R2 released', 'log-ok');
+      document.getElementById('dl-r1').className = 'resource-box free';
+      document.getElementById('dl-r1').textContent = 'Lock R1';
+      document.getElementById('dl-r2').className = 'resource-box free';
+      document.getElementById('dl-r2').textContent = 'Lock R2';
+      document.getElementById('dl-p1').className = 'process-box';
+      document.getElementById('dl-p1-state').textContent = 'Done ✓'; },
+    () => { dlLog('Process B now acquires R1, then R2, completes safely', 'log-t2');
+      document.getElementById('dl-r1').className = 'resource-box locked';
+      document.getElementById('dl-r1').textContent = '🔒 R1 (B)';
+      document.getElementById('dl-p2').className = 'process-box holding';
+      document.getElementById('dl-p2-state').textContent = 'Working...'; },
+    () => { dlLog('✅ No deadlock! Lock ordering prevents circular wait.', 'log-ok');
+      document.getElementById('dl-r1').className = 'resource-box free';
+      document.getElementById('dl-r1').textContent = 'Lock R1';
+      document.getElementById('dl-p2').className = 'process-box';
+      document.getElementById('dl-p2-state').textContent = 'Done ✓'; }
+  ];
+  let i = 0;
+  dlInterval = setInterval(() => {
+    if (i < steps.length) { steps[i++](); } else clearInterval(dlInterval);
+  }, 900);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CAP SIMULATOR
+// ═══════════════════════════════════════════════════════════════
+const CAP_DATA = {
+  CA: {
+    title: 'CA — Consistency + Availability',
+    desc: 'Maintains strict consistency and always responds to requests. Cannot handle network partitions. Only achievable on single-node or tightly coupled systems.',
+    color: 'var(--accent)',
+    examples: ['PostgreSQL (single-node)', 'MySQL (single-node)', 'Traditional RDBMS'],
+    tradeoff: 'Sacrifices: Partition Tolerance. If the network splits, the system must choose — and CA systems typically halt rather than serve potentially inconsistent data.'
+  },
+  CP: {
+    title: 'CP — Consistency + Partition Tolerance',
+    desc: 'Maintains consistency even during partitions by refusing to serve requests on minority partitions. A split-brain cluster will reject writes on the losing side.',
+    color: 'var(--accent4)',
+    examples: ['MongoDB (w:majority)', 'HBase', 'Zookeeper', 'etcd', 'Redis Sentinel'],
+    tradeoff: 'Sacrifices: Availability. During a partition, the minority partition becomes unavailable rather than risk serving stale data.'
+  },
+  AP: {
+    title: 'AP — Availability + Partition Tolerance',
+    desc: 'Always responds to requests, even during a partition. Nodes may serve stale or conflicting data. Conflict resolution (e.g., last-write-wins, CRDTs) happens after partition heals.',
+    color: 'var(--accent2)',
+    examples: ['Cassandra', 'DynamoDB', 'CouchDB', 'Riak', 'DNS'],
+    tradeoff: 'Sacrifices: Consistency. During a partition, different nodes may have divergent state. Systems must reconcile via eventual consistency mechanisms.'
+  }
+};
+
+function selectCap(type) {
+  document.querySelectorAll('.cap-cell').forEach(c => c.classList.remove('selected'));
+  const cells = document.querySelectorAll('.cap-cell');
+  ['CA','CP','AP'].forEach((t, i) => { if (t === type) cells[i].classList.add('selected'); });
+
+  const d = CAP_DATA[type];
+  const exBadges = d.examples.map(e => `<span class="example-badge">${e}</span>`).join('');
+  document.getElementById('cap-result').innerHTML = `
+    <div class="tradeoff-title" style="color:${d.color}">${d.title}</div>
+    <p style="margin:8px 0;font-size:0.84rem;color:var(--text2)">${d.desc}</p>
+    <div style="margin:8px 0">${exBadges}</div>
+    <p style="margin-top:8px;font-size:0.82rem;color:var(--warn)">⚠️ ${d.tradeoff}</p>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PACELC SIMULATOR
+// ═══════════════════════════════════════════════════════════════
+function updatePacelc() {
+  const rf = parseInt(document.getElementById('sl-rf').value);
+  const w  = parseInt(document.getElementById('sl-w').value);
+  const r  = parseInt(document.getElementById('sl-r').value);
+
+  document.getElementById('sl-rf-val').textContent = rf;
+  document.getElementById('sl-w-val').textContent = Math.min(w, rf);
+  document.getElementById('sl-r-val').textContent = Math.min(r, rf);
+
+  const wn = Math.min(w, rf);
+  const rn = Math.min(r, rf);
+
+  document.getElementById('sl-w').max = rf;
+  document.getElementById('sl-r').max = rf;
+
+  const isConsistent = (wn + rn) > rf;
+  const latencyPenalty = Math.round(((wn / rf) + (rn / rf)) / 2 * 100);
+
+  let result = `<strong style="color:var(--text)">Config: N=${rf}, W=${wn}, R=${rn}</strong>\n\n`;
+  result += `📐 Quorum overlap (W+R > N): ${wn}+${rn}=${wn+rn} ${isConsistent ? '>' : '≤'} ${rf} → `;
+  result += isConsistent
+    ? `<span style="color:var(--accent3)">✓ STRONG CONSISTENCY (ELC: prefers C)</span>\n`
+    : `<span style="color:var(--accent2)">⚡ EVENTUAL CONSISTENCY (ELC: prefers L)</span>\n`;
+
+  result += `⏱️ Write latency pressure: ${latencyPenalty}% of nodes must ack — `;
+  result += wn === 1 ? `<span style="color:var(--accent3)">very fast</span>` :
+            wn >= rf ? `<span style="color:var(--warn)">slow (all nodes)</span>` :
+            `<span style="color:var(--accent2)">moderate</span>`;
+  result += '\n';
+
+  const faultTolerance = rf - wn;
+  result += `🛡️ Write fault tolerance: can lose ${faultTolerance} node${faultTolerance !== 1 ? 's' : ''} and still write\n`;
+
+  if (isConsistent) {
+    result += `\n<span style="color:var(--text3)">→ Like Cassandra QUORUM or MongoDB w:majority. Reads always reflect latest writes.</span>`;
+  } else {
+    result += `\n<span style="color:var(--text3)">→ Like Cassandra ONE or DynamoDB defaults. Fast but may read stale data.</span>`;
+  }
+
+  document.getElementById('pacelc-result').innerHTML = result.replace(/\n/g, '<br>');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TTL SIMULATION
+// ═══════════════════════════════════════════════════════════════
+const TTL_CONFIGS = {
+  redis: { total: 10, fill: 'redis-fill', label: 'redis-ttl-label', status: 'redis-status', unit: 's' },
+  mongo: { total: 25, fill: 'mongo-fill', label: 'mongo-ttl-label', status: 'mongo-status', unit: 's' },
+  dns:   { total: 60, fill: 'dns-fill',   label: 'dns-ttl-label',   status: 'dns-status',   unit: 's' }
+};
+
+let ttlElapsed = 0;
+const TTL_SPEED = 100; // ms per tick
+
+function resetTtlSim() {
+  if (ttlInterval) clearInterval(ttlInterval);
+  ttlElapsed = 0;
+  Object.entries(TTL_CONFIGS).forEach(([key, cfg]) => {
+    document.getElementById(cfg.fill).style.width = '100%';
+    document.getElementById(cfg.label).textContent = cfg.total + cfg.unit;
+    const st = document.getElementById(cfg.status);
+    st.textContent = 'ALIVE';
+    st.style.color = 'var(--accent3)';
+  });
+  document.getElementById('ttl-log').innerHTML = '// Click Start to begin TTL countdown...<br>';
+}
+
+function startTtlSim() {
+  resetTtlSim();
+  const log = document.getElementById('ttl-log');
+  log.innerHTML = '// Countdown started...<br>';
+
+  ttlInterval = setInterval(() => {
+    ttlElapsed += TTL_SPEED / 1000;
+
+    Object.entries(TTL_CONFIGS).forEach(([key, cfg]) => {
+      const remaining = Math.max(0, cfg.total - ttlElapsed);
+      const pct = (remaining / cfg.total) * 100;
+      document.getElementById(cfg.fill).style.width = pct + '%';
+      document.getElementById(cfg.label).textContent = remaining.toFixed(1) + cfg.unit;
+
+      const st = document.getElementById(cfg.status);
+      if (remaining <= 0 && st.textContent !== 'EXPIRED') {
+        st.textContent = 'EXPIRED';
+        st.style.color = 'var(--danger)';
+        let msg = '';
+        if (key === 'redis') msg = `<span class="log-warn">⚡ Redis key expired — lazy deletion active. Next GET returns nil.</span>`;
+        if (key === 'mongo') msg = `<span class="log-warn">🍃 MongoDB doc past expireAfterSeconds — TTL Monitor will delete within ~60s.</span>`;
+        if (key === 'dns')   msg = `<span class="log-warn">🌐 DNS TTL elapsed — resolver will re-query authoritative server on next request.</span>`;
+        log.innerHTML += msg + '<br>';
+        log.scrollTop = log.scrollHeight;
+      }
+    });
+
+    if (ttlElapsed >= 65) {
+      clearInterval(ttlInterval);
+      log.innerHTML += '<span class="log-ok">// Simulation complete.</span><br>';
+    }
+  }, TTL_SPEED);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+updatePacelc();
+updateProgress();
+</script>
+</body>
+</html>

@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Gradient Descent Midterm Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --surface3: #22222f;
+    --border: #2a2a3a;
+    --accent: #6c63ff;
+    --accent2: #ff6584;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --text: #e8e8f0;
+    --text-dim: #8888aa;
+    --text-dimmer: #55556a;
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 80% 80%, rgba(255,101,132,0.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 500px;
+    margin: 0 auto 32px;
+  }
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  .pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+  }
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    padding: 0 20px;
+  }
+  nav a {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    text-decoration: none;
+    padding: 14px 18px;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  section {
+    padding: 72px 0 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 60px;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 32px;
+    line-height: 1.1;
+  }
+  h3 {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  p { color: var(--text-dim); margin-bottom: 16px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: border-color .2s, transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .card:hover::before { opacity: 1; }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+
+  /* FORMULA BOX */
+  .formula {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 18px 22px;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent3);
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .formula .label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    margin-bottom: 8px;
+    font-family: var(--mono);
+  }
+
+  /* HIGHLIGHT CALLOUT */
+  .callout {
+    background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(255,101,132,0.05));
+    border: 1px solid rgba(108,99,255,0.25);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .callout.warn {
+    background: linear-gradient(135deg, rgba(247,151,30,0.08), rgba(255,101,132,0.05));
+    border-color: rgba(247,151,30,0.25);
+  }
+  .callout.success {
+    background: linear-gradient(135deg, rgba(67,233,123,0.06), rgba(108,99,255,0.04));
+    border-color: rgba(67,233,123,0.2);
+  }
+  .callout-icon { font-size: 20px; margin-bottom: 8px; }
+  .callout h4 {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .callout p { margin: 0; font-size: 14px; }
+
+  /* COMPARISON TABLE */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+  .compare-table th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+  }
+  .compare-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+  .compare-table tr:hover td { background: var(--surface2); }
+  .compare-table .col-head {
+    font-family: var(--display);
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge-green { background: rgba(67,233,123,0.15); color: var(--accent3); }
+  .badge-red { background: rgba(255,101,132,0.15); color: var(--accent2); }
+  .badge-yellow { background: rgba(247,151,30,0.15); color: var(--accent4); }
+  .badge-blue { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+  /* HILL VISUALIZER */
+  .hill-viz {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 28px 0;
+    text-align: center;
+  }
+  canvas { max-width: 100%; }
+
+  /* QUIZ */
+  .quiz-section { padding: 72px 0 48px; }
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+  .quiz-q {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 22px;
+    line-height: 1.4;
+  }
+  .quiz-opts { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-opt {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-dim);
+    transition: all .2s;
+    text-align: left;
+    font-family: var(--body);
+  }
+  .quiz-opt:hover { border-color: var(--accent); color: var(--text); }
+  .quiz-opt.correct { border-color: var(--accent3); background: rgba(67,233,123,0.1); color: var(--accent3); }
+  .quiz-opt.wrong { border-color: var(--accent2); background: rgba(255,101,132,0.1); color: var(--accent2); }
+  .quiz-opt.reveal-correct { border-color: var(--accent3); background: rgba(67,233,123,0.06); }
+  .quiz-opt:disabled { cursor: default; }
+  .quiz-feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+    line-height: 1.6;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.correct-fb { background: rgba(67,233,123,0.08); border: 1px solid rgba(67,233,123,0.2); color: var(--accent3); }
+  .quiz-feedback.wrong-fb { background: rgba(255,101,132,0.08); border: 1px solid rgba(255,101,132,0.2); color: var(--accent2); }
+  .quiz-score {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    text-align: center;
+    margin: 24px 0 8px;
+  }
+  .quiz-score-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    text-align: center;
+  }
+
+  /* INTERACTIVE SLIDER */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 18px 0;
+    flex-wrap: wrap;
+  }
+  .slider-row label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    min-width: 120px;
+  }
+  input[type=range] {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--accent);
+  }
+  .slider-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent3);
+    min-width: 50px;
+    text-align: right;
+  }
+  .sim-output {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    min-height: 60px;
+  }
+  .sim-output .val { color: var(--accent3); font-weight: 700; }
+
+  /* FLASHCARDS */
+  .flashcard-container { perspective: 1000px; margin-bottom: 20px; }
+  .flashcard {
+    background: transparent;
+    width: 100%;
+    height: 160px;
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform .5s cubic-bezier(.4,2,.6,1);
+    border-radius: 14px;
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .flashcard-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .flashcard-front {
+    background: var(--surface);
+  }
+  .flashcard-back {
+    background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(67,233,123,0.06));
+    border-color: rgba(108,99,255,0.3);
+    transform: rotateY(180deg);
+  }
+  .flashcard-front .fc-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dimmer);
+    position: absolute;
+    top: 14px;
+    left: 18px;
+  }
+  .flashcard-front .fc-q {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .flashcard-back .fc-a {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .fc-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+  }
+  .fc-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .fc-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .fc-counter {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dimmer);
+    flex: 1;
+    text-align: center;
+  }
+
+  /* CODE */
+  pre {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: #c9d1d9;
+    margin: 20px 0;
+  }
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .st { color: #f1fa8c; }
+  .cm { color: #6272a4; }
+  .nu { color: #bd93f9; }
+  .cl { color: #8be9fd; }
+
+  /* STEP LIST */
+  .steps { counter-reset: step; }
+  .step {
+    display: flex;
+    gap: 18px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    counter-increment: step;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h4 {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .step-content p { margin: 0; font-size: 14px; }
+
+  /* VARIATIONS ACCORDION */
+  .accordion { margin: 20px 0; }
+  .acc-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .acc-item.open { border-color: var(--accent); }
+  .acc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    cursor: pointer;
+    background: var(--surface);
+    user-select: none;
+  }
+  .acc-header:hover { background: var(--surface2); }
+  .acc-title {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .acc-subtitle { font-size: 13px; color: var(--text-dimmer); font-family: var(--mono); margin-top: 2px; }
+  .acc-arrow {
+    font-size: 18px;
+    color: var(--text-dimmer);
+    transition: transform .3s;
+  }
+  .acc-item.open .acc-arrow { transform: rotate(180deg); }
+  .acc-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .4s ease;
+    background: var(--surface2);
+  }
+  .acc-item.open .acc-body { max-height: 400px; }
+  .acc-inner { padding: 22px; font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .acc-inner p { margin-bottom: 10px; }
+  .acc-inner strong { color: var(--text); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .4s ease;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  /* UTILITY */
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface3);
+    color: var(--text-dim);
+    margin: 2px;
+  }
+  .mono { font-family: var(--mono); }
+  .accent { color: var(--accent); }
+  .accent2 { color: var(--accent2); }
+  .accent3 { color: var(--accent3); }
+  .accent4 { color: var(--accent4); }
+
+  @media (max-width: 600px) {
+    nav a { padding: 12px 12px; font-size: 10px; }
+    .hero { padding: 50px 20px 40px; }
+    section { padding: 48px 0 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">CS 270 · Midterm Prep</div>
+  <h1>Gradient Descent<br>Mastery Guide</h1>
+  <p class="hero-sub">// everything you need to crush the midterm. concepts → formulas → quizzes → code.</p>
+  <div class="pill-row">
+    <a class="pill" href="#concepts">Core Concepts</a>
+    <a class="pill" href="#formulas">Formulas & Derivatives</a>
+    <a class="pill" href="#types">Types of GD</a>
+    <a class="pill" href="#problems">Vanishing/Exploding</a>
+    <a class="pill" href="#variations">Variations</a>
+    <a class="pill" href="#sklearn">scikit-learn</a>
+    <a class="pill" href="#flashcards">Flashcards</a>
+    <a class="pill" href="#quiz">Quiz</a>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#concepts">Concepts</a>
+  <a href="#formulas">Formulas</a>
+  <a href="#types">GD Types</a>
+  <a href="#problems">Problems</a>
+  <a href="#variations">Variations</a>
+  <a href="#sklearn">sklearn</a>
+  <a href="#sim">Simulator</a>
+  <a href="#flashcards">Flashcards</a>
+  <a href="#quiz">Quiz</a>
+</nav>
+
+<!-- SECTION 1: CORE CONCEPTS -->
+<section id="concepts">
+  <div class="container">
+    <div class="section-label">01 — Core Concepts</div>
+    <h2>How Gradient Descent Works</h2>
+
+    <div class="callout">
+      <div class="callout-icon">⛰️</div>
+      <h4>The Hill Analogy</h4>
+      <p>Imagine you're blindfolded on a hilly landscape and want to reach the lowest valley. You feel the slope under your feet (the gradient) and take a step downhill. Gradient descent does exactly this — repeatedly nudging weights in the direction that reduces loss.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Forward Pass — Compute Loss</h4>
+          <p>Run your input through the network, get a prediction, then compute how wrong you were using a loss function (e.g., MSE, Cross-Entropy).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Backward Pass — Compute Gradient</h4>
+          <p>Use backpropagation (chain rule) to calculate the partial derivative of the loss with respect to each weight: <span class="mono accent">∂L/∂w</span>. This is the gradient — the slope of the loss landscape at your current position.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Update Weights</h4>
+          <p>Subtract the gradient (scaled by learning rate α) from each weight. If the gradient is negative (slope goes down to the right), increase the weight.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Repeat Until Convergence</h4>
+          <p>Keep iterating until the loss stops meaningfully decreasing — you've reached (a local) minimum.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula">
+      <div class="label">The Update Rule</div>
+      w_new = w_old − α · (∂L/∂w)
+      <br><br>
+      <span style="color:var(--text-dimmer); font-size:12px">
+        w = weight &nbsp;|&nbsp; α = learning rate &nbsp;|&nbsp; ∂L/∂w = gradient of loss w.r.t. weight
+      </span>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-icon">💡</div>
+      <h4>The Sign Intuition (Professor loves this!)</h4>
+      <p><strong style="color:var(--text)">Negative gradient</strong> → loss curve goes downhill to the right → <strong style="color:var(--accent3)">increase the weight</strong> (subtract a negative = add).<br>
+      <strong style="color:var(--text)">Positive gradient</strong> → loss curve goes uphill to the right → <strong style="color:var(--accent2)">decrease the weight</strong> (subtract a positive).<br>
+      You always move <em>opposite</em> to the gradient — that's why it's called <em>gradient</em> descent, not ascent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: FORMULAS -->
+<section id="formulas">
+  <div class="container">
+    <div class="section-label">02 — Key Formulas</div>
+    <h2>Derivatives You Need to Know</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>📉 Loss Functions</h3>
+        <div class="formula" style="margin-top:14px">
+          <div class="label">Mean Squared Error (MSE)</div>
+          L = (1/n) Σ (ŷ − y)²<br>
+          ∂L/∂ŷ = (2/n)(ŷ − y)
+        </div>
+        <div class="formula">
+          <div class="label">Binary Cross-Entropy</div>
+          L = −[y·log(ŷ) + (1−y)·log(1−ŷ)]<br>
+          ∂L/∂ŷ = (ŷ − y) / [ŷ(1−ŷ)]
+        </div>
+        <div class="formula">
+          <div class="label">Categorical Cross-Entropy</div>
+          L = −Σ yᵢ · log(ŷᵢ)<br>
+          ∂L/∂ŷᵢ = −yᵢ/ŷᵢ
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ Activation Gradients</h3>
+        <div class="formula" style="margin-top:14px">
+          <div class="label">Sigmoid  σ(z) = 1/(1+e⁻ᶻ)</div>
+          σ'(z) = σ(z) · (1 − σ(z))
+        </div>
+        <div class="formula">
+          <div class="label">tanh</div>
+          tanh'(z) = 1 − tanh²(z)
+        </div>
+        <div class="formula">
+          <div class="label">ReLU  max(0, z)</div>
+          ReLU'(z) = 1 if z > 0, else 0
+        </div>
+        <div class="formula">
+          <div class="label">Leaky ReLU</div>
+          f'(z) = 1 if z > 0, else α (small const)
+        </div>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:28px">
+      <h4>🎯 Worked Example — Weight Update</h4>
+      <p>Given: w = 0.5, α = 0.01, gradient ∂L/∂w = −2.3<br>
+      <span class="mono" style="color:var(--accent3)">w_new = 0.5 − 0.01 × (−2.3) = 0.5 + 0.023 = <strong>0.523</strong></span><br><br>
+      The gradient is negative → slope goes downhill to the right → we increase w to move toward the minimum. ✓</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: TYPES OF GD -->
+<section id="types">
+  <div class="container">
+    <div class="section-label">03 — Types of Gradient Descent</div>
+    <h2>Batch vs SGD vs Mini-Batch</h2>
+
+    <div class="callout" style="margin-bottom:28px">
+      <h4>The Study Analogy</h4>
+      <p><strong style="color:var(--text)">Batch GD</strong> — Solve all 1,000 practice problems, then reflect on every mistake at once before adjusting strategy. Very thorough but slow.<br>
+      <strong style="color:var(--text)">SGD</strong> — Solve one problem, immediately adjust, then move to the next. Fast but one weird problem can throw you off.<br>
+      <strong style="color:var(--text)">Mini-Batch</strong> — Solve 32 problems, reflect on those, adjust, repeat. The sweet spot in practice.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Batch GD</th>
+          <th>Stochastic GD</th>
+          <th>Mini-Batch GD</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-head">Data per update</td>
+          <td>All N samples</td>
+          <td>1 sample</td>
+          <td>k samples (e.g., 32, 64)</td>
+        </tr>
+        <tr>
+          <td class="col-head">Gradient accuracy</td>
+          <td><span class="badge badge-green">High</span></td>
+          <td><span class="badge badge-red">Noisy</span></td>
+          <td><span class="badge badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td class="col-head">Computation/update</td>
+          <td><span class="badge badge-red">Slow</span></td>
+          <td><span class="badge badge-green">Fastest</span></td>
+          <td><span class="badge badge-yellow">Fast</span></td>
+        </tr>
+        <tr>
+          <td class="col-head">Iterations/epoch</td>
+          <td>1</td>
+          <td>N (many!)</td>
+          <td>N/k</td>
+        </tr>
+        <tr>
+          <td class="col-head">Outlier sensitivity</td>
+          <td><span class="badge badge-green">Low</span></td>
+          <td><span class="badge badge-red">High</span></td>
+          <td><span class="badge badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td class="col-head">Memory usage</td>
+          <td><span class="badge badge-red">High</span></td>
+          <td><span class="badge badge-green">Lowest</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+        </tr>
+        <tr>
+          <td class="col-head">Overfitting risk</td>
+          <td><span class="badge badge-red">Higher</span></td>
+          <td><span class="badge badge-green">Lower</span></td>
+          <td><span class="badge badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td class="col-head">Used in practice?</td>
+          <td>Rarely</td>
+          <td>Online learning</td>
+          <td><span class="badge badge-blue">Most common</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3 class="accent">SGD Properties</h3>
+        <ul style="padding-left:18px; color:var(--text-dim); font-size:14px; line-height:2">
+          <li>Updates weights one instance at a time</li>
+          <li>Sensitive to outliers in the data</li>
+          <li>Fastest computation per iteration</li>
+          <li>Avoids overfitting (noisy updates act like regularization)</li>
+          <li>Takes many iterations per epoch</li>
+          <li>Path to minimum is zig-zaggy</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 class="accent4">Mini-Batch Properties</h3>
+        <ul style="padding-left:18px; color:var(--text-dim); font-size:14px; line-height:2">
+          <li>Typical batch sizes: 32, 64, 128, 256</li>
+          <li>Works well with GPU vectorization</li>
+          <li>Smoother convergence than SGD</li>
+          <li>Batch size is a hyperparameter</li>
+          <li>Default in most deep learning frameworks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--text-dimmer)">Batch GD Properties</h3>
+        <ul style="padding-left:18px; color:var(--text-dim); font-size:14px; line-height:2">
+          <li>Uses entire dataset per update</li>
+          <li>Deterministic — same result every run</li>
+          <li>Guaranteed smooth loss curve</li>
+          <li>Impractical for large datasets</li>
+          <li>Not the default in practice</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: PROBLEMS -->
+<section id="problems">
+  <div class="container">
+    <div class="section-label">04 — Problems in Gradient Descent</div>
+    <h2>Vanishing & Exploding Gradients</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3 class="accent">💨 Vanishing Gradient</h3>
+        <p style="font-size:14px">Occurs when gradients become extremely small as they propagate backward through the network.</p>
+        <div class="formula">
+          <div class="label">Why it happens</div>
+          grad = δ₁ × δ₂ × δ₃ × ... × δₙ<br>
+          If each δᵢ = 0.1 → 0.1⁵ = 0.00001 ≈ 0
+        </div>
+        <p style="font-size:14px"><strong style="color:var(--text)">Cause:</strong> Lots of small numbers (like sigmoid gradients max at 0.25) multiplied together approach 0. Early layers barely learn.</p>
+        <div style="margin-top:14px">
+          <span class="tag">Deep networks</span>
+          <span class="tag">Sigmoid/tanh</span>
+          <span class="tag">Early layers starved</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="accent2">💥 Exploding Gradient</h3>
+        <p style="font-size:14px">Occurs when gradients become extremely large, causing massive unstable weight updates.</p>
+        <div class="formula">
+          <div class="label">Why it happens</div>
+          grad = δ₁ × δ₂ × δ₃ × ... × δₙ<br>
+          If each δᵢ = 5 → 5⁵ = 3125 → NaN
+        </div>
+        <p style="font-size:14px"><strong style="color:var(--text)">Cause:</strong> Large weight values combined with many layers cause gradients to grow exponentially. Poor initial weights are a key trigger.</p>
+        <div style="margin-top:14px">
+          <span class="tag">Poor initialization</span>
+          <span class="tag">RNNs</span>
+          <span class="tag">Loss → NaN</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:28px">
+      <h4>🔑 Why Poor Initial Weights → Exploding Gradients</h4>
+      <p>If weights are initialized too large, the activations in each layer will also be large. During backpropagation, gradients are multiplied by these large weight values at each layer (via the chain rule). With many layers, each multiplication amplifies the gradient further, leading to exponential blowup. Networks with poor initial weights are therefore especially susceptible to exploding gradients.</p>
+    </div>
+
+    <h3 style="margin: 32px 0 16px;">🛠 Solutions</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h3 style="font-size:15px; color:var(--accent3)">Against Vanishing</h3>
+        <ul style="padding-left:18px; color:var(--text-dim); font-size:14px; line-height:2">
+          <li>Use <strong style="color:var(--text)">ReLU</strong> instead of sigmoid/tanh</li>
+          <li><strong style="color:var(--text)">Batch Normalization</strong> — rescales activations</li>
+          <li>Residual connections (skip connections)</li>
+          <li>Careful weight initialization (He, Xavier)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px; color:var(--accent3)">Against Exploding</h3>
+        <ul style="padding-left:18px; color:var(--text-dim); font-size:14px; line-height:2">
+          <li><strong style="color:var(--text)">Gradient Clipping</strong> — cap gradients at a max value</li>
+          <li>Proper weight initialization</li>
+          <li>Smaller learning rate</li>
+          <li><strong style="color:var(--text)">Batch Normalization</strong> helps here too</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout success" style="margin-top:24px">
+      <h4>📦 Batch Normalization Explained</h4>
+      <p>Batch normalization is a technique for training neural networks that <strong style="color:var(--text)">rescales the input features</strong> at each layer by standardizing them (applying z-score normalization: subtract mean, divide by std deviation). This keeps activations in a healthy range, preventing large gradients and speeding up training. It effectively prevents both vanishing and exploding gradient problems.</p>
+      <div class="formula" style="margin-top:12px">
+        <div class="label">Z-Score Standardization (what BatchNorm does)</div>
+        x̂ = (x − μ_batch) / √(σ²_batch + ε)<br>
+        output = γ · x̂ + β  &nbsp;  ← learnable scale and shift
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5: VARIATIONS -->
+<section id="variations">
+  <div class="container">
+    <div class="section-label">05 — Variations on Gradient Descent</div>
+    <h2>Beyond Plain GD</h2>
+
+    <div class="accordion">
+      <div class="acc-item open">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">Momentum</div>
+            <div class="acc-subtitle">// adds velocity to avoid local minima</div>
+          </div>
+          <div class="acc-arrow">▾</div>
+        </div>
+        <div class="acc-body">
+          <div class="acc-inner">
+            <p>Momentum adds a fraction of the previous update to the current one, like a ball rolling downhill that builds up speed. This helps escape local minima and saddle points, and dampens oscillations.</p>
+            <p><strong>Update rule:</strong></p>
+            <div class="formula">v = β · v_prev + (1−β) · ∇L<br>w = w − α · v</div>
+            <p>β (momentum coefficient) is typically 0.9. A higher β means more "inertia" — the optimizer remembers more of its past direction.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">RMSProp</div>
+            <div class="acc-subtitle">// adaptive learning rates per parameter</div>
+          </div>
+          <div class="acc-arrow">▾</div>
+        </div>
+        <div class="acc-body">
+          <div class="acc-inner">
+            <p>RMSProp divides the learning rate by a running average of recent gradient magnitudes. Parameters with large recent gradients get smaller effective learning rates, and vice versa.</p>
+            <div class="formula">E[g²] = β · E[g²]_prev + (1−β) · g²<br>w = w − α / √(E[g²] + ε) · g</div>
+            <p>This helps in situations where gradients vary a lot across dimensions (common in non-convex loss surfaces).</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">Adam (Adaptive Moment Estimation)</div>
+            <div class="acc-subtitle">// momentum + RMSProp combined — most popular</div>
+          </div>
+          <div class="acc-arrow">▾</div>
+        </div>
+        <div class="acc-body">
+          <div class="acc-inner">
+            <p>Adam combines the benefits of both momentum and RMSProp. It maintains a moving average of both the gradient (1st moment) and the squared gradient (2nd moment), with bias corrections.</p>
+            <div class="formula">m = β₁·m + (1−β₁)·g  &nbsp; ← 1st moment (mean)<br>v = β₂·v + (1−β₂)·g²  ← 2nd moment (variance)<br>m̂ = m/(1−β₁ᵗ) &nbsp;&nbsp; v̂ = v/(1−β₂ᵗ)   ← bias correction<br>w = w − α · m̂/√(v̂+ε)</div>
+            <p>Default: β₁=0.9, β₂=0.999, ε=1e-8. Adam is the <strong>most commonly used optimizer</strong> in deep learning today.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">Learning Rate Schedules</div>
+            <div class="acc-subtitle">// decay α over time for better convergence</div>
+          </div>
+          <div class="acc-arrow">▾</div>
+        </div>
+        <div class="acc-body">
+          <div class="acc-inner">
+            <p>Instead of a fixed learning rate, you can decay it over time. Large α early on allows big exploratory steps; smaller α later allows fine-tuned convergence.</p>
+            <p><strong>Step decay:</strong> halve α every N epochs<br>
+            <strong>Exponential decay:</strong> α = α₀ · e^(−kt)<br>
+            <strong>Cosine annealing:</strong> oscillates α following a cosine curve<br>
+            <strong>Warm restarts:</strong> periodically resets α to escape local minima</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc(this)">
+          <div>
+            <div class="acc-title">Nesterov Accelerated Gradient (NAG)</div>
+            <div class="acc-subtitle">// "look-ahead" momentum</div>
+          </div>
+          <div class="acc-arrow">▾</div>
+        </div>
+        <div class="acc-body">
+          <div class="acc-inner">
+            <p>NAG computes the gradient at the <em>anticipated</em> future position (where momentum would take you), not the current position. This "look-ahead" makes updates smarter and convergence faster than standard momentum.</p>
+            <div class="formula">v = β · v_prev + α · ∇L(w − β·v_prev)<br>w = w − v</div>
+            <p>Think of it as: regular momentum commits blindly to the direction you're going; NAG first "peeks" ahead and corrects course before committing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: SKLEARN -->
+<section id="sklearn">
+  <div class="container">
+    <div class="section-label">06 — scikit-learn Implementation</div>
+    <h2>GD for Training MLPs in sklearn</h2>
+
+    <div class="grid-2">
+      <div>
+        <div class="callout" style="margin-bottom:20px">
+          <h4>MLPClassifier with SGD</h4>
+          <p>Use <code style="font-family:var(--mono); color:var(--accent3)">solver='sgd'</code> for stochastic gradient descent. Control batch size with <code style="font-family:var(--mono); color:var(--accent3)">batch_size</code>.</p>
+        </div>
+        <pre><span class="kw">from</span> sklearn.neural_network <span class="kw">import</span> <span class="cl">MLPClassifier</span>
+
+<span class="cm"># Stochastic Gradient Descent</span>
+clf_sgd = <span class="cl">MLPClassifier</span>(
+    hidden_layer_sizes=(<span class="nu">100</span>, <span class="nu">50</span>),
+    solver=<span class="st">'sgd'</span>,
+    batch_size=<span class="nu">1</span>,        <span class="cm"># 1 = true SGD</span>
+    learning_rate_init=<span class="nu">0.01</span>,
+    max_iter=<span class="nu">200</span>
+)
+
+<span class="cm"># Mini-Batch GD</span>
+clf_mb = <span class="cl">MLPClassifier</span>(
+    hidden_layer_sizes=(<span class="nu">100</span>, <span class="nu">50</span>),
+    solver=<span class="st">'sgd'</span>,
+    batch_size=<span class="nu">32</span>,       <span class="cm"># 32 = mini-batch</span>
+    learning_rate_init=<span class="nu">0.01</span>,
+    momentum=<span class="nu">0.9</span>,         <span class="cm"># add momentum</span>
+    max_iter=<span class="nu">200</span>
+)</pre>
+      </div>
+      <div>
+        <div class="callout" style="margin-bottom:20px">
+          <h4>MLPClassifier with Adam</h4>
+          <p>Use <code style="font-family:var(--mono); color:var(--accent3)">solver='adam'</code> for the Adam optimizer — the sklearn default.</p>
+        </div>
+        <pre><span class="cm"># Adam Optimizer (default)</span>
+clf_adam = <span class="cl">MLPClassifier</span>(
+    hidden_layer_sizes=(<span class="nu">100</span>, <span class="nu">50</span>),
+    solver=<span class="st">'adam'</span>,         <span class="cm"># default!</span>
+    learning_rate_init=<span class="nu">0.001</span>,
+    beta_1=<span class="nu">0.9</span>,
+    beta_2=<span class="nu">0.999</span>,
+    max_iter=<span class="nu">200</span>
+)
+
+<span class="cm"># Batch GD (approx. using lbfgs)</span>
+clf_batch = <span class="cl">MLPClassifier</span>(
+    hidden_layer_sizes=(<span class="nu">100</span>, <span class="nu">50</span>),
+    solver=<span class="st">'lbfgs'</span>,        <span class="cm"># quasi-Newton</span>
+    max_iter=<span class="nu">500</span>
+)
+
+clf_adam.<span class="fn">fit</span>(X_train, y_train)
+acc = clf_adam.<span class="fn">score</span>(X_test, y_test)</pre>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:20px">
+      <h4>⚠️ sklearn solver options</h4>
+      <p><span class="mono accent3">'sgd'</span> — Stochastic or mini-batch GD. Set <code style="font-family:var(--mono)">batch_size</code> to control.<br>
+      <span class="mono accent3">'adam'</span> — Adam optimizer. Default and recommended for most cases.<br>
+      <span class="mono accent3">'lbfgs'</span> — Quasi-Newton method; good for small datasets, closest to full batch GD.<br>
+      Note: sklearn uses <strong>mini-batch by default</strong> when solver='sgd', not truly one-sample-at-a-time SGD.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: INTERACTIVE SIMULATOR -->
+<section id="sim">
+  <div class="container">
+    <div class="section-label">07 — Interactive</div>
+    <h2>Weight Update Simulator</h2>
+    <p>Plug in values to see how gradient descent updates weights in real-time.</p>
+
+    <div class="card" style="margin-top:24px">
+      <div class="slider-row">
+        <label>Weight (w)</label>
+        <input type="range" id="sim-w" min="-5" max="5" step="0.1" value="2.0">
+        <span class="slider-val" id="sim-w-val">2.0</span>
+      </div>
+      <div class="slider-row">
+        <label>Learning Rate (α)</label>
+        <input type="range" id="sim-lr" min="0.001" max="1" step="0.001" value="0.1">
+        <span class="slider-val" id="sim-lr-val">0.100</span>
+      </div>
+      <div class="slider-row">
+        <label>Gradient (∂L/∂w)</label>
+        <input type="range" id="sim-grad" min="-5" max="5" step="0.1" value="1.5">
+        <span class="slider-val" id="sim-grad-val">1.5</span>
+      </div>
+
+      <div class="sim-output" id="sim-output">
+        <div style="margin-bottom:8px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dimmer)">Result</div>
+        Loading...
+      </div>
+
+      <canvas id="sim-canvas" height="120" style="width:100%; margin-top:20px; border-radius:8px; display:block;"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- FLASHCARDS -->
+<section id="flashcards">
+  <div class="container">
+    <div class="section-label">08 — Flashcards</div>
+    <h2>Click to Reveal Answer</h2>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="fc-progress" style="width:0%"></div>
+    </div>
+
+    <div class="flashcard-container">
+      <div class="flashcard" id="flashcard" onclick="flipCard()">
+        <div class="flashcard-face flashcard-front">
+          <span class="fc-label">Question</span>
+          <span class="fc-q" id="fc-question">Loading...</span>
+        </div>
+        <div class="flashcard-face flashcard-back">
+          <span class="fc-a" id="fc-answer">Loading...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fc-nav">
+      <button class="fc-btn" onclick="prevCard()">← Prev</button>
+      <span class="fc-counter" id="fc-counter">1 / 12</span>
+      <button class="fc-btn" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz" class="quiz-section">
+  <div class="container">
+    <div class="section-label">09 — Quiz</div>
+    <h2>Test Your Knowledge</h2>
+    <p style="margin-bottom:32px">Professor-level questions. Select an answer to see instant feedback.</p>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="quiz-progress" style="width:0%"></div>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <div id="quiz-score-area" style="display:none; text-align:center; margin-top:32px;">
+      <div class="quiz-score" id="quiz-score">0/10</div>
+      <div class="quiz-score-label">Final Score</div>
+      <button class="fc-btn" style="margin-top:20px;" onclick="resetQuiz()">Retake Quiz</button>
+    </div>
+  </div>
+</section>
+
+<div style="height:80px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:center;">
+  <span style="font-family:var(--mono); font-size:11px; color:var(--text-dimmer); letter-spacing:2px;">CS 270 GRADIENT DESCENT GUIDE · GOOD LUCK ON YOUR MIDTERM</span>
+</div>
+
+<script>
+// ============================
+// ACCORDION
+// ============================
+function toggleAcc(header) {
+  const item = header.parentElement;
+  item.classList.toggle('open');
+}
+
+// ============================
+// SIMULATOR
+// ============================
+const simW = document.getElementById('sim-w');
+const simLR = document.getElementById('sim-lr');
+const simGrad = document.getElementById('sim-grad');
+const simOut = document.getElementById('sim-output');
+const simCanvas = document.getElementById('sim-canvas');
+const ctx = simCanvas.getContext('2d');
+
+function updateSim() {
+  const w = parseFloat(simW.value);
+  const lr = parseFloat(simLR.value);
+  const grad = parseFloat(simGrad.value);
+  const wNew = w - lr * grad;
+
+  document.getElementById('sim-w-val').textContent = w.toFixed(1);
+  document.getElementById('sim-lr-val').textContent = lr.toFixed(3);
+  document.getElementById('sim-grad-val').textContent = grad.toFixed(1);
+
+  const direction = grad > 0 ? '← decrease' : '→ increase';
+  const reason = grad > 0
+    ? 'Gradient is POSITIVE → slope goes uphill to the right → decrease w to go downhill.'
+    : grad < 0
+    ? 'Gradient is NEGATIVE → slope goes downhill to the right → increase w to go downhill.'
+    : 'Gradient is ZERO → you are at a minimum! No update needed.';
+
+  simOut.innerHTML = `
+    <div style="margin-bottom:8px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text-dimmer)">Result</div>
+    <span style="color:#8888aa">w_new = w − α · grad</span><br>
+    <span class="val">w_new = ${w.toFixed(3)} − ${lr.toFixed(3)} × ${grad.toFixed(3)} = ${wNew.toFixed(4)}</span><br><br>
+    <span style="color:#8888aa; font-size:13px">${reason}</span>
+  `;
+  drawSim(w, wNew);
+}
+
+function drawSim(w, wNew) {
+  const canvas = simCanvas;
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+  canvas.height = 120 * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  const W = canvas.offsetWidth;
+  const H = 120;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#1a1a24';
+  ctx.fillRect(0, 0, W, H);
+
+  // draw parabola
+  ctx.beginPath();
+  ctx.strokeStyle = '#6c63ff44';
+  ctx.lineWidth = 1;
+  for (let px = 0; px < W; px++) {
+    const xVal = (px / W) * 10 - 5;
+    const yVal = xVal * xVal;
+    const py = H - 10 - (yVal / 25) * (H - 20);
+    px === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // actual parabola colored
+  ctx.beginPath();
+  ctx.strokeStyle = '#6c63ff';
+  ctx.lineWidth = 2.5;
+  for (let px = 0; px < W; px++) {
+    const xVal = (px / W) * 10 - 5;
+    const yVal = xVal * xVal;
+    const py = H - 10 - (yVal / 25) * (H - 20);
+    px === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  function toCanvas(x) {
+    return ((x + 5) / 10) * W;
+  }
+  function toCanvasY(x) {
+    const yVal = x * x;
+    return H - 10 - (yVal / 25) * (H - 20);
+  }
+
+  // old weight
+  const wx = toCanvas(Math.max(-5, Math.min(5, w)));
+  const wy = toCanvasY(Math.max(-5, Math.min(5, w)));
+  ctx.beginPath();
+  ctx.arc(wx, wy, 7, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff6584';
+  ctx.fill();
+  ctx.fillStyle = '#ff6584';
+  ctx.font = '11px Space Mono, monospace';
+  ctx.fillText('w', wx - 4, wy - 13);
+
+  // new weight
+  const nx = toCanvas(Math.max(-5, Math.min(5, wNew)));
+  const ny = toCanvasY(Math.max(-5, Math.min(5, wNew)));
+  ctx.beginPath();
+  ctx.arc(nx, ny, 7, 0, Math.PI * 2);
+  ctx.fillStyle = '#43e97b';
+  ctx.fill();
+  ctx.fillStyle = '#43e97b';
+  ctx.fillText('w\'', nx - 6, ny - 13);
+
+  // arrow
+  if (Math.abs(wx - nx) > 3) {
+    ctx.beginPath();
+    ctx.strokeStyle = '#ffffff33';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.moveTo(wx, wy);
+    ctx.lineTo(nx, ny);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // minimum marker
+  const minX = toCanvas(0);
+  ctx.beginPath();
+  ctx.strokeStyle = '#ffffff22';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 6]);
+  ctx.moveTo(minX, 0);
+  ctx.lineTo(minX, H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#ffffff33';
+  ctx.font = '10px Space Mono, monospace';
+  ctx.fillText('min', minX + 4, H - 12);
+}
+
+[simW, simLR, simGrad].forEach(el => el.addEventListener('input', updateSim));
+updateSim();
+
+// ============================
+// FLASHCARDS
+// ============================
+const flashcards = [
+  { q: "What is the gradient descent update rule?", a: "w_new = w_old − α · (∂L/∂w). Subtract the gradient scaled by the learning rate from the current weight." },
+  { q: "If the gradient is negative, what happens to the weight?", a: "The weight INCREASES. Subtracting a negative value adds to the weight, moving it in the direction of decreasing loss." },
+  { q: "What is the vanishing gradient problem?", a: "When many small gradient values are multiplied together (e.g., through many sigmoid layers), the result approaches zero. Early layers stop learning." },
+  { q: "What is the exploding gradient problem?", a: "When many large gradient values are multiplied together, the result grows exponentially. This leads to NaN loss and unstable training." },
+  { q: "Why are poor initial weights linked to exploding gradients?", a: "Large initial weights produce large activations. During backprop, gradients are multiplied by these large weights at each layer, amplifying them exponentially." },
+  { q: "What is the key difference between SGD and mini-batch GD?", a: "SGD updates weights after every single sample. Mini-batch GD updates after every small batch (e.g., 32 samples)." },
+  { q: "What is batch normalization?", a: "A technique that rescales activations within each layer using z-score standardization, preventing large or small gradients and stabilizing training." },
+  { q: "Name 3 properties of SGD.", a: "1) Updates on one instance at a time. 2) Sensitive to outliers. 3) Fastest computation per iteration. Also: avoids overfitting, takes many iterations per epoch." },
+  { q: "What does Adam optimizer combine?", a: "Adam combines momentum (1st moment — mean of gradients) and RMSProp (2nd moment — variance of gradients), with bias correction. It's the most popular optimizer." },
+  { q: "In scikit-learn's MLPClassifier, which solver corresponds to SGD/mini-batch?", a: "solver='sgd'. Set batch_size=1 for true SGD, or batch_size=32 (etc.) for mini-batch GD. solver='adam' uses Adam by default." },
+  { q: "What learning rate does gradient descent use to avoid overshooting?", a: "A small learning rate (e.g., 0.001–0.1). Too large and weights overshoot the minimum; too small and convergence is very slow." },
+  { q: "What is Nesterov Accelerated Gradient (NAG)?", a: "A 'look-ahead' variant of momentum. It computes the gradient at the anticipated future position (where momentum would take you) before making the update." },
+];
+
+let fcIdx = 0;
+let fcFlipped = false;
+
+function renderCard() {
+  const card = flashcards[fcIdx];
+  document.getElementById('fc-question').textContent = card.q;
+  document.getElementById('fc-answer').textContent = card.a;
+  document.getElementById('fc-counter').textContent = `${fcIdx + 1} / ${flashcards.length}`;
+  document.getElementById('fc-progress').style.width = `${((fcIdx + 1) / flashcards.length) * 100}%`;
+  const fc = document.getElementById('flashcard');
+  fc.classList.remove('flipped');
+  fcFlipped = false;
+}
+
+function flipCard() {
+  const fc = document.getElementById('flashcard');
+  fcFlipped = !fcFlipped;
+  fc.classList.toggle('flipped', fcFlipped);
+}
+
+function nextCard() {
+  fcIdx = (fcIdx + 1) % flashcards.length;
+  renderCard();
+}
+
+function prevCard() {
+  fcIdx = (fcIdx - 1 + flashcards.length) % flashcards.length;
+  renderCard();
+}
+
+renderCard();
+
+// ============================
+// QUIZ
+// ============================
+const questions = [
+  {
+    q: "Given w=1.0, α=0.05, and gradient ∂L/∂w = 3.0, what is the new weight after one gradient descent step?",
+    opts: ["0.85", "1.15", "0.95", "1.05"],
+    correct: 0,
+    explanation: "w_new = 1.0 − 0.05 × 3.0 = 1.0 − 0.15 = 0.85. The gradient is positive, so we decrease the weight."
+  },
+  {
+    q: "Which of the following is NOT a property of Stochastic Gradient Descent (SGD)?",
+    opts: ["Uses entire dataset per update", "Updates weights one instance at a time", "Sensitive to outliers", "Fastest computation per iteration"],
+    correct: 0,
+    explanation: "'Uses entire dataset per update' describes Batch GD, not SGD. SGD updates after each single training example."
+  },
+  {
+    q: "What is the primary cause of the vanishing gradient problem?",
+    opts: [
+      "Large initial weights",
+      "Many small gradient values multiplied together approaching zero",
+      "Too high a learning rate",
+      "Insufficient training data"
+    ],
+    correct: 1,
+    explanation: "The vanishing gradient occurs when many small values (like sigmoid derivatives which max at 0.25) are multiplied through many layers, causing the gradient to shrink toward zero."
+  },
+  {
+    q: "If the gradient ∂L/∂w is NEGATIVE, what should happen to the weight to descend the loss curve?",
+    opts: ["Decrease it", "Increase it", "Keep it the same", "Multiply it by the learning rate"],
+    correct: 1,
+    explanation: "A negative gradient means the loss curve slopes downward to the right. To move toward the minimum, we move right — increasing the weight. w = w − α×(negative) = w + something."
+  },
+  {
+    q: "What makes neural networks with poor initial weights especially susceptible to exploding gradients?",
+    opts: [
+      "Poor weights cause the loss function to be undefined",
+      "Large initial weights produce large activations; during backprop these are multiplied at each layer, amplifying gradients exponentially",
+      "Small initial weights cause ReLU neurons to die",
+      "Poor initialization prevents the optimizer from computing momentum"
+    ],
+    correct: 1,
+    explanation: "Large weights → large activations → large gradient magnitudes at each layer → exponential amplification through the chain rule of backpropagation."
+  },
+  {
+    q: "In scikit-learn's MLPClassifier, which configuration gives you MINI-BATCH gradient descent?",
+    opts: [
+      "solver='lbfgs', batch_size=32",
+      "solver='sgd', batch_size=1",
+      "solver='sgd', batch_size=32",
+      "solver='adam', batch_size='auto'"
+    ],
+    correct: 2,
+    explanation: "solver='sgd' with batch_size=32 gives mini-batch GD. batch_size=1 would be true SGD. solver='lbfgs' is closest to batch GD."
+  },
+  {
+    q: "What does batch normalization do to help with gradient problems?",
+    opts: [
+      "It clips gradients to a maximum value",
+      "It rescales activations within each layer using z-score standardization, keeping them in a healthy range",
+      "It shuffles the training data before each epoch",
+      "It adds L2 regularization to each weight"
+    ],
+    correct: 1,
+    explanation: "Batch normalization applies z-score standardization (subtract mean, divide by std dev) to the activations in each layer, preventing them from becoming too large or too small, which stabilizes gradient flow."
+  },
+  {
+    q: "Which gradient descent variation uses a 'look-ahead' technique to compute gradients at the anticipated future position?",
+    opts: ["Adam", "RMSProp", "Nesterov Accelerated Gradient (NAG)", "Momentum"],
+    correct: 2,
+    explanation: "NAG computes the gradient where momentum would take you first, then makes the update. This 'look-ahead' makes corrections before overshooting, unlike standard momentum which corrects after."
+  },
+  {
+    q: "A mini-batch of size 64 is used with a dataset of 6,400 samples. How many weight updates occur per epoch?",
+    opts: ["1", "64", "100", "6400"],
+    correct: 2,
+    explanation: "Updates per epoch = N / batch_size = 6400 / 64 = 100. One epoch processes all samples exactly once."
+  },
+  {
+    q: "The derivative of the sigmoid activation σ(z) is:",
+    opts: ["1 − σ²(z)", "σ(z) · (1 − σ(z))", "σ(z) · σ(−z)", "1 / (1 + e^z)"],
+    correct: 1,
+    explanation: "σ'(z) = σ(z) × (1 − σ(z)). Note that the maximum value is 0.25 (at z=0), which is why sigmoids contribute to vanishing gradients in deep networks."
+  }
+];
+
+let quizAnswered = [];
+let quizScore = 0;
+
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizAnswered = new Array(questions.length).fill(false);
+  quizScore = 0;
+  document.getElementById('quiz-score-area').style.display = 'none';
+  document.getElementById('quiz-progress').style.width = '0%';
+
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'quiz-card';
+    card.innerHTML = `
+      <div class="quiz-q"><span style="font-family:var(--mono);font-size:12px;color:var(--text-dimmer);margin-right:8px">Q${qi+1}.</span>${q.q}</div>
+      <div class="quiz-opts">
+        ${q.opts.map((opt, oi) => `
+          <button class="quiz-opt" onclick="answerQ(${qi}, ${oi})" id="opt-${qi}-${oi}">${opt}</button>
+        `).join('')}
+      </div>
+      <div class="quiz-feedback" id="fb-${qi}"></div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function answerQ(qi, chosen) {
+  if (quizAnswered[qi]) return;
+  quizAnswered[qi] = true;
+
+  const q = questions[qi];
+  const isCorrect = chosen === q.correct;
+  if (isCorrect) quizScore++;
+
+  // Update buttons
+  q.opts.forEach((_, oi) => {
+    const btn = document.getElementById(`opt-${qi}-${oi}`);
+    btn.disabled = true;
+    if (oi === chosen && isCorrect) btn.classList.add('correct');
+    else if (oi === chosen && !isCorrect) btn.classList.add('wrong');
+    else if (oi === q.correct) btn.classList.add('reveal-correct');
+  });
+
+  // Show feedback
+  const fb = document.getElementById(`fb-${qi}`);
+  fb.classList.add('show', isCorrect ? 'correct-fb' : 'wrong-fb');
+  fb.innerHTML = `<strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${q.explanation}`;
+
+  // Update progress
+  const answered = quizAnswered.filter(Boolean).length;
+  document.getElementById('quiz-progress').style.width = `${(answered / questions.length) * 100}%`;
+
+  // Show score when done
+  if (answered === questions.length) {
+    setTimeout(() => {
+      const scoreArea = document.getElementById('quiz-score-area');
+      scoreArea.style.display = 'block';
+      document.getElementById('quiz-score').textContent = `${quizScore}/${questions.length}`;
+      scoreArea.scrollIntoView({ behavior: 'smooth' });
+    }, 600);
+  }
+}
+
+function resetQuiz() {
+  renderQuiz();
+  document.getElementById('quiz-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+renderQuiz();
+
+// resize canvas on window resize
+window.addEventListener('resize', updateSim);
+</script>
+</body>
+</html>

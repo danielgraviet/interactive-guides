@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — 8.2 Training Neural Networks</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00f5c4;
+    --accent2: #ff4d6d;
+    --accent3: #7c6bff;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --correct: #00e676;
+    --wrong: #ff1744;
+    --warn: #ffab00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,245,196,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,196,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+    position: relative;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 15px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .progress-bar-wrap {
+    margin-top: 32px;
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* Nav pills */
+  .nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+
+  .nav-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .nav-pill:hover, .nav-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,245,196,0.07);
+  }
+
+  /* Sections */
+  .section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section headers */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #3a3a50; }
+
+  .card-accent-line {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card p, .card li {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c0c0d4;
+  }
+
+  .card ul { padding-left: 20px; }
+  .card li { margin-bottom: 6px; }
+
+  /* Highlight boxes */
+  .callout {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    border-left: 3px solid;
+  }
+
+  .callout.info { background: rgba(124,107,255,0.08); border-color: var(--accent3); color: #bbb8ff; }
+  .callout.warn { background: rgba(255,171,0,0.08); border-color: var(--warn); color: #ffd060; }
+  .callout.tip { background: rgba(0,245,196,0.07); border-color: var(--accent); color: #80ffe8; }
+
+  .callout strong { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; font-family: 'Space Mono', monospace; }
+
+  /* Code */
+  pre {
+    background: #0d0d15;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  .kw { color: #ff79c6; }
+  .fn { color: #50fa7b; }
+  .str { color: #f1fa8c; }
+  .cm { color: #6272a4; font-style: italic; }
+  .num { color: #bd93f9; }
+
+  /* Steps */
+  .steps {
+    counter-reset: step;
+    display: grid;
+    gap: 16px;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 20px;
+    background: var(--surface2);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .step:hover {
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .step-num {
+    counter-increment: step;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0,245,196,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-content h4 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .step-content p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* Formula display */
+  .formula-box {
+    background: #0d0d18;
+    border: 1px solid var(--accent3);
+    border-radius: 10px;
+    padding: 20px 24px;
+    text-align: center;
+    margin: 20px 0;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .formula-box .formula {
+    font-size: 18px;
+    color: var(--accent3);
+    margin-bottom: 8px;
+  }
+
+  .formula-box .formula-desc {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Two columns */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  .compare-card {
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .compare-card h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .compare-card.good h4 { color: var(--correct); }
+  .compare-card.bad h4 { color: var(--accent2); }
+
+  /* Interactive LR Slider */
+  .lr-demo {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 20px 0;
+  }
+
+  .lr-demo h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .slider-wrap { margin: 16px 0; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,245,196,0.5);
+  }
+
+  .lr-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+
+  .lr-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 20px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .lr-desc {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 300px;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  .lr-status {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    transition: all 0.3s;
+  }
+
+  /* Batch Calculator */
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 600px) { .calc-grid { grid-template-columns: 1fr; } }
+
+  .calc-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .calc-input label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .calc-input input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .calc-input input:focus { border-color: var(--accent); }
+
+  .calc-results {
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .calc-results { grid-template-columns: 1fr; } }
+
+  .result-item { text-align: center; }
+
+  .result-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+  }
+
+  .result-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* MCQ */
+  .mcq-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .mcq-q {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  .mcq-q .q-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+  }
+
+  .mcq-options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .mcq-opt {
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.2s;
+    background: var(--surface2);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    color: var(--text);
+  }
+
+  .mcq-opt:hover:not(.disabled) {
+    border-color: var(--accent3);
+    background: rgba(124,107,255,0.08);
+  }
+
+  .mcq-opt .opt-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 20px;
+    margin-top: 1px;
+  }
+
+  .mcq-opt.correct {
+    border-color: var(--correct);
+    background: rgba(0,230,118,0.08);
+  }
+
+  .mcq-opt.wrong {
+    border-color: var(--wrong);
+    background: rgba(255,23,68,0.08);
+  }
+
+  .mcq-opt.disabled { cursor: default; pointer-events: none; }
+
+  .mcq-feedback {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .mcq-feedback.show { display: block; }
+  .mcq-feedback.correct-fb { background: rgba(0,230,118,0.08); border: 1px solid var(--correct); color: #80ffb0; }
+  .mcq-feedback.wrong-fb { background: rgba(255,23,68,0.08); border: 1px solid var(--wrong); color: #ff8099; }
+
+  /* What-if scenarios */
+  .scenario {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .scenario-header {
+    padding: 20px 24px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .scenario-header:hover { background: var(--surface2); }
+
+  .scenario-title {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .scenario-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(255,77,109,0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(255,77,109,0.3);
+  }
+
+  .scenario-arrow {
+    color: var(--muted);
+    transition: transform 0.3s;
+    font-size: 18px;
+  }
+
+  .scenario.open .scenario-arrow { transform: rotate(90deg); }
+
+  .scenario-body {
+    padding: 0 24px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s;
+  }
+
+  .scenario.open .scenario-body {
+    max-height: 1000px;
+    padding: 0 24px 24px;
+  }
+
+  .scenario-situation {
+    font-size: 14px;
+    color: #c0c0d4;
+    line-height: 1.7;
+    padding: 16px;
+    background: rgba(255,77,109,0.05);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent2);
+    margin-bottom: 16px;
+  }
+
+  .scenario-analysis h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    margin: 16px 0 10px;
+  }
+
+  .scenario-analysis p, .scenario-analysis li {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c0c0d4;
+  }
+
+  .scenario-analysis ul { padding-left: 20px; }
+  .scenario-analysis li { margin-bottom: 6px; }
+
+  /* Score tracker */
+  .score-panel {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    z-index: 100;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    min-width: 130px;
+  }
+
+  .score-panel .score-label { color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; font-size: 10px; text-transform: uppercase; }
+  .score-panel .score-val { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .score-panel .score-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+  /* Technique badges */
+  .techniques-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .technique-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .technique-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .technique-icon { font-size: 24px; margin-bottom: 12px; }
+  .technique-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .technique-card p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Canvas for loss curve */
+  .loss-canvas-wrap {
+    background: #0d0d15;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  canvas#lossCanvas {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  .canvas-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+
+  .ctrl-btn:hover, .ctrl-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,245,196,0.08);
+  }
+
+  .ctrl-btn.accent2:hover, .ctrl-btn.accent2.active {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: rgba(255,77,109,0.08);
+  }
+
+  .ctrl-btn.accent3:hover, .ctrl-btn.accent3.active {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(124,107,255,0.08);
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+
+  th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    color: #c0c0d4;
+    line-height: 1.5;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .badge-green { background: rgba(0,230,118,0.12); color: var(--correct); border: 1px solid rgba(0,230,118,0.3); }
+  .badge-red { background: rgba(255,23,68,0.12); color: var(--wrong); border: 1px solid rgba(255,23,68,0.3); }
+  .badge-yellow { background: rgba(255,171,0,0.12); color: var(--warn); border: 1px solid rgba(255,171,0,0.3); }
+  .badge-blue { background: rgba(124,107,255,0.12); color: var(--accent3); border: 1px solid rgba(124,107,255,0.3); }
+
+  /* Summary cheat sheet */
+  .cheat-table { margin: 8px 0; }
+</style>
+</head>
+<body>
+
+<div class="score-panel">
+  <div class="score-label">Quiz Score</div>
+  <div class="score-val" id="scoreVal">0/0</div>
+  <div class="score-sub" id="scorePct">—</div>
+</div>
+
+<div class="container">
+  <header>
+    <span class="tag">CS 270 · Intro to Machine Learning</span>
+    <h1>8.2 Training<br><span>Neural Nets</span></h1>
+    <p class="subtitle">// MLP training · forward & backprop · gradient descent · batch/epoch</p>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+    <div class="progress-label" id="progressLabel">0 of 5 sections visited</div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-pill active" onclick="showSection('concepts', this)">Core Concepts</button>
+    <button class="nav-pill" onclick="showSection('training', this)">Training Steps</button>
+    <button class="nav-pill" onclick="showSection('batch', this)">Batch & Epoch</button>
+    <button class="nav-pill" onclick="showSection('gradient', this)">LR & Gradient</button>
+    <button class="nav-pill" onclick="showSection('techniques', this)">Improve Performance</button>
+    <button class="nav-pill" onclick="showSection('quiz', this)">MCQ Quiz</button>
+    <button class="nav-pill" onclick="showSection('scenarios', this)">What-If Scenarios</button>
+    <button class="nav-pill" onclick="showSection('cheatsheet', this)">Cheat Sheet</button>
+  </nav>
+
+  <!-- CORE CONCEPTS -->
+  <section class="section active" id="concepts">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Core Concepts</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: linear-gradient(90deg, var(--accent), var(--accent3))"></div>
+      <h3>⚡ Forward Propagation</h3>
+      <p>Forward propagation is the process of passing input data through the neural network layer by layer to produce a prediction (output). Each layer applies weights, biases, and an activation function to transform the signal.</p>
+      <div class="callout info" style="margin-top:14px;">
+        <strong>Direction of Flow</strong>
+        Input layer → Hidden layer(s) → Output layer. The network uses its current weights to make a prediction — no weight updates happen yet.
+      </div>
+      <p style="margin-top:12px;">Think of it as the network asking <em>"given these weights, what do I predict?"</em></p>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: linear-gradient(90deg, var(--accent2), var(--accent3))"></div>
+      <h3>🔄 Backpropagation</h3>
+      <p>Backpropagation is the algorithm used to update the network's weights after a forward pass. It calculates the gradient of the loss function with respect to each weight, then propagates this error signal backward through the network.</p>
+      <div class="callout warn" style="margin-top:14px;">
+        <strong>Key Principle</strong>
+        Uses the chain rule of calculus to efficiently compute gradients for every weight in every layer. Without backprop, training deep networks would be computationally infeasible.
+      </div>
+      <div class="formula-box" style="margin-top:16px;">
+        <div class="formula">w_new = w_old − η · (∂L/∂w)</div>
+        <div class="formula-desc">η = learning rate &nbsp;|&nbsp; L = loss &nbsp;|&nbsp; w = weight</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-accent-line" style="background: var(--accent)"></div>
+        <h3>Forward Prop</h3>
+        <ul>
+          <li>Input → Output prediction</li>
+          <li>Uses current weights</li>
+          <li>Computes the loss</li>
+          <li>Left-to-right through layers</li>
+          <li>No weight modification</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-accent-line" style="background: var(--accent2)"></div>
+        <h3>Backprop</h3>
+        <ul>
+          <li>Output → Input (gradient flow)</li>
+          <li>Computes error gradients</li>
+          <li>Updates weights using gradients</li>
+          <li>Right-to-left through layers</li>
+          <li>Modifies weights to reduce loss</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout tip" style="margin-top:24px;">
+      <strong>Exam Trap</strong>
+      Forward prop and backprop always happen in <em>pairs</em> — one forward pass to get predictions and compute loss, then one backward pass to update the weights.
+    </div>
+  </section>
+
+  <!-- TRAINING STEPS -->
+  <section class="section" id="training">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>MLP Training Steps</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: linear-gradient(90deg, var(--accent3), var(--accent))"></div>
+      <h3>🧠 The 4-Step Training Loop</h3>
+      <div class="steps" style="margin-top:16px;">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4>Randomly Initialize Weights</h4>
+            <p>All weights in the network are assigned small random values. This breaks symmetry — if all weights started the same, every neuron would learn identical features. Common: Xavier/Glorot initialization or He initialization.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4>Forward Propagation — Make Predictions</h4>
+            <p>Run a batch of training instances through the network. Each neuron computes a weighted sum of its inputs, applies an activation function, and passes the result forward. The final layer produces the prediction ŷ.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4>Compute Loss & Backpropagate</h4>
+            <p>Calculate how wrong the predictions are using a loss function (e.g., MSE for regression, cross-entropy for classification). Backprop computes ∂L/∂w for each weight and uses gradient descent to update them: w ← w − η·∇L.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h4>Repeat Until Convergence</h4>
+            <p>Steps 2–3 repeat for every batch, for every epoch, until the loss reaches a minimum (or a stopping criterion is met). Training is complete when the weights have converged to a good solution.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent)"></div>
+      <h3>💻 scikit-learn MLP Code</h3>
+      <pre><span class="kw">from</span> sklearn.neural_network <span class="kw">import</span> MLPClassifier
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+<span class="cm"># 1. Pre-process: always scale your features!</span>
+scaler = <span class="fn">StandardScaler</span>()
+X_train_scaled = scaler.<span class="fn">fit_transform</span>(X_train)
+X_test_scaled  = scaler.<span class="fn">transform</span>(X_test)
+
+<span class="cm"># 2. Define the model</span>
+mlpModel = <span class="fn">MLPClassifier</span>(
+    hidden_layer_sizes=(<span class="num">100</span>, <span class="num">50</span>),   <span class="cm"># 2 hidden layers</span>
+    activation=<span class="str">'relu'</span>,
+    learning_rate_init=<span class="num">0.001</span>,
+    batch_size=<span class="num">200</span>,
+    max_iter=<span class="num">100</span>,               <span class="cm"># epochs</span>
+    random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 3. Train</span>
+mlpModel.<span class="fn">fit</span>(X_train_scaled, y_train)
+
+<span class="cm"># 4. Plot loss curve</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+plt.<span class="fn">plot</span>(mlpModel.loss_curve_)
+plt.<span class="fn">xlabel</span>(<span class="str">"Epochs"</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">"Loss"</span>)
+plt.<span class="fn">show</span>()</pre>
+      <div class="callout tip">
+        <strong>Key Parameters to Know for Exams</strong>
+        <code style="font-family:'Space Mono',monospace;font-size:12px;">hidden_layer_sizes</code> sets the architecture. <code style="font-family:'Space Mono',monospace;font-size:12px;">max_iter</code> is the number of epochs. <code style="font-family:'Space Mono',monospace;font-size:12px;">learning_rate_init</code> sets η. <code style="font-family:'Space Mono',monospace;font-size:12px;">batch_size</code> controls mini-batch SGD.
+      </div>
+    </div>
+  </section>
+
+  <!-- BATCH & EPOCH -->
+  <section class="section" id="batch">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Batch Size & Epochs</h2>
+    </div>
+
+    <div class="two-col">
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-accent-line" style="background: var(--accent3)"></div>
+        <h3>📦 Batch</h3>
+        <p>A <strong>batch</strong> is a subset of training instances used in one forward + backward pass. Rather than showing the whole dataset at once (too expensive) or one example at a time (too noisy), we process them in chunks.</p>
+        <div class="callout info" style="margin-top:12px;">
+          <strong>Batch Size</strong>
+          The number of training instances in a single batch. Typical values: 32, 64, 128, 256, 512.
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="card-accent-line" style="background: var(--accent2)"></div>
+        <h3>🔁 Epoch</h3>
+        <p>An <strong>epoch</strong> is one complete pass through the entire training dataset. During an epoch, every batch is processed exactly once.</p>
+        <div class="callout warn" style="margin-top:12px;">
+          <strong>Epoch ≠ Training Pass</strong>
+          Each epoch contains (dataset_size / batch_size) training passes, not just one.
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-box" style="margin-top:24px;">
+      <div class="formula">Batches per epoch = ⌈ N / batch_size ⌉</div>
+      <div class="formula-desc">N = total training instances &nbsp;|&nbsp; ⌈⌉ = ceiling function</div>
+    </div>
+
+    <div class="formula-box" style="margin-top:8px;">
+      <div class="formula">Total passes = (N / batch_size) × num_epochs</div>
+      <div class="formula-desc">Total forward+backward passes across all training</div>
+    </div>
+
+    <!-- Interactive Calculator -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-accent-line" style="background: linear-gradient(90deg, var(--accent), var(--accent3))"></div>
+      <h3>🧮 Interactive Batch Calculator</h3>
+      <p style="margin-bottom:20px; font-size:14px; color:var(--muted);">Plug in your numbers to see how batches, passes, and epochs relate.</p>
+      <div class="calc-grid">
+        <div class="calc-input">
+          <label>Dataset Size (N)</label>
+          <input type="number" id="calcN" value="100000" oninput="updateCalc()">
+        </div>
+        <div class="calc-input">
+          <label>Batch Size</label>
+          <input type="number" id="calcB" value="500" oninput="updateCalc()">
+        </div>
+        <div class="calc-input">
+          <label>Num Epochs</label>
+          <input type="number" id="calcE" value="100" oninput="updateCalc()">
+        </div>
+      </div>
+      <div class="calc-results">
+        <div class="result-item">
+          <span class="result-val" id="rBatches">200</span>
+          <div class="result-label">Batches per Epoch</div>
+        </div>
+        <div class="result-item">
+          <span class="result-val" id="rPassEpoch">200</span>
+          <div class="result-label">Passes per Epoch</div>
+        </div>
+        <div class="result-item">
+          <span class="result-val" id="rTotalPass">20,000</span>
+          <div class="result-label">Total Training Passes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Effect Table -->
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent2)"></div>
+      <h3>📊 How Batch Size Affects Training</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Factor</th>
+            <th>Small Batch Size</th>
+            <th>Large Batch Size</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Gradient Estimate</strong></td><td><span class="badge badge-yellow">Noisy</span> — high variance</td><td><span class="badge badge-green">Stable</span> — low variance</td></tr>
+          <tr><td><strong>Training Speed</strong></td><td>Slower per epoch (more updates)</td><td>Faster per epoch (fewer updates)</td></tr>
+          <tr><td><strong>Memory Usage</strong></td><td><span class="badge badge-green">Low</span></td><td><span class="badge badge-red">High</span></td></tr>
+          <tr><td><strong>Generalization</strong></td><td>Often <span class="badge badge-green">better</span> — noise acts as regularization</td><td>Can <span class="badge badge-yellow">overfit</span> sharper minima</td></tr>
+          <tr><td><strong>Loss per Epoch</strong></td><td>Fluctuates more</td><td>Smoother loss curve</td></tr>
+          <tr><td><strong>Convergence</strong></td><td>May escape local minima</td><td>Can get stuck in sharp minima</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn">
+        <strong>Professor Exam Favorite</strong>
+        Increasing batch size does NOT always improve accuracy — large batches often generalize worse despite training faster. Small batches introduce noise that can act as implicit regularization.
+      </div>
+    </div>
+  </section>
+
+  <!-- GRADIENT DESCENT & LR -->
+  <section class="section" id="gradient">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Learning Rate & Gradient Descent</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: linear-gradient(90deg, var(--accent3), var(--accent2))"></div>
+      <h3>📉 Gradient Descent</h3>
+      <p>Gradient descent is the optimization algorithm used to minimize the loss function. It works by computing the gradient (slope) of the loss with respect to each weight, then moving the weights in the direction that reduces the loss.</p>
+      <div class="formula-box" style="margin-top:16px;">
+        <div class="formula">w ← w − η · ∇<sub>w</sub>L(w)</div>
+        <div class="formula-desc">Move each weight opposite to the gradient, scaled by η</div>
+      </div>
+      <p style="margin-top:14px; font-size:14px; color:#c0c0d4;">The gradient tells you <em>which direction is uphill</em> on the loss surface. Gradient descent moves you <em>downhill</em> to find the minimum.</p>
+    </div>
+
+    <!-- Interactive LR Slider -->
+    <div class="lr-demo">
+      <h3>🎛️ Learning Rate Simulator</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Drag the slider to see how different learning rates affect training behavior.</p>
+      <div class="slider-wrap">
+        <input type="range" min="1" max="100" value="20" id="lrSlider" oninput="updateLR(this.value)">
+        <div class="lr-display">
+          <div class="lr-val" id="lrVal">0.001</div>
+          <div class="lr-desc" id="lrDesc">Moderate learning rate — good balance of speed and stability.</div>
+        </div>
+      </div>
+      <div class="lr-status" id="lrStatus"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent)"></div>
+      <h3>📈 Visualize Loss Curves by Learning Rate</h3>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:16px;">Click a learning rate profile to see how the loss curve typically looks during training.</p>
+      <div class="loss-canvas-wrap">
+        <canvas id="lossCanvas"></canvas>
+      </div>
+      <div class="canvas-controls">
+        <button class="ctrl-btn active" onclick="drawLoss('good', this)">Ideal LR</button>
+        <button class="ctrl-btn accent2" onclick="drawLoss('high', this)">Too High LR</button>
+        <button class="ctrl-btn accent3" onclick="drawLoss('low', this)">Too Low LR</button>
+        <button class="ctrl-btn" onclick="drawLoss('decay', this)">LR Decay</button>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="compare-card good">
+        <h4>✓ Small Learning Rate</h4>
+        <ul style="padding-left:20px;">
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">Takes many iterations to converge</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">More likely to find the true minimum</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">Smoother, more stable loss curve</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4;">Higher computational cost</li>
+        </ul>
+      </div>
+      <div class="compare-card bad">
+        <h4>✗ Large Learning Rate</h4>
+        <ul style="padding-left:20px;">
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">Updates weights quickly</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">May overshoot the minimum</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4; margin-bottom:4px;">Can diverge (loss goes up!)</li>
+          <li style="font-size:13px;line-height:1.7;color:#c0c0d4;">Oscillates around minimum</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout warn" style="margin-top:20px;">
+      <strong>Convergence vs Divergence</strong>
+      A model "converges" when the loss reaches a stable minimum. A model "diverges" when the loss increases or oscillates wildly. The learning rate is the #1 cause of divergence.
+    </div>
+  </section>
+
+  <!-- TECHNIQUES -->
+  <section class="section" id="techniques">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Improving Training Performance</h2>
+    </div>
+
+    <div class="techniques-grid">
+      <div class="technique-card">
+        <div class="technique-icon">⚖️</div>
+        <h4>Feature Scaling</h4>
+        <p>Normalize or standardize input features before training. Without scaling, features with large values dominate the gradient updates, causing unstable training. Use <code style="font-family:'Space Mono',monospace;font-size:12px;">StandardScaler</code> (zero mean, unit variance) or <code style="font-family:'Space Mono',monospace;font-size:12px;">MinMaxScaler</code>.</p>
+        <div style="margin-top:12px;"><span class="badge badge-green">Pre-processing</span></div>
+      </div>
+
+      <div class="technique-card">
+        <div class="technique-icon">🔧</div>
+        <h4>Regularization</h4>
+        <p>Controls the magnitude of weights to prevent overfitting. L2 regularization (weight decay) adds a penalty term λ‖w‖² to the loss function. This discourages the model from relying too heavily on any single feature.</p>
+        <div style="margin-top:12px;"><span class="badge badge-blue">Complexity Control</span></div>
+      </div>
+
+      <div class="technique-card">
+        <div class="technique-icon">🎲</div>
+        <h4>Dropout</h4>
+        <p>Randomly deactivates a fraction of neurons during each training iteration. This adds structured random noise, forces the network to learn redundant representations, and prevents co-adaptation of neurons — effectively reducing overfitting.</p>
+        <div style="margin-top:12px;"><span class="badge badge-yellow">Regularization</span></div>
+      </div>
+
+      <div class="technique-card">
+        <div class="technique-icon">🏎️</div>
+        <h4>Adaptive Learning Rates</h4>
+        <p>Algorithms like Adam, RMSProp, and AdaGrad automatically adjust the learning rate per-parameter. Adam combines momentum with adaptive rates and is the most popular optimizer for deep learning today.</p>
+        <div style="margin-top:12px;"><span class="badge badge-blue">Optimization</span></div>
+      </div>
+
+      <div class="technique-card">
+        <div class="technique-icon">⏱️</div>
+        <h4>Early Stopping</h4>
+        <p>Monitor validation loss during training and stop when it stops improving. Prevents overfitting by halting training at the point of best generalization, not when training loss is minimized.</p>
+        <div style="margin-top:12px;"><span class="badge badge-green">Training Control</span></div>
+      </div>
+
+      <div class="technique-card">
+        <div class="technique-icon">📐</div>
+        <h4>Batch Normalization</h4>
+        <p>Normalizes the outputs of each layer before passing them to the next. This stabilizes training, allows higher learning rates, and reduces the dependence on careful weight initialization.</p>
+        <div style="margin-top:12px;"><span class="badge badge-blue">Architecture</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:8px;">
+      <div class="card-accent-line" style="background: var(--accent2)"></div>
+      <h3>🎲 Dropout — Deep Dive</h3>
+      <p>Dropout is especially important to understand for exams. During training, each neuron is randomly "dropped" (set to zero) with probability p. At test time, all neurons are active but their outputs are scaled by (1−p) to compensate.</p>
+      <div class="two-col" style="margin-top:16px;">
+        <div style="background:var(--surface2); border-radius:8px; padding:16px; border:1px solid var(--border);">
+          <p style="font-size:13px; font-family:'Space Mono',monospace; color:var(--accent); margin-bottom:8px;">TRAINING</p>
+          <p style="font-size:13px; color:#c0c0d4; line-height:1.6;">Each iteration, randomly zero-out nodes with probability p. Forces the network to use multiple pathways — can't rely on one set of neurons.</p>
+        </div>
+        <div style="background:var(--surface2); border-radius:8px; padding:16px; border:1px solid var(--border);">
+          <p style="font-size:13px; font-family:'Space Mono',monospace; color:var(--accent3); margin-bottom:8px;">INFERENCE</p>
+          <p style="font-size:13px; color:#c0c0d4; line-height:1.6;">All neurons are active. Outputs are multiplied by (1−p) to keep expected values the same as during training (inverted dropout).</p>
+        </div>
+      </div>
+      <div class="callout info" style="margin-top:16px;">
+        <strong>Why it Prevents Overfitting</strong>
+        By randomly disabling neurons, dropout prevents any single neuron from becoming overly specialized to the training data. The model must learn distributed, robust representations.
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="section" id="quiz">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>MCQ Quiz</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted); margin-bottom:28px;">Professor-level difficulty. No hints — click to reveal answers.</p>
+
+    <!-- Q1 -->
+    <div class="mcq-card" id="q1">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 01</span>
+        A neural network is trained on 80,000 instances with a batch size of 400 and 50 epochs. How many total weight update steps (training passes) are completed?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q1', this, false, 'A')"><span class="opt-letter">A</span> 50</div>
+        <div class="mcq-opt" onclick="checkMCQ('q1', this, false, 'B')"><span class="opt-letter">B</span> 4,000</div>
+        <div class="mcq-opt" onclick="checkMCQ('q1', this, true,  'C')"><span class="opt-letter">C</span> 10,000</div>
+        <div class="mcq-opt" onclick="checkMCQ('q1', this, false, 'D')"><span class="opt-letter">D</span> 200,000</div>
+      </div>
+      <div class="mcq-feedback" id="q1-fb">
+        <strong>✓ Correct!</strong> 80,000 / 400 = 200 batches per epoch. 200 × 50 = <strong>10,000</strong> total training passes. Each batch = one weight update step.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="mcq-card" id="q2">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 02</span>
+        Which of the following best describes what happens when the learning rate is set too high?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q2', this, false, 'A')"><span class="opt-letter">A</span> The model converges faster and achieves a lower loss</div>
+        <div class="mcq-opt" onclick="checkMCQ('q2', this, false, 'B')"><span class="opt-letter">B</span> Training slows down significantly due to more iterations needed</div>
+        <div class="mcq-opt" onclick="checkMCQ('q2', this, true,  'C')"><span class="opt-letter">C</span> The weights may overshoot the minimum, causing the loss to oscillate or diverge</div>
+        <div class="mcq-opt" onclick="checkMCQ('q2', this, false, 'D')"><span class="opt-letter">D</span> Dropout automatically compensates by increasing regularization</div>
+      </div>
+      <div class="mcq-feedback" id="q2-fb">
+        <strong>✓ Correct!</strong> A large η makes weight updates too big — the optimizer "jumps over" the minimum and oscillates. In severe cases, the loss increases every iteration (divergence). B describes a small LR. D is unrelated.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="mcq-card" id="q3">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 03</span>
+        What is the PRIMARY role of backpropagation in training a neural network?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q3', this, false, 'A')"><span class="opt-letter">A</span> To generate predictions from input data</div>
+        <div class="mcq-opt" onclick="checkMCQ('q3', this, true,  'B')"><span class="opt-letter">B</span> To compute gradients of the loss with respect to each weight so they can be updated</div>
+        <div class="mcq-opt" onclick="checkMCQ('q3', this, false, 'C')"><span class="opt-letter">C</span> To normalize the input features before training</div>
+        <div class="mcq-opt" onclick="checkMCQ('q3', this, false, 'D')"><span class="opt-letter">D</span> To randomly initialize the weights at the start of training</div>
+      </div>
+      <div class="mcq-feedback" id="q3-fb">
+        <strong>✓ Correct!</strong> Backprop's job is to compute ∂L/∂w for every weight using the chain rule. These gradients are then used by gradient descent to update the weights. A describes forward propagation; C is pre-processing; D is weight initialization.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="mcq-card" id="q4">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 04</span>
+        You notice your model's training loss is decreasing steadily, but the validation loss starts increasing after epoch 20. Which technique would MOST directly address this problem?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q4', this, false, 'A')"><span class="opt-letter">A</span> Increase the learning rate</div>
+        <div class="mcq-opt" onclick="checkMCQ('q4', this, false, 'B')"><span class="opt-letter">B</span> Increase the batch size</div>
+        <div class="mcq-opt" onclick="checkMCQ('q4', this, true,  'C')"><span class="opt-letter">C</span> Apply dropout or regularization, and use early stopping</div>
+        <div class="mcq-opt" onclick="checkMCQ('q4', this, false, 'D')"><span class="opt-letter">D</span> Remove feature scaling</div>
+      </div>
+      <div class="mcq-feedback" id="q4-fb">
+        <strong>✓ Correct!</strong> This is the classic sign of <strong>overfitting</strong> — the model has memorized training data but generalizes poorly. Dropout, regularization (L2), and early stopping are the standard remedies. Increasing LR or batch size would likely make it worse.
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="mcq-card" id="q5">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 05</span>
+        In scikit-learn's MLPClassifier, the parameter <code style="font-family:'Space Mono',monospace;font-size:13px;">max_iter=100</code> refers to what?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q5', this, false, 'A')"><span class="opt-letter">A</span> The maximum number of weight update steps</div>
+        <div class="mcq-opt" onclick="checkMCQ('q5', this, true,  'B')"><span class="opt-letter">B</span> The maximum number of epochs (full passes through the training set)</div>
+        <div class="mcq-opt" onclick="checkMCQ('q5', this, false, 'C')"><span class="opt-letter">C</span> The maximum batch size</div>
+        <div class="mcq-opt" onclick="checkMCQ('q5', this, false, 'D')"><span class="opt-letter">D</span> The maximum number of hidden layers allowed</div>
+      </div>
+      <div class="mcq-feedback" id="q5-fb">
+        <strong>✓ Correct!</strong> <code style="font-family:'Space Mono',monospace;font-size:12px;">max_iter</code> in sklearn's MLP is the number of epochs. The total weight updates = (dataset_size / batch_size) × max_iter.
+      </div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="mcq-card" id="q6">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 06</span>
+        Which statement about dropout is CORRECT?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q6', this, false, 'A')"><span class="opt-letter">A</span> Dropout is applied during inference to reduce prediction variance</div>
+        <div class="mcq-opt" onclick="checkMCQ('q6', this, false, 'B')"><span class="opt-letter">B</span> Dropout permanently removes neurons from the network</div>
+        <div class="mcq-opt" onclick="checkMCQ('q6', this, true,  'C')"><span class="opt-letter">C</span> Dropout randomly deactivates neurons each iteration during training, helping prevent overfitting</div>
+        <div class="mcq-opt" onclick="checkMCQ('q6', this, false, 'D')"><span class="opt-letter">D</span> Dropout is a form of feature scaling</div>
+      </div>
+      <div class="mcq-feedback" id="q6-fb">
+        <strong>✓ Correct!</strong> Dropout is a training-time regularization technique. It randomly zeros neurons per iteration. At inference/test time, all neurons are active (outputs scaled by 1−p). It does NOT permanently remove neurons.
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="mcq-card" id="q7">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 07</span>
+        A model trained without feature scaling on a dataset where one feature ranges from 0–1 and another ranges from 0–10,000. What is the most likely outcome?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q7', this, false, 'A')"><span class="opt-letter">A</span> The model will train normally; feature scale has no effect on neural networks</div>
+        <div class="mcq-opt" onclick="checkMCQ('q7', this, true,  'B')"><span class="opt-letter">B</span> The large-valued feature will dominate gradient updates, causing unstable or slow training</div>
+        <div class="mcq-opt" onclick="checkMCQ('q7', this, false, 'C')"><span class="opt-letter">C</span> The model will automatically normalize features during backpropagation</div>
+        <div class="mcq-opt" onclick="checkMCQ('q7', this, false, 'D')"><span class="opt-letter">D</span> The learning rate will automatically adjust to compensate</div>
+      </div>
+      <div class="mcq-feedback" id="q7-fb">
+        <strong>✓ Correct!</strong> Without scaling, the large-magnitude feature (0–10,000) will produce much larger gradients than the small one (0–1). This causes imbalanced updates — the network struggles to learn from the small-scale feature, often failing to converge properly.
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="mcq-card" id="q8">
+      <div class="mcq-q">
+        <span class="q-num">QUESTION 08</span>
+        What does the <code style="font-family:'Space Mono',monospace;font-size:13px;">mlpModel.loss_curve_</code> attribute store in scikit-learn?
+      </div>
+      <div class="mcq-options">
+        <div class="mcq-opt" onclick="checkMCQ('q8', this, false, 'A')"><span class="opt-letter">A</span> The loss value computed on the test set after training</div>
+        <div class="mcq-opt" onclick="checkMCQ('q8', this, true,  'B')"><span class="opt-letter">B</span> The training loss value at the end of each epoch</div>
+        <div class="mcq-opt" onclick="checkMCQ('q8', this, false, 'C')"><span class="opt-letter">C</span> The loss value for each individual training instance</div>
+        <div class="mcq-opt" onclick="checkMCQ('q8', this, false, 'D')"><span class="opt-letter">D</span> The gradient values at the final epoch</div>
+      </div>
+      <div class="mcq-feedback" id="q8-fb">
+        <strong>✓ Correct!</strong> <code style="font-family:'Space Mono',monospace;font-size:12px;">loss_curve_</code> stores the loss computed on the training data at the end of each epoch. It has length = number of epochs and is used to diagnose convergence, learning rate issues, and overfitting.
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT-IF SCENARIOS -->
+  <section class="section" id="scenarios">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>What-If Scenarios</h2>
+    </div>
+    <p style="font-size:14px; color:var(--muted); margin-bottom:28px;">Click each scenario to reveal deep analysis. These are the kinds of questions that appear on hard exams.</p>
+
+    <div class="scenario" id="sc1">
+      <div class="scenario-header" onclick="toggleScenario('sc1')">
+        <div class="scenario-title">
+          <span class="scenario-badge">WHAT IF</span>
+          You double the batch size from 100 → 200, keeping everything else the same
+        </div>
+        <span class="scenario-arrow">›</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-situation">
+          Original setup: 10,000 training instances, batch size 100, 50 epochs, LR = 0.001. You change batch size to 200.
+        </div>
+        <div class="scenario-analysis">
+          <h4>Effect on Batches Per Epoch</h4>
+          <p>Batches per epoch: 10,000/100 = <strong>100 → 10,000/200 = 50</strong>. You now process half as many batches each epoch.</p>
+          <h4>Effect on Total Weight Updates</h4>
+          <p>Total passes: 100 × 50 = 5,000 → 50 × 50 = <strong>2,500</strong>. You perform HALF the weight updates in the same number of epochs.</p>
+          <h4>Effect on Gradient Quality</h4>
+          <p>Larger batches give a more accurate (less noisy) estimate of the true gradient, but the noisiness of small batches can help escape local minima and often generalizes better.</p>
+          <h4>Effect on Training Speed</h4>
+          <p>Each epoch completes faster (fewer backward passes), but the model may need more epochs to converge to the same quality since each epoch makes fewer updates.</p>
+          <h4>Effect on Generalization</h4>
+          <p>Research shows larger batches often converge to sharper minima that generalize worse ("sharp minima" problem). Smaller batches tend to find flatter minima that generalize better.</p>
+          <div class="callout warn">
+            <strong>Bottom Line</strong>
+            Doubling batch size ≈ halving the effective training time per epoch and reducing update noise, but may hurt generalization. To compensate, many practitioners also scale the learning rate proportionally (linear scaling rule: if batch doubles, try doubling LR too).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario" id="sc2">
+      <div class="scenario-header" onclick="toggleScenario('sc2')">
+        <div class="scenario-title">
+          <span class="scenario-badge">WHAT IF</span>
+          The loss curve oscillates wildly and never decreases
+        </div>
+        <span class="scenario-arrow">›</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-situation">
+          You train a MLP for 100 epochs. The loss_curve_ plot shows the loss bouncing between high values rather than trending downward.
+        </div>
+        <div class="scenario-analysis">
+          <h4>Most Likely Cause</h4>
+          <p>The learning rate is too large. The gradient updates are overshooting the minimum on every step — the optimizer jumps back and forth over the optimal weights.</p>
+          <h4>Secondary Causes</h4>
+          <ul>
+            <li>Features are not scaled — large gradient magnitudes cause instability</li>
+            <li>Batch size is too small — extremely noisy gradient estimates</li>
+            <li>Poor weight initialization (rare with modern defaults)</li>
+            <li>The loss function is poorly suited to the problem</li>
+          </ul>
+          <h4>How to Diagnose</h4>
+          <p>Start by reducing learning rate by 10× (e.g., 0.01 → 0.001). If still unstable, check whether features are scaled. Examine the magnitude of gradients.</p>
+          <h4>How to Fix</h4>
+          <ul>
+            <li>Reduce learning rate (primary fix)</li>
+            <li>Apply StandardScaler to features</li>
+            <li>Increase batch size to get smoother gradient estimates</li>
+            <li>Use Adam optimizer instead of vanilla SGD</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario" id="sc3">
+      <div class="scenario-header" onclick="toggleScenario('sc3')">
+        <div class="scenario-title">
+          <span class="scenario-badge">WHAT IF</span>
+          Training loss is very low but test accuracy is poor
+        </div>
+        <span class="scenario-arrow">›</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-situation">
+          After 200 epochs, your model achieves 99% training accuracy but only 62% test accuracy. The loss_curve_ shows a smooth decrease to near zero.
+        </div>
+        <div class="scenario-analysis">
+          <h4>Diagnosis</h4>
+          <p>This is textbook <strong>overfitting</strong>. The model has memorized the training data rather than learning generalizable patterns. The large gap between training and test performance is the key indicator.</p>
+          <h4>Why It Happens</h4>
+          <ul>
+            <li>Model is too complex (too many parameters) for the dataset size</li>
+            <li>Too many epochs — model has "memorized" training noise</li>
+            <li>No regularization to constrain weight magnitudes</li>
+          </ul>
+          <h4>Solutions</h4>
+          <ul>
+            <li><strong>Dropout:</strong> Randomly deactivate neurons during training to prevent co-adaptation</li>
+            <li><strong>L2 Regularization:</strong> Add penalty to loss for large weights (α parameter in sklearn)</li>
+            <li><strong>Early Stopping:</strong> Stop training when validation loss starts increasing</li>
+            <li><strong>More data:</strong> Overfit on more diverse examples</li>
+            <li><strong>Reduce model complexity:</strong> Fewer hidden layers or neurons</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario" id="sc4">
+      <div class="scenario-header" onclick="toggleScenario('sc4')">
+        <div class="scenario-title">
+          <span class="scenario-badge">WHAT IF</span>
+          You increase epochs from 50 → 500, but loss barely improves after epoch 80
+        </div>
+        <span class="scenario-arrow">›</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-situation">
+          Your loss_curve_ shows steep descent for the first 80 epochs, then essentially flatlines. You continue training to 500 epochs.
+        </div>
+        <div class="scenario-analysis">
+          <h4>What's Happening</h4>
+          <p>The model has already converged (or reached a local minimum) by epoch 80. The extra 420 epochs are mostly wasted computation — and worse, could cause overfitting.</p>
+          <h4>Risks of Over-training</h4>
+          <ul>
+            <li>Overfitting: the model continues to fit training noise after convergence</li>
+            <li>Wasted compute time with no benefit</li>
+            <li>Potential degradation in test performance</li>
+          </ul>
+          <h4>Better Approaches</h4>
+          <ul>
+            <li><strong>Early stopping:</strong> Monitor validation loss and stop at the optimal point</li>
+            <li><strong>Learning rate decay:</strong> Reduce LR over time to make finer adjustments once near the minimum</li>
+            <li><strong>Use the loss curve:</strong> <code style="font-family:'Space Mono',monospace;font-size:12px;">mlpModel.loss_curve_</code> to visually identify convergence</li>
+          </ul>
+          <div class="callout tip">
+            <strong>Rule of Thumb</strong>
+            If the loss hasn't improved by more than ~0.001 in 10 consecutive epochs, the model has likely converged. This is exactly what scikit-learn's tolerance parameter (tol) controls.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario" id="sc5">
+      <div class="scenario-header" onclick="toggleScenario('sc5')">
+        <div class="scenario-title">
+          <span class="scenario-badge">WHAT IF</span>
+          You remove StandardScaler before training your MLP
+        </div>
+        <span class="scenario-arrow">›</span>
+      </div>
+      <div class="scenario-body">
+        <div class="scenario-situation">
+          Your dataset has features with ranges: age (18–80), salary (20,000–200,000), and score (0.0–1.0). You skip feature scaling and train directly.
+        </div>
+        <div class="scenario-analysis">
+          <h4>Immediate Effect on Gradients</h4>
+          <p>The salary feature (range ~180,000) produces gradients ~10,000× larger than the score feature (range ~1). Gradient descent will update weights connected to salary much more aggressively than those connected to score.</p>
+          <h4>Effect on Convergence</h4>
+          <p>The loss surface becomes elongated and poorly scaled — gradient descent takes a very zig-zaggy path instead of going straight to the minimum. Convergence is much slower or fails entirely.</p>
+          <h4>Effect on Weight Initialization</h4>
+          <p>Weights are initialized assuming ~unit-scale inputs. With unscaled inputs, the network's activations may immediately saturate or become extremely small, hampering learning.</p>
+          <h4>Fix</h4>
+          <p>Always use <code style="font-family:'Space Mono',monospace;font-size:12px;">StandardScaler().fit_transform(X_train)</code> and <code style="font-family:'Space Mono',monospace;font-size:12px;">.transform(X_test)</code>. Fit ONLY on training data to prevent data leakage.</p>
+          <div class="callout warn">
+            <strong>Common Exam Mistake</strong>
+            Calling <code style="font-family:'Space Mono',monospace;font-size:12px;">fit_transform</code> on the test set instead of just <code style="font-family:'Space Mono',monospace;font-size:12px;">transform</code> is data leakage — the scaler learns test statistics, inflating performance estimates.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHEAT SHEET -->
+  <section class="section" id="cheatsheet">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>Exam Cheat Sheet</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent)"></div>
+      <h3>📐 Key Formulas</h3>
+      <table>
+        <thead><tr><th>Formula</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code style="font-family:'Space Mono',monospace;">Batches/epoch = N / batch_size</code></td><td>N = dataset size</td></tr>
+          <tr><td><code style="font-family:'Space Mono',monospace;">Total passes = (N/B) × epochs</code></td><td>B = batch size</td></tr>
+          <tr><td><code style="font-family:'Space Mono',monospace;">w ← w − η · ∂L/∂w</code></td><td>Gradient descent update rule</td></tr>
+          <tr><td><code style="font-family:'Space Mono',monospace;">loss_curve_[i]</code></td><td>Loss at end of epoch i</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent3)"></div>
+      <h3>🗺️ Concept Map</h3>
+      <table>
+        <thead><tr><th>Concept</th><th>Definition</th><th>Key Detail</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Forward Prop</strong></td><td>Input → Prediction</td><td>No weight updates</td></tr>
+          <tr><td><strong>Backprop</strong></td><td>Error → Weight gradients</td><td>Uses chain rule</td></tr>
+          <tr><td><strong>Gradient Descent</strong></td><td>Minimize loss via gradients</td><td>w -= η × gradient</td></tr>
+          <tr><td><strong>Batch</strong></td><td>Subset of training data</td><td>One forward+back pass</td></tr>
+          <tr><td><strong>Epoch</strong></td><td>Full pass through dataset</td><td>Contains N/B batches</td></tr>
+          <tr><td><strong>Learning Rate (η)</strong></td><td>Step size for gradient descent</td><td>Too high → diverge; too low → slow</td></tr>
+          <tr><td><strong>Dropout</strong></td><td>Randomly zero neurons</td><td>Training only; prevents overfitting</td></tr>
+          <tr><td><strong>Regularization</strong></td><td>Penalize large weights</td><td>L2 adds λ‖w‖² to loss</td></tr>
+          <tr><td><strong>Feature Scaling</strong></td><td>Normalize input features</td><td>Required for stable gradient descent</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-accent-line" style="background: var(--accent2)"></div>
+      <h3>⚡ Quick Diagnosis Guide</h3>
+      <table>
+        <thead><tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Loss oscillates wildly</td><td><span class="badge badge-red">LR too high</span></td><td>Reduce learning rate</td></tr>
+          <tr><td>Loss decreases very slowly</td><td><span class="badge badge-yellow">LR too small</span></td><td>Increase learning rate</td></tr>
+          <tr><td>Train ↑↑ Test ↓↓ accuracy</td><td><span class="badge badge-red">Overfitting</span></td><td>Dropout, regularization, early stopping</td></tr>
+          <tr><td>Both train & test accuracy low</td><td><span class="badge badge-yellow">Underfitting</span></td><td>More layers, more epochs, lower regularization</td></tr>
+          <tr><td>Training unstable / NaN loss</td><td><span class="badge badge-red">No feature scaling</span></td><td>Apply StandardScaler</td></tr>
+          <tr><td>Loss plateau after few epochs</td><td><span class="badge badge-blue">Converged early</span></td><td>LR decay or try different optimizer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ── Section navigation ──────────────────────────────────
+const visited = new Set(['concepts']);
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  visited.add(id);
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = 8;
+  const pct = Math.round((visited.size / total) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${visited.size} of ${total} sections visited`;
+}
+
+// ── Batch Calculator ─────────────────────────────────────
+function updateCalc() {
+  const N = parseInt(document.getElementById('calcN').value) || 0;
+  const B = parseInt(document.getElementById('calcB').value) || 1;
+  const E = parseInt(document.getElementById('calcE').value) || 0;
+  const batches = Math.ceil(N / B);
+  const totalPass = batches * E;
+  document.getElementById('rBatches').textContent = batches.toLocaleString();
+  document.getElementById('rPassEpoch').textContent = batches.toLocaleString();
+  document.getElementById('rTotalPass').textContent = totalPass.toLocaleString();
+}
+
+// ── Learning Rate Slider ──────────────────────────────────
+const lrMap = [
+  { val: 0.00001, label: '0.00001', desc: 'Extremely small — training will take forever. Rarely converges in reasonable time.', status: 'background: rgba(124,107,255,0.1); border: 1px solid var(--accent3); color: #bbb8ff;', msg: '⚠️ Too slow — loss decreases at a glacial pace. May need thousands of epochs.' },
+  { val: 0.0001,  label: '0.0001',  desc: 'Very small — stable but slow convergence. Good for fine-tuning.', status: 'background: rgba(0,245,196,0.07); border: 1px solid var(--accent); color: #80ffe8;', msg: '✓ Stable convergence. Works but requires many epochs.' },
+  { val: 0.001,   label: '0.001',   desc: 'Default for Adam. Good balance of speed and stability for most problems.', status: 'background: rgba(0,230,118,0.1); border: 1px solid var(--correct); color: #80ffb0;', msg: '✓✓ Ideal range — this is the sklearn MLP default. Recommended starting point.' },
+  { val: 0.01,    label: '0.01',    desc: 'Moderate-high. Can work well with proper tuning, but watch for instability.', status: 'background: rgba(255,171,0,0.08); border: 1px solid var(--warn); color: #ffd060;', msg: '⚠️ Monitor the loss curve carefully — may start oscillating.' },
+  { val: 0.1,     label: '0.1',     desc: 'High learning rate — likely to overshoot and oscillate. Risky.', status: 'background: rgba(255,77,109,0.08); border: 1px solid var(--accent2); color: #ff8099;', msg: '✗ Likely to diverge. Loss will oscillate or increase.' },
+  { val: 1.0,     label: '1.0',     desc: 'Far too large — weights will explode. Loss will diverge immediately.', status: 'background: rgba(255,23,68,0.1); border: 1px solid var(--wrong); color: #ff6080;', msg: '✗✗ Divergence guaranteed. Weights will explode to NaN.' }
+];
+
+function updateLR(v) {
+  const idx = Math.min(Math.floor(v / 17), lrMap.length - 1);
+  const lr = lrMap[idx];
+  document.getElementById('lrVal').textContent = lr.label;
+  document.getElementById('lrDesc').textContent = lr.desc;
+  const s = document.getElementById('lrStatus');
+  s.style.cssText = lr.status;
+  s.textContent = lr.msg;
+}
+updateLR(20);
+
+// ── Loss Curve Canvas ─────────────────────────────────────
+const canvas = document.getElementById('lossCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * devicePixelRatio;
+  canvas.height = canvas.offsetHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+}
+
+function generateLoss(type) {
+  const pts = [];
+  const n = 50;
+  switch(type) {
+    case 'good':
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        pts.push(2.5 * Math.exp(-4 * t) + 0.1 + (Math.random() * 0.04));
+      }
+      break;
+    case 'high':
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        const osc = Math.sin(i * 1.5) * 0.8 * Math.exp(-0.5 * t);
+        pts.push(1.2 + osc + Math.random() * 0.3);
+      }
+      break;
+    case 'low':
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        pts.push(2.5 - 1.8 * t + Math.random() * 0.05);
+      }
+      break;
+    case 'decay':
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        const lr = t < 0.5 ? 1 : 0.1 * (1 - (t - 0.5) * 2) + 0.01;
+        pts.push(2.5 * Math.exp(-3.5 * t - (t > 0.5 ? 2.5 : 0)) + 0.08 + Math.random() * 0.02);
+      }
+      break;
+  }
+  return pts;
+}
+
+let currentType = 'good';
+function drawLoss(type, btn) {
+  currentType = type;
+  document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  resizeCanvas();
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  ctx.clearRect(0, 0, W, H);
+
+  const pts = generateLoss(type);
+  const maxV = Math.max(...pts), minV = Math.min(...pts);
+  const pad = { t: 20, b: 30, l: 40, r: 20 };
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const y = pad.t + (H - pad.t - pad.b) * (g / 4);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  }
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `10px 'Space Mono', monospace`;
+  ctx.fillText('EPOCHS', W/2 - 20, H - 4);
+  ctx.save(); ctx.rotate(-Math.PI/2);
+  ctx.fillText('LOSS', -H/2 - 10, 12);
+  ctx.restore();
+
+  // Line color
+  const colors = { good: '#00f5c4', high: '#ff4d6d', low: '#7c6bff', decay: '#ffab00' };
+  const color = colors[type];
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
+  grad.addColorStop(0, color + '30');
+  grad.addColorStop(1, color + '00');
+  ctx.beginPath();
+  pts.forEach((v, i) => {
+    const x = pad.l + (W - pad.l - pad.r) * (i / (pts.length - 1));
+    const y = pad.t + (H - pad.t - pad.b) * ((maxV - v) / (maxV - minV || 1));
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(pad.l + (W - pad.l - pad.r), H - pad.b);
+  ctx.lineTo(pad.l, H - pad.b);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Main line
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  pts.forEach((v, i) => {
+    const x = pad.l + (W - pad.l - pad.r) * (i / (pts.length - 1));
+    const y = pad.t + (H - pad.t - pad.b) * ((maxV - v) / (maxV - minV || 1));
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Glow
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+window.addEventListener('resize', () => drawLoss(currentType, null));
+setTimeout(() => drawLoss('good', document.querySelector('.ctrl-btn')), 100);
+
+// ── MCQ Logic ─────────────────────────────────────────────
+let correct = 0, total = 0;
+
+function checkMCQ(qid, el, isCorrect, letter) {
+  const card = document.getElementById(qid);
+  if (card.dataset.answered) return;
+  card.dataset.answered = 'true';
+  total++;
+
+  const opts = card.querySelectorAll('.mcq-opt');
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (isCorrect) {
+    el.classList.add('correct');
+    correct++;
+    const fb = document.getElementById(qid + '-fb');
+    fb.classList.add('show', 'correct-fb');
+  } else {
+    el.classList.add('wrong');
+    opts.forEach(o => {
+      if (o.querySelector('.opt-letter').textContent === findCorrectLetter(qid)) {
+        o.classList.add('correct');
+      }
+    });
+    const fb = document.getElementById(qid + '-fb');
+    fb.classList.add('show', 'wrong-fb');
+    fb.innerHTML = '<strong>✗ Incorrect.</strong> ' + fb.innerHTML.replace(/^<strong>.*?<\/strong>\s*/, '');
+  }
+
+  document.getElementById('scoreVal').textContent = `${correct}/${total}`;
+  const pct = Math.round((correct/total)*100);
+  document.getElementById('scorePct').textContent = `${pct}% correct`;
+}
+
+const correctAnswers = { q1: 'C', q2: 'C', q3: 'B', q4: 'C', q5: 'B', q6: 'C', q7: 'B', q8: 'B' };
+function findCorrectLetter(qid) { return correctAnswers[qid]; }
+
+// ── Scenario accordions ───────────────────────────────────
+function toggleScenario(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

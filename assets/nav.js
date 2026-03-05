@@ -53,6 +53,16 @@ const CATEGORIES = {
         path: './guides/machine-learning/neural-networks/',
         meta: 'Interactive · MLP, activation functions, scikit-learn',
       },
+      {
+        title: 'Training Neural Networks',
+        path: './guides/machine-learning/training-neural-networks/',
+        meta: 'Interactive · Backpropagation, gradient descent, optimization',
+      },
+      {
+        title: 'Gradient Descent',
+        path: './guides/machine-learning/gradient-descent/',
+        meta: 'Interactive · Optimization, learning rate, and convergence',
+      },
     ],
   },
   'computer-science': {
@@ -87,6 +97,11 @@ const CATEGORIES = {
         title: 'Mastering Distributed Systems',
         path: './guides/computer-science/distributed-systems/',
         meta: 'Interactive guide · 8 fallacies, CAP theorem, scaling tradeoffs, consensus, and latency vs. throughput.',
+      },
+      {
+        title: 'Distributed Systems & Concurrency',
+        path: './guides/computer-science/dist-sys-concur/',
+        meta: 'Masterclass · Distributed systems and concurrency patterns',
       },
     ],
   },

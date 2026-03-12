@@ -63,6 +63,11 @@ const CATEGORIES = {
         path: './guides/machine-learning/gradient-descent/',
         meta: 'Interactive · Optimization, learning rate, and convergence',
       },
+      {
+        title: 'Neural Networks with Keras',
+        path: './guides/machine-learning/neural-networks-with-keras/',
+        meta: 'Interactive · Keras, TensorFlow, and neural network fundamentals',
+      },
     ],
   },
   'computer-science': {
@@ -112,6 +117,16 @@ const CATEGORIES = {
         title: 'Data Science Review',
         path: './guides/data-science/data-science-review/',
         meta: 'Flashcards · Stats, sampling, Seaborn',
+      },
+      {
+        title: 'KNN Tutor',
+        path: './guides/data-science/knn/',
+        meta: 'Interactive · k-NN intuition, demos, quizzes',
+      },
+      {
+        title: 'Logistic Regression Tutor',
+        path: './guides/data-science/logistic-regression/',
+        meta: 'Interactive · Sigmoid, odds, decision boundary, scikit-learn',
       },
     ],
   },

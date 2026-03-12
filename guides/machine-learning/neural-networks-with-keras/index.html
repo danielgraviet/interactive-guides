@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Midterm Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e5ff;
+    --accent2: #ff3cac;
+    --accent3: #7b2fff;
+    --text: #e8e8f0;
+    --muted: #7070a0;
+    --correct: #00ff9d;
+    --wrong: #ff4d6d;
+    --warn: #ffb830;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 40px 20px 80px; }
+
+  /* Header */
+  header { text-align: center; margin-bottom: 60px; }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent3), var(--accent2));
+    color: #fff;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent3) 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+  .subtitle {
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Score bar */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin-bottom: 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .score-label { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .score-val { font-size: 1.4rem; font-weight: 800; color: var(--accent); font-family: 'Space Mono', monospace; }
+  .progress-track {
+    flex: 1; min-width: 120px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent));
+    border-radius: 3px; transition: width 0.4s ease; width: 0%;
+  }
+  .reset-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* Topic nav */
+  .topic-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .topic-chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .topic-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .topic-chip.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.08); }
+  .topic-chip.done { border-color: var(--correct); color: var(--correct); background: rgba(0,255,157,0.06); }
+
+  /* Section heading */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent3);
+    letter-spacing: 0.1em;
+  }
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Concept card */
+  .concept-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .concept-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent3), var(--accent));
+  }
+  .concept-card:hover { border-color: rgba(0,229,255,0.2); }
+  .concept-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  .concept-card p { font-size: 0.875rem; color: #b0b0c8; line-height: 1.7; }
+  .concept-card ul { padding-left: 18px; }
+  .concept-card li { font-size: 0.875rem; color: #b0b0c8; line-height: 1.8; }
+  .concept-card .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .tag.discriminative { background: rgba(255,60,172,0.15); color: var(--accent2); border: 1px solid rgba(255,60,172,0.3); }
+  .tag.generative { background: rgba(0,229,255,0.1); color: var(--accent); border: 1px solid rgba(0,229,255,0.3); }
+
+  /* Topic section */
+  .topic-section { display: none; animation: fadeUp 0.35s ease both; }
+  .topic-section.visible { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* MCQ Question */
+  .question-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+  .question-block.answered { border-color: var(--border); }
+  .q-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 18px;
+  }
+  .q-difficulty {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .diff-hard { background: rgba(255,77,109,0.15); color: var(--wrong); border: 1px solid rgba(255,77,109,0.25); }
+  .diff-med { background: rgba(255,184,48,0.12); color: var(--warn); border: 1px solid rgba(255,184,48,0.25); }
+  .diff-easy { background: rgba(0,255,157,0.1); color: var(--correct); border: 1px solid rgba(0,255,157,0.2); }
+
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(0,229,255,0.06); }
+  .option-btn:disabled { cursor: default; }
+  .option-btn.correct { border-color: var(--correct); background: rgba(0,255,157,0.08); color: var(--correct); }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(255,77,109,0.08); color: var(--wrong); }
+  .option-btn.reveal { border-color: rgba(0,255,157,0.4); background: rgba(0,255,157,0.04); }
+  .opt-letter {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: background 0.18s;
+  }
+  .option-btn.correct .opt-letter { background: var(--correct); color: var(--bg); }
+  .option-btn.wrong .opt-letter { background: var(--wrong); color: #fff; }
+
+  .explanation {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-left: 3px solid var(--accent3);
+    border-radius: 0 4px 4px 0;
+    font-size: 0.82rem;
+    color: #a0a0c0;
+    line-height: 1.7;
+    display: none;
+  }
+  .explanation.show { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .expl-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--accent3); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 4px; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 36px 0;
+  }
+
+  /* Two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Table */
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin-top: 12px;
+  }
+  .info-table th {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .info-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    color: #b0b0c8;
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .info-table tr:last-child td { border-bottom: none; }
+  .info-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Scrollspy sidebar placeholder */
+  .all-done {
+    text-align: center;
+    padding: 40px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    margin-top: 30px;
+  }
+  .all-done .big { font-size: 2.5rem; margin-bottom: 10px; }
+  .all-done p { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: var(--muted); }
+
+  /* Scroll to top */
+  .back-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 100;
+  }
+  .back-top:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="badge">📡 AI Midterm Prep</div>
+    <h1>Neural Networks &amp;<br>AI Fundamentals</h1>
+    <p class="subtitle">// professor-level MCQ practice · high-concept questions</p>
+  </header>
+
+  <div class="score-bar">
+    <div>
+      <div class="score-label">Score</div>
+      <div class="score-val"><span id="correct-count">0</span> / <span id="total-count">0</span></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+    <div>
+      <div class="score-label">Accuracy</div>
+      <div class="score-val" id="accuracy">—</div>
+    </div>
+    <button class="reset-btn" onclick="resetAll()">↺ Reset</button>
+  </div>
+
+  <div class="topic-nav" id="topic-nav">
+    <div class="topic-chip active" onclick="showTopic(0)" id="chip-0">01 · What is AI</div>
+    <div class="topic-chip" onclick="showTopic(1)" id="chip-1">02 · Discriminative vs Generative</div>
+    <div class="topic-chip" onclick="showTopic(2)" id="chip-2">03 · CNN</div>
+    <div class="topic-chip" onclick="showTopic(3)" id="chip-3">04 · RNN</div>
+    <div class="topic-chip" onclick="showTopic(4)" id="chip-4">05 · Autoencoder</div>
+    <div class="topic-chip" onclick="showTopic(5)" id="chip-5">06 · Transformer</div>
+    <div class="topic-chip" onclick="showTopic(6)" id="chip-6">07 · GAN</div>
+    <div class="topic-chip" onclick="showTopic(7)" id="chip-7">08 · Applications</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 0 -->
+  <div class="topic-section visible" id="topic-0">
+    <div class="section-header">
+      <span class="section-num">01 //</span>
+      <span class="section-title">What is Artificial Intelligence?</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>Artificial Intelligence is the field of computer science focused on building systems that can perform tasks that typically require human-level intelligence — including reasoning, learning, perception, language understanding, and decision-making. AI systems learn patterns from data and generalize to new situations rather than following rigid explicit rules.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>The Six Domain Areas of AI</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">1. Machine Learning (ML)</strong> — Systems that learn from data to improve performance without being explicitly programmed for every case.</li>
+        <li><strong style="color:var(--accent)">2. Natural Language Processing (NLP)</strong> — Enabling computers to understand, interpret, and generate human language (text and speech).</li>
+        <li><strong style="color:var(--accent)">3. Computer Vision</strong> — Enabling machines to interpret and understand visual information from images and video.</li>
+        <li><strong style="color:var(--accent)">4. Robotics</strong> — Designing intelligent agents that sense, reason, and act physically in the real world.</li>
+        <li><strong style="color:var(--accent)">5. Expert Systems / Knowledge Representation</strong> — Encoding domain knowledge as rules or graphs so AI can reason symbolically and make inferences.</li>
+        <li><strong style="color:var(--accent)">6. Planning &amp; Search / Decision-Making</strong> — Algorithms that find optimal sequences of actions, including game-playing, scheduling, and autonomous agents.</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+
+    <div id="q-block-0"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 1 -->
+  <div class="topic-section" id="topic-1">
+    <div class="section-header">
+      <span class="section-num">02 //</span>
+      <span class="section-title">Discriminative vs. Generative Models</span>
+    </div>
+
+    <div class="two-col">
+      <div class="concept-card">
+        <span class="tag discriminative">Discriminative</span>
+        <h3>Discriminative Models</h3>
+        <p>Learn the boundary between classes. They model <strong>P(Y | X)</strong> — the probability of a label <em>given</em> input data. They ask: <em>"Given this input, which class does it belong to?"</em></p>
+        <br>
+        <p><strong style="color:var(--muted);font-size:0.8rem">Examples:</strong> Logistic Regression, SVM, Decision Trees, CNNs for classification, BERT (classification head)</p>
+      </div>
+      <div class="concept-card">
+        <span class="tag generative">Generative</span>
+        <h3>Generative Models</h3>
+        <p>Learn the underlying data distribution. They model <strong>P(X, Y)</strong> or <strong>P(X)</strong> — they can <em>generate</em> new samples similar to training data. They ask: <em>"What does this class of data look like?"</em></p>
+        <br>
+        <p><strong style="color:var(--muted);font-size:0.8rem">Examples:</strong> GANs, VAEs, Diffusion Models, GPT, Naive Bayes</p>
+      </div>
+    </div>
+
+    <div class="concept-card">
+      <h3>Key Distinction (Exam-Critical)</h3>
+      <table class="info-table">
+        <tr><th>Aspect</th><th>Discriminative</th><th>Generative</th></tr>
+        <tr><td>Goal</td><td>Classify / predict labels</td><td>Model / synthesize data</td></tr>
+        <tr><td>Models</td><td>P(Y|X)</td><td>P(X,Y) or P(X)</td></tr>
+        <tr><td>Can generate new data?</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Needs labeled data?</td><td>Yes (supervised)</td><td>Not always</td></tr>
+        <tr><td>Typical accuracy on classification</td><td>Often higher</td><td>Often lower</td></tr>
+      </table>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-1"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 2 -->
+  <div class="topic-section" id="topic-2">
+    <div class="section-header">
+      <span class="section-num">03 //</span>
+      <span class="section-title">Convolutional Neural Network (CNN)</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>A CNN is a deep learning architecture designed to process <strong>grid-structured data</strong> (images, video, audio spectrograms) by exploiting spatial locality and translation invariance. It uses learned filters (kernels) that slide across the input to detect features regardless of their position.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Core Components</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">Convolutional Layer</strong> — Applies learned filters to extract local features (edges, textures, shapes). Each filter produces a feature map.</li>
+        <li><strong style="color:var(--accent)">Activation (ReLU)</strong> — Introduces non-linearity; removes negative values.</li>
+        <li><strong style="color:var(--accent)">Pooling Layer</strong> — Downsamples feature maps (Max Pool, Avg Pool) to reduce dimensionality and gain spatial invariance.</li>
+        <li><strong style="color:var(--accent)">Fully Connected Layer</strong> — Final layers that aggregate features for classification or regression output.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>Key Properties (Exam-Critical)</h3>
+      <ul>
+        <li><strong>Parameter sharing:</strong> The same filter weights are used across all positions — dramatically fewer parameters than fully connected layers.</li>
+        <li><strong>Local receptive field:</strong> Each neuron connects only to a local region of the input.</li>
+        <li><strong>Translation invariance:</strong> Can detect features regardless of where they appear in the image.</li>
+        <li><strong>Hierarchical feature learning:</strong> Early layers learn low-level features (edges); deeper layers learn high-level concepts (faces, objects).</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-2"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 3 -->
+  <div class="topic-section" id="topic-3">
+    <div class="section-header">
+      <span class="section-num">04 //</span>
+      <span class="section-title">Recurrent Neural Network (RNN)</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>An RNN is a neural network designed for <strong>sequential data</strong> where order matters. It maintains a <strong>hidden state</strong> (memory) that captures information about previous inputs and feeds it back into the network at each time step, allowing the model to process arbitrary-length sequences.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Core Variants</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">Vanilla RNN</strong> — Basic recurrent structure; suffers from vanishing/exploding gradients over long sequences.</li>
+        <li><strong style="color:var(--accent)">LSTM (Long Short-Term Memory)</strong> — Adds input, forget, and output gates to control information flow; solves vanishing gradient for long-range dependencies.</li>
+        <li><strong style="color:var(--accent)">GRU (Gated Recurrent Unit)</strong> — Simplified LSTM with fewer parameters; uses reset and update gates.</li>
+        <li><strong style="color:var(--accent)">Bidirectional RNN</strong> — Processes sequences in both forward and backward directions to capture context from both sides.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>Key Challenge: Vanishing Gradient</h3>
+      <p>During backpropagation through time (BPTT), gradients must be multiplied across many time steps. If the weights are small, gradients shrink exponentially (vanish) — making it impossible for the model to learn long-range dependencies. LSTMs and GRUs solve this with gating mechanisms that create gradient highways.</p>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-3"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 4 -->
+  <div class="topic-section" id="topic-4">
+    <div class="section-header">
+      <span class="section-num">05 //</span>
+      <span class="section-title">Autoencoder</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>An autoencoder is an unsupervised neural network that learns to <strong>compress data into a low-dimensional latent representation</strong> (encoding) and then <strong>reconstruct the original data</strong> from that representation (decoding). It is trained to minimize reconstruction error between input and output.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Architecture</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">Encoder</strong> — Maps high-dimensional input X to a compact latent code Z (bottleneck). Forces the network to learn the most essential features.</li>
+        <li><strong style="color:var(--accent)">Bottleneck (Latent Space)</strong> — The compressed representation. Its dimensionality is &lt; input; acts as an information bottleneck.</li>
+        <li><strong style="color:var(--accent)">Decoder</strong> — Reconstructs the original input X̂ from the latent code Z. Mirrors the encoder structure.</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>Variants (Exam-Critical)</h3>
+      <ul>
+        <li><strong>Denoising Autoencoder</strong> — Trained to reconstruct clean data from corrupted/noisy input; forces more robust feature learning.</li>
+        <li><strong>Variational Autoencoder (VAE)</strong> — Encodes input as a probability distribution (mean + variance) rather than a point; enables smooth latent space and new sample generation. This makes it a <em>generative</em> model.</li>
+        <li><strong>Sparse Autoencoder</strong> — Adds a sparsity constraint on activations to learn disentangled features.</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-4"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 5 -->
+  <div class="topic-section" id="topic-5">
+    <div class="section-header">
+      <span class="section-num">06 //</span>
+      <span class="section-title">Transformer</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>A Transformer is a neural network architecture built entirely on <strong>self-attention mechanisms</strong> (no recurrence, no convolution). Introduced in "Attention is All You Need" (2017), it processes all tokens in a sequence <strong>in parallel</strong> and learns which tokens to attend to via attention weights, enabling highly scalable training on modern hardware.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Core Mechanism: Self-Attention</h3>
+      <p>For each token, the model computes Query (Q), Key (K), and Value (V) vectors. Attention scores are computed as <strong>softmax(QKᵀ / √d_k) · V</strong>. This lets every token directly attend to every other token in one step — enabling long-range dependencies without the vanishing gradient problem of RNNs.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Key Components</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">Multi-Head Attention</strong> — Runs multiple attention mechanisms in parallel, each learning different relationship types.</li>
+        <li><strong style="color:var(--accent)">Positional Encoding</strong> — Since there's no recurrence, positional info is added explicitly to token embeddings.</li>
+        <li><strong style="color:var(--accent)">Feed-Forward Sublayer</strong> — Applied position-wise after attention.</li>
+        <li><strong style="color:var(--accent)">Layer Normalization &amp; Residual Connections</strong> — Stabilize training of deep stacks.</li>
+        <li><strong style="color:var(--accent)">Encoder / Decoder stacks</strong> — Encoder (BERT-style) for understanding; Decoder (GPT-style) for generation; Both (T5, original Transformer) for seq2seq tasks.</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-5"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 6 -->
+  <div class="topic-section" id="topic-6">
+    <div class="section-header">
+      <span class="section-num">07 //</span>
+      <span class="section-title">Generative Adversarial Network (GAN)</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Definition</h3>
+      <p>A GAN is a generative model consisting of <strong>two neural networks trained in opposition</strong>: a Generator (G) that learns to produce realistic synthetic data, and a Discriminator (D) that learns to distinguish real data from generated fakes. They are trained simultaneously in a <strong>minimax game</strong> until the generator fools the discriminator.</p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Training Dynamic</h3>
+      <ul>
+        <li><strong style="color:var(--accent)">Generator</strong> — Takes random noise Z as input and produces synthetic sample G(Z). Tries to maximize the probability that D classifies G(Z) as real.</li>
+        <li><strong style="color:var(--accent)">Discriminator</strong> — Takes either a real sample or G(Z); outputs probability that input is real. Tries to correctly distinguish real vs. fake.</li>
+        <li><strong style="color:var(--accent)">Equilibrium</strong> — Training converges (ideally) when the generator produces samples indistinguishable from real data (D outputs 0.5 for all inputs).</li>
+      </ul>
+    </div>
+
+    <div class="concept-card">
+      <h3>Key Challenges (Exam-Critical)</h3>
+      <ul>
+        <li><strong>Mode Collapse</strong> — Generator learns to produce only a few types of outputs, ignoring diversity in the real data distribution.</li>
+        <li><strong>Training Instability</strong> — Balancing G and D is difficult; if one overpowers the other, training fails.</li>
+        <li><strong>Vanishing Gradients in D</strong> — If D becomes too strong early, G receives near-zero gradients and stops learning.</li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-6"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ TOPIC 7 -->
+  <div class="topic-section" id="topic-7">
+    <div class="section-header">
+      <span class="section-num">08 //</span>
+      <span class="section-title">Applications, Advantages &amp; Disadvantages</span>
+    </div>
+
+    <div class="concept-card">
+      <h3>Applications by Architecture</h3>
+      <table class="info-table">
+        <tr><th>Model</th><th>Applications</th></tr>
+        <tr><td><strong style="color:var(--accent)">CNN</strong></td><td>Image classification, object detection (YOLO), medical imaging, facial recognition, self-driving vision, video analysis</td></tr>
+        <tr><td><strong style="color:var(--accent)">RNN/LSTM</strong></td><td>Speech recognition, machine translation (pre-Transformer), time-series forecasting, sentiment analysis, music generation</td></tr>
+        <tr><td><strong style="color:var(--accent)">Autoencoder</strong></td><td>Anomaly detection, data compression, denoising, dimensionality reduction, feature learning, drug discovery</td></tr>
+        <tr><td><strong style="color:var(--accent)">Transformer</strong></td><td>Large language models (GPT, BERT), machine translation, summarization, code generation, vision transformers (ViT), multimodal AI</td></tr>
+        <tr><td><strong style="color:var(--accent)">GAN</strong></td><td>Image synthesis/deepfakes, style transfer, data augmentation, super-resolution, video generation, drug molecule design</td></tr>
+      </table>
+    </div>
+
+    <div class="two-col">
+      <div class="concept-card">
+        <h3 style="color:var(--correct)">✓ Advantages</h3>
+        <ul>
+          <li>Automatically learn hierarchical features from raw data (no manual feature engineering)</li>
+          <li>Scale to massive datasets and compute</li>
+          <li>Achieve superhuman performance on many benchmarks</li>
+          <li>Transfer learning: pre-trained models fine-tuned cheaply</li>
+          <li>Generative models can augment limited datasets</li>
+          <li>Transformers handle long-range dependencies efficiently</li>
+        </ul>
+      </div>
+      <div class="concept-card">
+        <h3 style="color:var(--wrong)">✗ Disadvantages</h3>
+        <ul>
+          <li>Data hungry — require large labeled datasets</li>
+          <li>Computationally expensive to train</li>
+          <li>Black box / poor interpretability</li>
+          <li>Prone to adversarial attacks and dataset bias</li>
+          <li>GANs: training instability and mode collapse</li>
+          <li>RNNs: vanishing gradient, slow sequential training</li>
+          <li>Transformers: quadratic attention complexity (O(n²))</li>
+          <li>Environmental cost of large model training</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-header"><span class="section-num">MCQ //</span><span class="section-title">Practice Questions</span></div>
+    <div id="q-block-7"></div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ TOP</button>
+
+<script>
+// ═══════════════ QUESTION DATA ═══════════════
+const allQuestions = [
+  // Topic 0: What is AI
+  [
+    {
+      q: "Which of the following best captures the distinction between traditional programming and AI?",
+      diff: "med",
+      opts: [
+        "Traditional programs use more memory than AI systems",
+        "AI systems derive rules from data patterns rather than following explicit programmer-defined rules",
+        "AI always requires internet connectivity to function",
+        "Traditional programs cannot perform logical operations"
+      ],
+      answer: 1,
+      explain: "The core difference is paradigm: traditional programming = explicit rules → outputs; AI/ML = data + outputs → learned rules (model). AI infers the decision logic from examples."
+    },
+    {
+      q: "A system that schedules hospital operating rooms by optimizing surgeon availability, room conflicts, and urgency scores is primarily drawing on which AI domain?",
+      diff: "hard",
+      opts: [
+        "Computer Vision",
+        "Natural Language Processing",
+        "Planning & Decision-Making",
+        "Robotics"
+      ],
+      answer: 2,
+      explain: "Finding optimal sequences of actions under constraints is the definition of AI Planning. This is not perception (CV), language (NLP), or physical actuation (Robotics)."
+    },
+    {
+      q: "Which of the six AI domains is most directly responsible for enabling voice assistants to understand spoken commands?",
+      diff: "easy",
+      opts: [
+        "Robotics",
+        "Expert Systems",
+        "Natural Language Processing",
+        "Planning & Search"
+      ],
+      answer: 2,
+      explain: "NLP encompasses understanding and generating human language — both written and spoken (speech recognition + language understanding). Voice assistants rely heavily on NLP pipelines."
+    },
+    {
+      q: "An AI that uses a knowledge graph of medical symptoms, diseases, and drug interactions to make diagnoses draws primarily on which domain?",
+      diff: "hard",
+      opts: [
+        "Machine Learning",
+        "Computer Vision",
+        "Expert Systems / Knowledge Representation",
+        "Robotics"
+      ],
+      answer: 2,
+      explain: "Expert Systems encode domain knowledge as structured rules or graphs and use inference engines to derive conclusions — this is the Knowledge Representation domain, not ML (which learns from data statistically)."
+    }
+  ],
+
+  // Topic 1: Discriminative vs Generative
+  [
+    {
+      q: "BERT fine-tuned for sentiment classification and a GAN trained for face synthesis: which statement correctly classifies them?",
+      diff: "hard",
+      opts: [
+        "Both are generative models",
+        "BERT is generative; GAN is discriminative",
+        "BERT is discriminative; GAN is generative",
+        "Both are discriminative models"
+      ],
+      answer: 2,
+      explain: "A fine-tuned BERT classifier models P(label|input) → discriminative. A GAN models the data distribution and generates new samples → generative. The key: can it create new realistic data?"
+    },
+    {
+      q: "Which probabilistic quantity does a discriminative model directly estimate?",
+      diff: "med",
+      opts: [
+        "P(X) — the marginal distribution of inputs",
+        "P(X, Y) — the joint distribution",
+        "P(Y | X) — the conditional distribution of labels given input",
+        "P(X | Y) — the likelihood of input given label"
+      ],
+      answer: 2,
+      explain: "Discriminative models learn P(Y|X) — the decision boundary directly. Generative models learn P(X,Y) or P(X), from which they can derive P(Y|X) via Bayes' rule."
+    },
+    {
+      q: "A fraud detection system is trained on labeled 'fraud' / 'not fraud' transactions and learns a boundary between the two classes. A researcher also builds a model that can synthesize realistic-looking fraudulent transactions for data augmentation. Which correctly describes these models?",
+      diff: "hard",
+      opts: [
+        "Both are discriminative",
+        "The first is generative; the second is discriminative",
+        "The first is discriminative; the second is generative",
+        "Both are generative because they both deal with fraud data"
+      ],
+      answer: 2,
+      explain: "The classifier learns P(fraud|transaction) — it draws a decision boundary = discriminative. The synthesizer models the distribution of fraudulent transactions to generate new ones = generative."
+    },
+    {
+      q: "Why do generative models often achieve lower classification accuracy than discriminative models on the same task?",
+      diff: "hard",
+      opts: [
+        "Generative models always require more labeled data",
+        "They solve a harder problem — modeling the full data distribution instead of just the decision boundary — wasting capacity on irrelevant features",
+        "Generative models cannot use backpropagation",
+        "Discriminative models have more layers on average"
+      ],
+      answer: 1,
+      explain: "Generative models model P(X,Y), which requires learning the entire data distribution. For classification, most of that effort is irrelevant. Discriminative models focus only on the decision boundary P(Y|X), using capacity more efficiently for that task."
+    }
+  ],
+
+  // Topic 2: CNN
+  [
+    {
+      q: "What fundamental property allows CNNs to use dramatically fewer parameters than a fully connected network for image data?",
+      diff: "med",
+      opts: [
+        "Dropout regularization",
+        "Parameter sharing — the same filter weights are reused across all spatial positions",
+        "Batch normalization",
+        "Softmax output activation"
+      ],
+      answer: 1,
+      explain: "A single convolutional filter learns one set of weights and applies it across every position in the feature map. This 'weight sharing' gives CNNs their efficiency and makes learned features translation-equivariant."
+    },
+    {
+      q: "A max pooling layer with a 2×2 window and stride 2 is applied to a 64×64 feature map. What is the output size?",
+      diff: "med",
+      opts: [
+        "128×128",
+        "64×64",
+        "32×32",
+        "16×16"
+      ],
+      answer: 2,
+      explain: "Max pooling with a 2×2 window and stride 2 halves both spatial dimensions: 64÷2 = 32. Output: 32×32. This is a standard calculation your professor will expect you to do mentally."
+    },
+    {
+      q: "In a CNN trained for image recognition, which layer type is responsible for the model detecting the same edge regardless of whether it appears in the top-left or bottom-right of the image?",
+      diff: "hard",
+      opts: [
+        "Fully Connected layers",
+        "Batch Normalization layers",
+        "Convolutional layers with parameter sharing",
+        "Softmax output layer"
+      ],
+      answer: 2,
+      explain: "Translation invariance / equivariance comes from the convolutional operation — the same filter scans the entire image. Fully connected layers have no spatial awareness and cannot generalize across positions."
+    },
+    {
+      q: "A researcher replaces all pooling layers in a CNN with convolutional layers using stride=2. What is the most likely consequence?",
+      diff: "hard",
+      opts: [
+        "The network can no longer be trained at all",
+        "The network gains more learnable parameters and may learn richer spatial transformations, but at higher computational cost",
+        "The network becomes deeper automatically",
+        "Translation invariance is completely removed"
+      ],
+      answer: 1,
+      explain: "Strided convolutions can spatially downsample like pooling, but unlike pooling they have learnable parameters. This gives more representational power but increases parameter count and compute. Many modern architectures (e.g., ResNet) do exactly this."
+    }
+  ],
+
+  // Topic 3: RNN
+  [
+    {
+      q: "What is the 'vanishing gradient' problem in RNNs, and which architectural innovation directly addresses it?",
+      diff: "hard",
+      opts: [
+        "Gradients explode during forward pass; solved by dropout",
+        "Gradients shrink toward zero during backpropagation through many time steps; solved by LSTM/GRU gating mechanisms",
+        "The network memorizes all inputs; solved by weight decay",
+        "Output predictions collapse to a single class; solved by softmax temperature"
+      ],
+      answer: 1,
+      explain: "During BPTT, gradients are multiplied by weight matrices at each time step. If eigenvalues < 1, gradients shrink exponentially, preventing learning of long-range dependencies. LSTM's gates create direct gradient pathways (the 'cell state highway') that resist vanishing."
+    },
+    {
+      q: "An RNN is trained on daily temperature readings to predict tomorrow's temperature. A bidirectional RNN is also considered. Why would bidirectionality NOT help this use case?",
+      diff: "hard",
+      opts: [
+        "Bidirectional RNNs cannot process numerical data",
+        "The prediction task is causal — future temperatures are unavailable at inference time, making the backward pass impossible",
+        "Bidirectional RNNs always overfit on time-series data",
+        "Temperature data has no sequential structure"
+      ],
+      answer: 1,
+      explain: "Bidirectional RNNs require the full sequence at once — they process it both forward and backward. For online prediction tasks (predicting the next value in real time), you don't have future inputs yet. Bidirectionality is valuable for tasks like NLP where the full sentence exists."
+    },
+    {
+      q: "Which component of an LSTM specifically controls whether previous cell state information is retained or erased?",
+      diff: "med",
+      opts: [
+        "Input gate",
+        "Output gate",
+        "Forget gate",
+        "Peephole connection"
+      ],
+      answer: 2,
+      explain: "The forget gate applies a sigmoid-activated weight to the previous cell state C_{t-1}, outputting values between 0 (forget everything) and 1 (keep everything). This is the mechanism that lets LSTMs maintain long-term memory selectively."
+    },
+    {
+      q: "Compared to LSTMs, GRUs are preferred in which scenario?",
+      diff: "med",
+      opts: [
+        "When processing images rather than sequences",
+        "When the dataset is large and memory / compute constraints favor fewer parameters",
+        "When the task requires generating text longer than 1000 tokens",
+        "When the input has no temporal structure"
+      ],
+      answer: 1,
+      explain: "GRUs have fewer parameters (2 gates vs 3 in LSTM, no separate cell state). They often train faster and perform comparably to LSTMs on smaller datasets. For large-scale tasks where capacity matters more, LSTMs may edge ahead."
+    }
+  ],
+
+  // Topic 4: Autoencoder
+  [
+    {
+      q: "What is the primary purpose of the 'bottleneck' in an autoencoder architecture?",
+      diff: "med",
+      opts: [
+        "To prevent the network from using GPU memory",
+        "To force the network to learn a compact, information-preserving representation of the input",
+        "To apply dropout for regularization",
+        "To increase the dimensionality before the output layer"
+      ],
+      answer: 1,
+      explain: "The bottleneck has lower dimensionality than the input, forcing the encoder to compress the most essential information. If the bottleneck were the same size, the network could learn a trivial identity mapping. Compression forces meaningful feature learning."
+    },
+    {
+      q: "A Variational Autoencoder (VAE) differs from a standard autoencoder primarily because:",
+      diff: "hard",
+      opts: [
+        "It uses convolutional layers in the encoder only",
+        "It encodes inputs as probability distributions (mean and variance) rather than fixed points, enabling smooth sampling from the latent space",
+        "It trains two networks adversarially",
+        "It cannot be used for reconstruction tasks"
+      ],
+      answer: 1,
+      explain: "In a VAE, the encoder outputs μ and σ² for each latent dimension. A sample Z is drawn from N(μ, σ²). This probabilistic latent space is continuous and smooth — interpolation between points generates coherent data, making VAEs true generative models."
+    },
+    {
+      q: "An autoencoder trained on normal network traffic data is deployed to detect cyberattacks. The core assumption is:",
+      diff: "hard",
+      opts: [
+        "Cyberattacks will have lower reconstruction error than normal traffic",
+        "Anomalous (attack) traffic will have high reconstruction error because the model was never trained to reconstruct such patterns",
+        "The model will generate synthetic attack data to compare",
+        "Autoencoders can only work on image data for anomaly detection"
+      ],
+      answer: 1,
+      explain: "The autoencoder learns to reconstruct the normal distribution well. Novel anomalies (attacks) fall outside the learned distribution, leading to high reconstruction error. This is the anomaly detection principle: high error = out-of-distribution = anomaly."
+    },
+    {
+      q: "In a denoising autoencoder, how does the training procedure differ from a standard autoencoder?",
+      diff: "med",
+      opts: [
+        "The decoder is removed and only the encoder is trained",
+        "Corrupted/noisy versions of inputs are fed in, but the target output is the clean original",
+        "The network is trained to maximize reconstruction error",
+        "Labels are required for each training example"
+      ],
+      answer: 1,
+      explain: "Denoising autoencoders learn a more robust latent space by being forced to reconstruct the clean signal from noisy input. This prevents learning the trivial identity function and produces features that capture genuine structure rather than noise."
+    }
+  ],
+
+  // Topic 5: Transformer
+  [
+    {
+      q: "Transformers displaced RNNs as the dominant architecture for NLP primarily because:",
+      diff: "med",
+      opts: [
+        "Transformers have fewer parameters and train faster on small datasets",
+        "They process sequences in parallel via self-attention rather than sequentially, enabling efficient training at scale",
+        "Transformers do not require labeled training data",
+        "They use convolutional layers for text instead of attention"
+      ],
+      answer: 1,
+      explain: "RNNs process tokens sequentially — training cannot be parallelized across time steps. Transformers compute all attention scores simultaneously, leveraging GPU parallelism fully. This made training on internet-scale data feasible."
+    },
+    {
+      q: "Why do transformers require positional encoding?",
+      diff: "hard",
+      opts: [
+        "To reduce the number of attention heads needed",
+        "Because the self-attention mechanism is permutation-invariant — it has no inherent sense of token order, so position must be injected explicitly",
+        "To convert token embeddings into query/key/value vectors",
+        "To apply layer normalization before the attention operation"
+      ],
+      answer: 1,
+      explain: "Self-attention computes relationships between all pairs of tokens without any notion of sequence order. The same sentence with words shuffled produces the same attention scores without positional encoding. PE injects order information as additive signals to the embeddings."
+    },
+    {
+      q: "The computational complexity of standard self-attention with respect to sequence length n is:",
+      diff: "hard",
+      opts: [
+        "O(n) — linear",
+        "O(n log n) — linearithmic",
+        "O(n²) — quadratic",
+        "O(2ⁿ) — exponential"
+      ],
+      answer: 2,
+      explain: "Every token attends to every other token: n × n = n² attention score computations. This quadratic scaling is the primary limitation of transformers on long sequences and has motivated linear-attention alternatives like Mamba, Longformer, and Flash Attention."
+    },
+    {
+      q: "BERT uses only the Transformer encoder, while GPT uses only the decoder. What practical consequence does this have?",
+      diff: "hard",
+      opts: [
+        "BERT can generate open-ended text; GPT cannot",
+        "GPT uses autoregressive (causal) generation and is suited for text generation; BERT uses bidirectional attention and is suited for understanding tasks like classification and QA",
+        "Both can be used interchangeably for any NLP task",
+        "BERT is faster at inference because it has fewer layers"
+      ],
+      answer: 1,
+      explain: "Decoder-only (GPT) uses causal/masked attention — each token only sees past tokens, enabling left-to-right text generation. Encoder-only (BERT) uses full bidirectional attention — ideal for tasks needing full-sequence context like classification, NER, and extractive QA."
+    }
+  ],
+
+  // Topic 6: GAN
+  [
+    {
+      q: "During GAN training, what happens when the discriminator becomes too strong too early?",
+      diff: "hard",
+      opts: [
+        "The generator immediately produces perfect images",
+        "The generator receives near-zero gradient signals and fails to learn, because the discriminator confidently rejects all generated samples",
+        "The GAN enters mode collapse",
+        "The discriminator starts generating images instead"
+      ],
+      answer: 1,
+      explain: "If D is too strong, it outputs near-0 for all G(Z). The loss gradient for G approaches zero (vanishing gradient in G), starving the generator of the learning signal it needs. This is why careful balance between G and D training is critical."
+    },
+    {
+      q: "Mode collapse in GANs refers to:",
+      diff: "med",
+      opts: [
+        "The discriminator collapsing to outputting 0.5 for all inputs",
+        "The generator producing only a small subset of the possible output space, ignoring the diversity of the real data distribution",
+        "Both networks converging to random outputs",
+        "The training loss collapsing to exactly zero"
+      ],
+      answer: 1,
+      explain: "Mode collapse: G learns that a few particular outputs reliably fool D, so it ignores all other modes of the data distribution. A GAN trained on face data might generate only one type of face. Wasserstein GANs (WGANs) and other techniques help mitigate this."
+    },
+    {
+      q: "In a GAN at ideal convergence (Nash equilibrium), the discriminator's output for any input should be:",
+      diff: "hard",
+      opts: [
+        "1.0 for real data, 0.0 for generated data",
+        "0.0 for all inputs",
+        "0.5 for all inputs — it can no longer distinguish real from generated",
+        "Variable based on image quality"
+      ],
+      answer: 2,
+      explain: "At Nash equilibrium, G has learned the true data distribution P_data. The discriminator has no information advantage — it cannot distinguish real from fake — and outputs 0.5 (maximum uncertainty) for all inputs. This is the theoretical training goal."
+    },
+    {
+      q: "A GAN is used to synthesize additional training images of rare medical conditions to augment a small dataset. This application addresses which core machine learning challenge?",
+      diff: "med",
+      opts: [
+        "Overfitting due to model complexity",
+        "Class imbalance and data scarcity by generating realistic synthetic examples of underrepresented classes",
+        "Reducing inference latency in deployment",
+        "Improving model interpretability"
+      ],
+      answer: 1,
+      explain: "Rare medical conditions have few training examples, causing class imbalance. GANs can synthesize plausible new examples, augmenting the minority class. This is a key practical application of GANs beyond aesthetics."
+    }
+  ],
+
+  // Topic 7: Applications, Advantages, Disadvantages
+  [
+    {
+      q: "Which architectural property of transformers creates a fundamental scalability bottleneck for very long documents?",
+      diff: "hard",
+      opts: [
+        "They require recurrence through all tokens sequentially",
+        "Self-attention is O(n²) in sequence length — doubling document length quadruples compute and memory",
+        "Transformers cannot process more than 512 tokens by design",
+        "Positional encodings break down after 1000 tokens"
+      ],
+      answer: 1,
+      explain: "Quadratic attention complexity (O(n²)) is the architectural bottleneck. A 2048-token sequence requires 4× more attention computation than a 1024-token one. This drove the development of sparse attention, sliding window attention, and state-space models."
+    },
+    {
+      q: "Across all advanced neural networks, which disadvantage is most universal and applies regardless of architecture type?",
+      diff: "med",
+      opts: [
+        "They can only process image data",
+        "They cannot be deployed on mobile devices",
+        "They are largely 'black boxes' — internal representations are difficult to interpret, making it hard to audit decisions for bias, safety, or reasoning",
+        "They require symbolic reasoning rules to be defined manually"
+      ],
+      answer: 2,
+      explain: "Interpretability/explainability is the most universal challenge across CNNs, RNNs, Transformers, GANs, and Autoencoders. While domain-specific challenges differ (GAN stability, RNN gradients), the lack of transparent reasoning applies to all deep networks."
+    },
+    {
+      q: "Transfer learning is listed as an advantage of advanced neural networks. What core property makes transfer learning possible?",
+      diff: "hard",
+      opts: [
+        "Neural networks have random weights that generalize universally",
+        "Lower layers of deep networks learn general, reusable features (edges, textures, linguistic patterns) transferable across tasks",
+        "Transfer learning only works when source and target tasks are identical",
+        "It eliminates the need for any training data on the new task"
+      ],
+      answer: 1,
+      explain: "Deep networks develop hierarchical representations. Early layers learn domain-general features (e.g., edge detectors in CNNs, syntactic patterns in LLMs) that transfer well to new tasks. Fine-tuning only the top layers adapts these features cheaply to new domains."
+    },
+    {
+      q: "A startup wants to use deep learning for a medical imaging task but only has 300 labeled X-ray images. Which combination of strategies best addresses this challenge?",
+      diff: "hard",
+      opts: [
+        "Train a transformer from scratch and use a very large learning rate",
+        "Use a pre-trained CNN with transfer learning, apply data augmentation, and consider using a GAN to synthesize additional training images",
+        "Use a vanilla RNN since it requires less data than CNNs",
+        "Increase model depth to compensate for low data volume"
+      ],
+      answer: 1,
+      explain: "This combines three solutions: (1) Transfer learning reduces data requirements by reusing features from ImageNet-trained CNNs. (2) Data augmentation (flips, rotations, crops) multiplies effective dataset size. (3) GANs can synthesize realistic additional training examples. Deeper models with small data will overfit."
+    }
+  ]
+];
+
+// ═══════════════ STATE ═══════════════
+let answered = {}; // key: "t-q" → {selected, correct}
+let currentTopic = 0;
+
+function renderQuestions(topicIdx) {
+  const container = document.getElementById(`q-block-${topicIdx}`);
+  if (!container || container.children.length > 0) return;
+  const qs = allQuestions[topicIdx];
+  qs.forEach((q, qi) => {
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.id = `qb-${topicIdx}-${qi}`;
+    const diffClass = q.diff === 'hard' ? 'diff-hard' : q.diff === 'med' ? 'diff-med' : 'diff-easy';
+    const diffLabel = q.diff === 'hard' ? 'Hard' : q.diff === 'med' ? 'Medium' : 'Easy';
+    block.innerHTML = `
+      <div class="q-text">Q${qi+1}. ${q.q} <span class="q-difficulty ${diffClass}">${diffLabel}</span></div>
+      <div class="options" id="opts-${topicIdx}-${qi}">
+        ${q.opts.map((o,oi) => `
+          <button class="option-btn" onclick="selectAnswer(${topicIdx},${qi},${oi})" id="opt-${topicIdx}-${qi}-${oi}">
+            <span class="opt-letter">${String.fromCharCode(65+oi)}</span>
+            <span>${o}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="explanation" id="expl-${topicIdx}-${qi}">
+        <span class="expl-label">⚡ Explanation</span>
+        ${q.explain}
+      </div>
+    `;
+    container.appendChild(block);
+  });
+  // Restore state
+  const key = `${topicIdx}`;
+  Object.keys(answered).forEach(k => {
+    if (k.startsWith(key + '-')) {
+      const [t, qi] = k.split('-').map(Number);
+      restoreAnswer(t, qi);
+    }
+  });
+}
+
+function selectAnswer(t, qi, selected) {
+  const key = `${t}-${qi}`;
+  if (answered[key]) return;
+  const q = allQuestions[t][qi];
+  const isCorrect = selected === q.answer;
+  answered[key] = { selected, correct: isCorrect };
+  applyAnswer(t, qi, selected, q.answer);
+  updateScore();
+  checkTopicDone(t);
+}
+
+function applyAnswer(t, qi, selected, correct) {
+  const opts = allQuestions[t][qi].opts;
+  opts.forEach((_, oi) => {
+    const btn = document.getElementById(`opt-${t}-${qi}-${oi}`);
+    if (!btn) return;
+    btn.disabled = true;
+    if (oi === correct && oi === selected) btn.classList.add('correct');
+    else if (oi === selected) btn.classList.add('wrong');
+    else if (oi === correct) btn.classList.add('reveal');
+  });
+  const expl = document.getElementById(`expl-${t}-${qi}`);
+  if (expl) expl.classList.add('show');
+}
+
+function restoreAnswer(t, qi) {
+  const key = `${t}-${qi}`;
+  if (!answered[key]) return;
+  applyAnswer(t, qi, answered[key].selected, allQuestions[t][qi].answer);
+}
+
+function updateScore() {
+  const total = Object.keys(answered).length;
+  const correct = Object.values(answered).filter(a => a.correct).length;
+  const totalQ = allQuestions.flat().length;
+  document.getElementById('correct-count').textContent = correct;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('accuracy').textContent = total > 0 ? Math.round(correct/total*100) + '%' : '—';
+  document.getElementById('prog-fill').style.width = (total/totalQ*100) + '%';
+}
+
+function checkTopicDone(t) {
+  const qs = allQuestions[t];
+  const done = qs.every((_, qi) => answered[`${t}-${qi}`]);
+  if (done) document.getElementById(`chip-${t}`).classList.add('done');
+}
+
+function showTopic(idx) {
+  document.querySelectorAll('.topic-section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById(`topic-${idx}`).classList.add('visible');
+  document.getElementById(`chip-${idx}`).classList.add('active');
+  currentTopic = idx;
+  renderQuestions(idx);
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function resetAll() {
+  answered = {};
+  document.querySelectorAll('.q-block-inner, [id^="q-block-"]').forEach(el => el.innerHTML = '');
+  allQuestions.forEach((_, ti) => {
+    const c = document.getElementById(`q-block-${ti}`);
+    if (c) c.innerHTML = '';
+    document.getElementById(`chip-${ti}`).classList.remove('done');
+  });
+  updateScore();
+  renderQuestions(currentTopic);
+}
+
+// Init
+renderQuestions(0);
+</script>
+</body>
+</html>

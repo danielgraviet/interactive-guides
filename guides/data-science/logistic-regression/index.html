@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logistic Regression Tutor — CS 180 Intro to Data Science</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Libre+Franklin:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --bg-card: #ffffff;
+  --bg-dark: #1a1714;
+  --bg-code: #1e1b16;
+  --border: #e2ddd5;
+  --border-active: #b8860b;
+  --text: #3d3630;
+  --text-dim: #8a7f74;
+  --text-bright: #1a1714;
+  --accent: #b8860b;
+  --accent-light: rgba(184, 134, 11, 0.1);
+  --accent-glow: rgba(184, 134, 11, 0.15);
+  --green: #2d7a3a;
+  --green-light: rgba(45, 122, 58, 0.1);
+  --red: #c0392b;
+  --red-light: rgba(192, 57, 43, 0.08);
+  --blue: #2c5f8a;
+  --blue-light: rgba(44, 95, 138, 0.1);
+  --purple: #6b4c8a;
+  --orange: #c67c24;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Libre Franklin', -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(26,23,20,0.06), 0 4px 16px rgba(26,23,20,0.04);
+  --shadow-lg: 0 4px 12px rgba(26,23,20,0.08), 0 16px 40px rgba(26,23,20,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 17px;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 800px 500px at 50% 40%, rgba(184,134,11,0.06), transparent),
+    linear-gradient(180deg, var(--bg) 0%, #f5f0e8 100%);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 80px;
+  background: linear-gradient(to bottom, transparent, var(--accent));
+}
+
+.hero-badge {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  padding: 0.4rem 1.4rem;
+  border-radius: 100px;
+  margin-bottom: 2.5rem;
+  margin-top: 3rem;
+  background: var(--bg-card);
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 6.5vw, 5rem);
+  line-height: 1.12;
+  color: var(--text-bright);
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.hero p {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 540px;
+  margin-bottom: 3rem;
+  font-weight: 300;
+  line-height: 1.8;
+}
+
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.toc a {
+  font-family: var(--mono);
+  font-size: 0.73rem;
+  padding: 0.45rem 1rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: all 0.25s;
+  background: var(--bg-card);
+}
+.toc a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+/* ── NAV DOTS ── */
+.nav-bar {
+  position: fixed;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.nav-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+.nav-dot.active { border-color: var(--accent); background: var(--accent); }
+.nav-dot:hover { border-color: var(--accent); }
+
+.nav-dot .tooltip {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.nav-dot:hover .tooltip { opacity: 1; }
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+.section h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 3.5vw, 2.7rem);
+  color: var(--text-bright);
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.section p {
+  margin-bottom: 1.2rem;
+  color: var(--text);
+}
+
+.divider {
+  max-width: 820px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* ── CONCEPT CARDS ── */
+.concept-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.3s;
+}
+.concept-card:hover { box-shadow: var(--shadow-lg); }
+
+.concept-card h3 {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  color: var(--text-bright);
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.key-term {
+  display: inline;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 0.08rem 0.45rem;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: var(--bg-code);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-sm);
+  padding: 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.85;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  position: relative;
+  color: #d4cfc8;
+  white-space: pre;
+}
+
+.code-block .comment { color: #6b6560; }
+.code-block .keyword { color: #e07a5f; }
+.code-block .string { color: #81b29a; }
+.code-block .func { color: #c9a857; }
+.code-block .num { color: #f2cc8f; }
+.code-block .cls { color: #7eb8da; }
+
+.code-label {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.75rem;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: #5a5550;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── FORMULA ── */
+.formula {
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  padding: 1.2rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  line-height: 2;
+  color: var(--text-bright);
+  box-shadow: var(--shadow);
+}
+
+/* ── INTERACTIVE CANVAS ── */
+.canvas-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 2rem 0;
+  box-shadow: var(--shadow);
+}
+
+.canvas-wrap canvas {
+  width: 100%;
+  height: 380px;
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  border: 1px solid var(--border);
+}
+
+.canvas-controls {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.canvas-controls label {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.canvas-controls input[type="range"] {
+  accent-color: var(--accent);
+  width: 110px;
+}
+
+.canvas-hint {
+  margin-top: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--text-dim);
+}
+
+/* ── BUTTONS ── */
+.btn {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: #9a7209; }
+
+/* ── QUIZ ── */
+.quiz-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: var(--shadow);
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-header h3 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  color: var(--text-bright);
+}
+
+.quiz-progress {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.quiz-question {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 1.2rem;
+  line-height: 1.55;
+}
+
+.quiz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.55rem;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.93rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.5;
+}
+.quiz-option:hover { border-color: var(--accent); background: var(--accent-light); }
+.quiz-option.correct { border-color: var(--green); background: var(--green-light); color: var(--green); font-weight: 600; }
+.quiz-option.wrong { border-color: var(--red); background: var(--red-light); color: var(--red); }
+.quiz-option:disabled { cursor: default; }
+
+.quiz-feedback {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.93rem;
+  line-height: 1.6;
+  display: none;
+}
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct-fb { background: var(--green-light); border: 1px solid rgba(45,122,58,0.2); color: var(--green); }
+.quiz-feedback.wrong-fb { background: var(--red-light); border: 1px solid rgba(192,57,43,0.15); color: var(--text); }
+
+.quiz-next {
+  margin-top: 1rem;
+  display: none;
+}
+.quiz-next.show { display: inline-block; }
+
+.quiz-score { text-align: center; padding: 2rem; }
+.quiz-score .score-num {
+  font-family: var(--serif);
+  font-size: 3.5rem;
+  color: var(--accent);
+}
+.quiz-score p { color: var(--text-dim); margin-top: 0.5rem; }
+
+/* ── CALCULATOR ── */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.calc-input-group label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.calc-input-group input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.calc-input-group input:focus { border-color: var(--accent); }
+
+.calc-result {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.1rem;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  line-height: 1.8;
+}
+
+/* ── TABLE ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.data-table th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 0.75rem 0.8rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table tr.highlight td { background: var(--accent-light); }
+
+/* ── CHAT TUTOR ── */
+.tutor-chat {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 200;
+}
+
+.chat-toggle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(184,134,11,0.25);
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-toggle:hover { transform: scale(1.08); }
+
+.chat-panel {
+  position: absolute;
+  bottom: 68px;
+  left: 0;
+  width: 370px;
+  max-height: 480px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.chat-panel.open { display: flex; }
+
+.chat-panel-header {
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  min-height: 200px;
+}
+
+.chat-msg {
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  max-width: 90%;
+}
+.chat-msg.bot {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  align-self: flex-start;
+}
+.chat-msg.user {
+  background: var(--accent-light);
+  border: 1px solid rgba(184,134,11,0.25);
+  align-self: flex-end;
+  color: var(--accent);
+}
+
+.chat-input-row {
+  display: flex;
+  border-top: 1px solid var(--border);
+}
+.chat-input-row input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  outline: none;
+}
+.chat-input-row button {
+  padding: 0.75rem 1.1rem;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav-bar { display: none; }
+  .calc-grid { grid-template-columns: 1fr; }
+  .section { padding: 3rem 1.2rem; }
+  .canvas-wrap canvas { height: 280px; }
+  .chat-panel { width: calc(100vw - 3rem); }
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { opacity: 0; animation: fadeUp 0.5s ease forwards; }
+.fade-up:nth-child(2) { animation-delay: 0.08s; }
+.fade-up:nth-child(3) { animation-delay: 0.16s; }
+.fade-up:nth-child(4) { animation-delay: 0.24s; }
+</style>
+</head>
+<body>
+
+<!-- NAV DOTS -->
+<nav class="nav-bar" id="navBar"></nav>
+
+<!-- ══════════ HERO ══════════ -->
+<header class="hero" id="sec-home">
+  <div class="hero-badge fade-up">CS 180 — Intro to Data Science</div>
+  <h1 class="fade-up">Logistic<br><em>Regression</em></h1>
+  <p class="fade-up">An interactive guide from the sigmoid function to scikit-learn implementation. Explore the math, experiment with visualizations, and test yourself along the way.</p>
+  <div class="toc fade-up">
+    <a href="#sec-what">What is it?</a>
+    <a href="#sec-probs">Probabilities</a>
+    <a href="#sec-classify">Classification</a>
+    <a href="#sec-multi">Multiple Features</a>
+    <a href="#sec-sklearn">scikit-learn</a>
+    <a href="#sec-quiz">Final Quiz</a>
+  </div>
+</header>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     MODULE 1: WHAT IS LOGISTIC REGRESSION?
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-what">
+  <span class="section-label">Module 01</span>
+  <h2>What is Logistic Regression?</h2>
+
+  <p>Despite its name, <span class="key-term">logistic regression</span> is a <strong>classification</strong> algorithm, not a regression one. It predicts the probability that an instance belongs to a particular class — typically a binary outcome like pass/fail, spam/not-spam, or malignant/benign.</p>
+
+  <div class="concept-card">
+    <h3>From Linear to Logistic</h3>
+    <p>Linear regression predicts continuous values and can output anything from −∞ to +∞. But probabilities must be between 0 and 1. Logistic regression solves this by wrapping a linear equation inside the <span class="key-term">sigmoid function</span>, which squashes any real number into the (0, 1) range.</p>
+  </div>
+
+  <div class="formula">
+    <strong>Linear model:</strong> z = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ<br>
+    <strong>Sigmoid:</strong> σ(z) = 1 / (1 + e⁻ᶻ)<br>
+    <strong>Prediction:</strong> P(y=1 | x) = σ(β₀ + β₁x₁ + ... + βₙxₙ)
+  </div>
+
+  <div class="concept-card">
+    <h3>Key Properties</h3>
+    <p><span class="key-term">Parametric</span> — unlike KNN, logistic regression learns a fixed set of weights (β values) during training. Prediction is fast: just a dot product + sigmoid.</p>
+    <p><span class="key-term">Discriminative</span> — it models the decision boundary directly, rather than the full data distribution.</p>
+    <p><span class="key-term">Linear decision boundary</span> — in the feature space, the boundary where P(y=1) = 0.5 is a straight line (or hyperplane in higher dimensions).</p>
+  </div>
+
+  <div class="concept-card">
+    <h3>Logistic Regression vs. Linear Regression</h3>
+    <p><strong>Linear regression:</strong> Predicts a continuous value. Loss = mean squared error. Output ∈ (−∞, +∞).</p>
+    <p><strong>Logistic regression:</strong> Predicts a probability → class. Loss = <span class="key-term">log loss</span> (binary cross-entropy). Output ∈ (0, 1).</p>
+  </div>
+
+  <!-- Mini Quiz -->
+  <div class="quiz-container" id="quiz-m1">
+    <div class="quiz-header">
+      <h3>✦ Check Your Understanding</h3>
+      <span class="quiz-progress" id="quiz-m1-progress">1 / 2</span>
+    </div>
+    <div id="quiz-m1-body"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     MODULE 2: CALCULATING PROBABILITIES
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-probs">
+  <span class="section-label">Module 02</span>
+  <h2>Calculating Probabilities with Logistic Regression</h2>
+
+  <p>At the heart of logistic regression is the <span class="key-term">sigmoid function</span>. It takes any linear combination z and maps it to a probability between 0 and 1.</p>
+
+  <div class="formula">
+    σ(z) = 1 / (1 + e⁻ᶻ)<br><br>
+    When z = 0 → σ = 0.5 &nbsp;|&nbsp; z → +∞ → σ → 1 &nbsp;|&nbsp; z → −∞ → σ → 0
+  </div>
+
+  <!-- Interactive Sigmoid Graph -->
+  <div class="canvas-wrap">
+    <canvas id="sigmoidCanvas"></canvas>
+    <div class="canvas-hint">Hover over the curve to see σ(z) values. Use the sliders to see how β₀ (intercept) and β₁ (slope) change the curve.</div>
+    <div class="canvas-controls">
+      <label>β₀ = <span id="b0Val">0</span></label>
+      <input type="range" id="b0Slider" min="-5" max="5" step="0.5" value="0">
+      <label>β₁ = <span id="b1Val">1</span></label>
+      <input type="range" id="b1Slider" min="0.2" max="5" step="0.2" value="1">
+    </div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Step-by-Step Probability Calculation</h3>
+    <p>Suppose we have a single feature x (hours studied) and want to predict P(pass).</p>
+    <p><strong>Given:</strong> β₀ = −4, β₁ = 1.5</p>
+    <p><strong>For a student who studied 5 hours:</strong></p>
+    <p style="font-family: var(--mono); font-size: 0.9rem;">
+      z = β₀ + β₁ · x = −4 + 1.5 · 5 = 3.5<br>
+      P(pass) = 1 / (1 + e⁻³·⁵) = 1 / (1 + 0.0302) = 0.9706
+    </p>
+    <p>The model predicts a <strong>97.1%</strong> chance of passing.</p>
+  </div>
+
+  <!-- Probability Calculator -->
+  <div class="concept-card">
+    <h3>↳ Try It: Probability Calculator</h3>
+    <p>Enter the coefficients and a feature value to compute the predicted probability.</p>
+    <div class="calc-grid">
+      <div class="calc-input-group">
+        <label>β₀ (intercept)</label>
+        <input type="number" id="calcB0" value="-4" step="0.5">
+      </div>
+      <div class="calc-input-group">
+        <label>β₁ (coefficient)</label>
+        <input type="number" id="calcB1" value="1.5" step="0.1">
+      </div>
+      <div class="calc-input-group">
+        <label>x (feature value)</label>
+        <input type="number" id="calcX" value="5" step="0.5">
+      </div>
+    </div>
+    <button class="btn primary" id="calcBtn">Calculate Probability</button>
+    <div class="calc-result" id="probResult">Enter values and click Calculate.</div>
+  </div>
+
+  <!-- Mini Quiz -->
+  <div class="quiz-container" id="quiz-m2">
+    <div class="quiz-header">
+      <h3>✦ Check Your Understanding</h3>
+      <span class="quiz-progress" id="quiz-m2-progress">1 / 2</span>
+    </div>
+    <div id="quiz-m2-body"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     MODULE 3: CLASSIFICATION
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-classify">
+  <span class="section-label">Module 03</span>
+  <h2>Using Logistic Regression to Classify</h2>
+
+  <p>Logistic regression outputs a probability, but classification requires a <span class="key-term">discrete label</span>. We convert probabilities to classes using a <span class="key-term">decision threshold</span> — typically 0.5:</p>
+
+  <div class="formula">
+    ŷ = 1 &nbsp; if P(y=1 | x) ≥ 0.5<br>
+    ŷ = 0 &nbsp; if P(y=1 | x) &lt; 0.5
+  </div>
+
+  <div class="concept-card">
+    <h3>The Decision Boundary</h3>
+    <p>The threshold P = 0.5 corresponds to z = 0 (since σ(0) = 0.5). The decision boundary is the set of points where the linear equation equals zero:</p>
+    <p style="font-family: var(--mono); font-size: 0.9rem;">β₀ + β₁x₁ + β₂x₂ + ... = 0</p>
+    <p>With one feature, this is a single point on the x-axis. With two features, it's a line. With more, it's a hyperplane.</p>
+  </div>
+
+  <!-- Interactive Classification Demo -->
+  <div class="canvas-wrap">
+    <canvas id="classifyCanvas"></canvas>
+    <div class="canvas-hint">Click to add data points (left-click = Class 0, right-click = Class 1). The decision boundary updates automatically. Drag the threshold slider to see how it changes predictions.</div>
+    <div class="canvas-controls">
+      <label>Threshold = <span id="threshVal">0.50</span></label>
+      <input type="range" id="threshSlider" min="0.1" max="0.9" step="0.05" value="0.5">
+      <button class="btn" id="resetClassBtn">Reset</button>
+      <button class="btn" id="demoDataBtn">Load Demo Data</button>
+    </div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Why Adjust the Threshold?</h3>
+    <p>The 0.5 threshold isn't always ideal. In medical screening, you may lower the threshold (e.g., 0.3) to catch more positive cases — accepting more <span class="key-term">false positives</span> to reduce <span class="key-term">false negatives</span>. This is the <span class="key-term">precision-recall tradeoff</span>.</p>
+  </div>
+
+  <div class="concept-card">
+    <h3>Log Loss (Binary Cross-Entropy)</h3>
+    <p>Logistic regression is trained by minimizing <span class="key-term">log loss</span>, not mean squared error:</p>
+    <div class="formula">
+      L = −(1/n) × Σ [ yᵢ · log(p̂ᵢ) + (1 − yᵢ) · log(1 − p̂ᵢ) ]
+    </div>
+    <p>This penalizes confident wrong predictions heavily. If the model says P = 0.99 but the true label is 0, the loss is very large.</p>
+  </div>
+
+  <!-- Mini Quiz -->
+  <div class="quiz-container" id="quiz-m3">
+    <div class="quiz-header">
+      <h3>✦ Check Your Understanding</h3>
+      <span class="quiz-progress" id="quiz-m3-progress">1 / 2</span>
+    </div>
+    <div id="quiz-m3-body"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     MODULE 4: MULTIPLE INPUT FEATURES
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-multi">
+  <span class="section-label">Module 04</span>
+  <h2>Expanding to Multiple Input Features</h2>
+
+  <p>Real-world datasets rarely have just one feature. Logistic regression extends naturally to multiple inputs — each feature gets its own coefficient:</p>
+
+  <div class="formula">
+    z = β₀ + β₁x₁ + β₂x₂ + β₃x₃ + ... + βₙxₙ<br>
+    P(y=1) = σ(z) = 1 / (1 + e⁻ᶻ)
+  </div>
+
+  <div class="concept-card">
+    <h3>Interpreting Multiple Coefficients</h3>
+    <p>Each coefficient βᵢ tells you the effect of feature xᵢ on the <span class="key-term">log-odds</span> of the positive class, holding other features constant:</p>
+    <p style="font-family: var(--mono); font-size: 0.9rem;">log(p / (1−p)) = β₀ + β₁x₁ + β₂x₂ + ...</p>
+    <p><strong>Positive βᵢ:</strong> increasing xᵢ increases the probability of class 1.</p>
+    <p><strong>Negative βᵢ:</strong> increasing xᵢ decreases the probability of class 1.</p>
+    <p><strong>Magnitude:</strong> larger |βᵢ| means feature xᵢ has a stronger influence.</p>
+  </div>
+
+  <!-- Interactive Multi-Feature Calculator -->
+  <div class="concept-card">
+    <h3>↳ Try It: Multi-Feature Prediction</h3>
+    <p>A model predicts whether a student passes an exam based on three features.</p>
+
+    <table class="data-table">
+      <thead><tr><th>Feature</th><th>Coefficient</th><th>Your Value</th></tr></thead>
+      <tbody>
+        <tr><td>Intercept (β₀)</td><td>−6.0</td><td>—</td></tr>
+        <tr><td>Hours Studied (x₁)</td><td>β₁ = 1.2</td><td><input type="number" id="mf_x1" value="5" step="0.5" style="width:70px; font-family:var(--mono); font-size:0.85rem; padding:0.3rem; border:1px solid var(--border); border-radius:4px; background:var(--bg);"></td></tr>
+        <tr><td>Hours Slept (x₂)</td><td>β₂ = 0.8</td><td><input type="number" id="mf_x2" value="7" step="0.5" style="width:70px; font-family:var(--mono); font-size:0.85rem; padding:0.3rem; border:1px solid var(--border); border-radius:4px; background:var(--bg);"></td></tr>
+        <tr><td>Practice Exams (x₃)</td><td>β₃ = 0.5</td><td><input type="number" id="mf_x3" value="3" step="1" style="width:70px; font-family:var(--mono); font-size:0.85rem; padding:0.3rem; border:1px solid var(--border); border-radius:4px; background:var(--bg);"></td></tr>
+      </tbody>
+    </table>
+
+    <button class="btn primary" id="mfCalcBtn">Calculate</button>
+    <div class="calc-result" id="mfResult">Enter values and click Calculate.</div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Feature Scaling Still Matters</h3>
+    <p>Just like KNN, logistic regression benefits from <span class="key-term">feature scaling</span>. While the model will still converge without it, scaling helps the optimization algorithm (gradient descent) converge faster and makes coefficients directly comparable in magnitude.</p>
+  </div>
+
+  <!-- Mini Quiz -->
+  <div class="quiz-container" id="quiz-m4">
+    <div class="quiz-header">
+      <h3>✦ Check Your Understanding</h3>
+      <span class="quiz-progress" id="quiz-m4-progress">1 / 2</span>
+    </div>
+    <div id="quiz-m4-body"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     MODULE 5: SCIKIT-LEARN
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-sklearn">
+  <span class="section-label">Module 05</span>
+  <h2>Implementing Logistic Regression in scikit-learn</h2>
+
+  <p>scikit-learn makes logistic regression straightforward. The API follows the same <span class="key-term">fit → predict</span> pattern you already know.</p>
+
+  <div class="concept-card">
+    <h3>Basic Classification</h3>
+    <div class="code-block"><span class="code-label">Python</span>
+<span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> <span class="cls">LogisticRegression</span>
+<span class="keyword">from</span> sklearn.model_selection <span class="keyword">import</span> <span class="func">train_test_split</span>
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> <span class="cls">StandardScaler</span>
+<span class="keyword">from</span> sklearn.metrics <span class="keyword">import</span> <span class="func">accuracy_score</span>, <span class="func">classification_report</span>
+
+<span class="comment"># 1. Split the data</span>
+X_train, X_test, y_train, y_test = <span class="func">train_test_split</span>(
+    X, y, test_size=<span class="num">0.2</span>, random_state=<span class="num">42</span>
+)
+
+<span class="comment"># 2. Scale features</span>
+scaler = <span class="cls">StandardScaler</span>()
+X_train = scaler.<span class="func">fit_transform</span>(X_train)
+X_test = scaler.<span class="func">transform</span>(X_test)
+
+<span class="comment"># 3. Create and train the model</span>
+model = <span class="cls">LogisticRegression</span>()
+model.<span class="func">fit</span>(X_train, y_train)
+
+<span class="comment"># 4. Predict and evaluate</span>
+y_pred = model.<span class="func">predict</span>(X_test)
+<span class="func">print</span>(<span class="func">classification_report</span>(y_test, y_pred))</div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Getting Probabilities</h3>
+    <div class="code-block"><span class="code-label">Python</span>
+<span class="comment"># predict_proba returns [P(class 0), P(class 1)] for each sample</span>
+probabilities = model.<span class="func">predict_proba</span>(X_test)
+
+<span class="comment"># Probability of class 1 for first 5 samples</span>
+<span class="func">print</span>(probabilities[:<span class="num">5</span>, <span class="num">1</span>])
+
+<span class="comment"># Custom threshold (e.g., 0.3 instead of 0.5)</span>
+y_pred_custom = (probabilities[:, <span class="num">1</span>] >= <span class="num">0.3</span>).<span class="func">astype</span>(<span class="func">int</span>)</div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Inspecting Coefficients</h3>
+    <div class="code-block"><span class="code-label">Python</span>
+<span class="comment"># The learned weights</span>
+<span class="func">print</span>(<span class="string">"Intercept (β₀):"</span>, model.intercept_[<span class="num">0</span>])
+<span class="func">print</span>(<span class="string">"Coefficients:"</span>, model.coef_[<span class="num">0</span>])
+
+<span class="comment"># Pair with feature names</span>
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+coef_df = pd.<span class="cls">DataFrame</span>({
+    <span class="string">'feature'</span>: feature_names,
+    <span class="string">'coefficient'</span>: model.coef_[<span class="num">0</span>]
+}).<span class="func">sort_values</span>(<span class="string">'coefficient'</span>, ascending=<span class="num">False</span>)
+<span class="func">print</span>(coef_df)</div>
+  </div>
+
+  <div class="concept-card">
+    <h3>Key Parameters</h3>
+    <p><span class="key-term">C</span> — inverse of regularization strength. Smaller C = stronger regularization = simpler model. Default is 1.0.</p>
+    <p><span class="key-term">penalty</span> — regularization type: <code>'l2'</code> (Ridge, default), <code>'l1'</code> (Lasso), or <code>'none'</code>.</p>
+    <p><span class="key-term">max_iter</span> — maximum iterations for the solver. Increase if you see convergence warnings (e.g., <code>max_iter=1000</code>).</p>
+    <p><span class="key-term">solver</span> — optimization algorithm. <code>'lbfgs'</code> (default) works well for most cases.</p>
+  </div>
+
+  <div class="concept-card">
+    <h3>Multiclass Classification</h3>
+    <p>scikit-learn's LogisticRegression handles multiclass automatically using a <span class="key-term">one-vs-rest</span> (OvR) strategy by default: it trains one binary classifier per class.</p>
+    <div class="code-block"><span class="code-label">Python</span>
+<span class="comment"># Works with 3+ classes automatically</span>
+model = <span class="cls">LogisticRegression</span>(multi_class=<span class="string">'ovr'</span>, max_iter=<span class="num">1000</span>)
+model.<span class="func">fit</span>(X_train, y_train)  <span class="comment"># y has 3+ unique values</span>
+
+<span class="comment"># predict_proba now returns one column per class</span>
+probs = model.<span class="func">predict_proba</span>(X_test)  <span class="comment"># shape: (n_samples, n_classes)</span></div>
+  </div>
+
+  <!-- Mini Quiz -->
+  <div class="quiz-container" id="quiz-m5">
+    <div class="quiz-header">
+      <h3>✦ Check Your Understanding</h3>
+      <span class="quiz-progress" id="quiz-m5-progress">1 / 2</span>
+    </div>
+    <div id="quiz-m5-body"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════
+     FINAL QUIZ
+     ══════════════════════════════════════════ -->
+<section class="section" id="sec-quiz">
+  <span class="section-label">Final Assessment</span>
+  <h2>Comprehensive Quiz</h2>
+  <p>Test everything you've learned across all five modules. 10 questions covering definitions, probabilities, classification, multiple features, and scikit-learn.</p>
+
+  <div class="quiz-container" id="quiz-final">
+    <div class="quiz-header">
+      <h3>✦ Final Quiz</h3>
+      <span class="quiz-progress" id="quiz-final-progress">1 / 10</span>
+    </div>
+    <div id="quiz-final-body"></div>
+  </div>
+</section>
+
+<footer style="text-align: center; padding: 3rem 2rem; color: var(--text-dim); font-size: 0.82rem; font-family: var(--mono);">
+  CS 180 — Logistic Regression Interactive Tutor
+</footer>
+
+<!-- CHAT TUTOR -->
+<div class="tutor-chat">
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-panel-header">Logistic Regression Tutor</div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">Hi! I'm your logistic regression tutor. Ask me anything — the sigmoid function, how to calculate probabilities, decision boundaries, log loss, coefficients, scikit-learn code, and more.</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="Ask about logistic regression...">
+      <button id="chatSendBtn">→</button>
+    </div>
+  </div>
+  <button class="chat-toggle" id="chatToggleBtn">?</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════
+const sections = [
+  { id: 'sec-home', label: 'Home' },
+  { id: 'sec-what', label: 'What is it?' },
+  { id: 'sec-probs', label: 'Probabilities' },
+  { id: 'sec-classify', label: 'Classification' },
+  { id: 'sec-multi', label: 'Multi-Feature' },
+  { id: 'sec-sklearn', label: 'scikit-learn' },
+  { id: 'sec-quiz', label: 'Final Quiz' },
+];
+
+const navBar = document.getElementById('navBar');
+sections.forEach(s => {
+  const dot = document.createElement('div');
+  dot.className = 'nav-dot';
+  dot.innerHTML = `<span class="tooltip">${s.label}</span>`;
+  dot.addEventListener('click', () => document.getElementById(s.id).scrollIntoView({ behavior: 'smooth' }));
+  dot.dataset.section = s.id;
+  navBar.appendChild(dot);
+});
+
+window.addEventListener('scroll', () => {
+  let current = sections[0].id;
+  sections.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el && el.getBoundingClientRect().top < window.innerHeight / 2) current = s.id;
+  });
+  document.querySelectorAll('.nav-dot').forEach(d => {
+    d.classList.toggle('active', d.dataset.section === current);
+  });
+});
+
+// ════════════════════════════════════════════════════
+// SIGMOID HELPER
+// ════════════════════════════════════════════════════
+function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+
+// ════════════════════════════════════════════════════
+// SIGMOID INTERACTIVE CANVAS
+// ════════════════════════════════════════════════════
+const sigCanvas = document.getElementById('sigmoidCanvas');
+const sigCtx = sigCanvas.getContext('2d');
+let sigHoverX = null;
+
+function resizeCanvas(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.getContext('2d').scale(dpr, dpr);
+}
+
+function drawSigmoid() {
+  resizeCanvas(sigCanvas);
+  const w = sigCanvas.getBoundingClientRect().width;
+  const h = sigCanvas.getBoundingClientRect().height;
+  const ctx = sigCtx;
+  const b0 = parseFloat(document.getElementById('b0Slider').value);
+  const b1 = parseFloat(document.getElementById('b1Slider').value);
+
+  // Background
+  ctx.fillStyle = '#faf7f2';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid
+  const padL = 55, padR = 25, padT = 25, padB = 45;
+  const gw = w - padL - padR, gh = h - padT - padB;
+
+  ctx.strokeStyle = '#e8e3db';
+  ctx.lineWidth = 0.8;
+  // Horizontal grid + labels
+  for (let p = 0; p <= 1; p += 0.25) {
+    const y = padT + gh * (1 - p);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
+    ctx.fillStyle = '#8a7f74';
+    ctx.font = '11px "IBM Plex Mono"';
+    ctx.textAlign = 'right';
+    ctx.fillText(p.toFixed(2), padL - 8, y + 4);
+  }
+  // Vertical grid + labels
+  for (let z = -6; z <= 6; z += 2) {
+    const x = padL + ((z + 6) / 12) * gw;
+    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + gh); ctx.stroke();
+    ctx.fillStyle = '#8a7f74';
+    ctx.font = '11px "IBM Plex Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillText(z, x, padT + gh + 18);
+  }
+
+  // Axis labels
+  ctx.fillStyle = '#8a7f74';
+  ctx.font = '12px "IBM Plex Mono"';
+  ctx.textAlign = 'center';
+  ctx.fillText('z', padL + gw / 2, h - 4);
+  ctx.save();
+  ctx.translate(14, padT + gh / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('σ(z)', 0, 0);
+  ctx.restore();
+
+  // P=0.5 line
+  ctx.setLineDash([5, 5]);
+  ctx.strokeStyle = 'rgba(184,134,11,0.3)';
+  ctx.lineWidth = 1;
+  const halfY = padT + gh * 0.5;
+  ctx.beginPath(); ctx.moveTo(padL, halfY); ctx.lineTo(padL + gw, halfY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Sigmoid curve
+  ctx.beginPath();
+  ctx.strokeStyle = '#b8860b';
+  ctx.lineWidth = 2.5;
+  for (let px = 0; px <= gw; px++) {
+    const z = (px / gw) * 12 - 6;
+    const zAdj = b0 + b1 * z;
+    const s = sigmoid(zAdj);
+    const x = padL + px;
+    const y = padT + gh * (1 - s);
+    px === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Hover point
+  if (sigHoverX !== null && sigHoverX >= padL && sigHoverX <= padL + gw) {
+    const px = sigHoverX - padL;
+    const z = (px / gw) * 12 - 6;
+    const zAdj = b0 + b1 * z;
+    const s = sigmoid(zAdj);
+    const y = padT + gh * (1 - s);
+
+    // Crosshair
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = 'rgba(26,23,20,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(sigHoverX, padT); ctx.lineTo(sigHoverX, padT + gh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + gw, y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dot
+    ctx.beginPath();
+    ctx.arc(sigHoverX, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#b8860b';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#1a1714';
+    ctx.font = '600 12px "IBM Plex Mono"';
+    ctx.textAlign = 'left';
+    const labelX = sigHoverX + 10;
+    const labelY = y - 10;
+    ctx.fillText(`z=${z.toFixed(2)}, σ=${s.toFixed(4)}`, labelX > padL + gw - 160 ? sigHoverX - 170 : labelX, labelY < padT + 15 ? y + 20 : labelY);
+  }
+}
+
+sigCanvas.addEventListener('mousemove', e => {
+  sigHoverX = e.clientX - sigCanvas.getBoundingClientRect().left;
+  drawSigmoid();
+});
+sigCanvas.addEventListener('mouseleave', () => { sigHoverX = null; drawSigmoid(); });
+
+document.getElementById('b0Slider').addEventListener('input', e => {
+  document.getElementById('b0Val').textContent = e.target.value;
+  drawSigmoid();
+});
+document.getElementById('b1Slider').addEventListener('input', e => {
+  document.getElementById('b1Val').textContent = e.target.value;
+  drawSigmoid();
+});
+
+// ════════════════════════════════════════════════════
+// PROBABILITY CALCULATOR
+// ════════════════════════════════════════════════════
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const b0 = parseFloat(document.getElementById('calcB0').value);
+  const b1 = parseFloat(document.getElementById('calcB1').value);
+  const x = parseFloat(document.getElementById('calcX').value);
+  if ([b0, b1, x].some(isNaN)) { document.getElementById('probResult').textContent = 'Please enter valid numbers.'; return; }
+
+  const z = b0 + b1 * x;
+  const p = sigmoid(z);
+  const cls = p >= 0.5 ? 1 : 0;
+
+  document.getElementById('probResult').innerHTML =
+    `<strong style="color:var(--accent)">Step 1:</strong> z = ${b0} + ${b1} × ${x} = <strong>${z.toFixed(4)}</strong><br>` +
+    `<strong style="color:var(--accent)">Step 2:</strong> σ(${z.toFixed(4)}) = 1 / (1 + e<sup>−${z.toFixed(4)}</sup>) = <strong>${p.toFixed(6)}</strong><br>` +
+    `<strong style="color:var(--accent)">Step 3:</strong> P(y=1) = ${(p * 100).toFixed(2)}% → Predicted class: <strong style="color:${cls ? 'var(--green)' : 'var(--red)'}">${cls}</strong> (threshold = 0.5)`;
+});
+
+// ════════════════════════════════════════════════════
+// MULTI-FEATURE CALCULATOR
+// ════════════════════════════════════════════════════
+document.getElementById('mfCalcBtn').addEventListener('click', () => {
+  const x1 = parseFloat(document.getElementById('mf_x1').value);
+  const x2 = parseFloat(document.getElementById('mf_x2').value);
+  const x3 = parseFloat(document.getElementById('mf_x3').value);
+  if ([x1, x2, x3].some(isNaN)) { document.getElementById('mfResult').textContent = 'Please enter valid numbers.'; return; }
+
+  const b0 = -6, b1 = 1.2, b2 = 0.8, b3 = 0.5;
+  const z = b0 + b1 * x1 + b2 * x2 + b3 * x3;
+  const p = sigmoid(z);
+  const cls = p >= 0.5 ? 'Pass' : 'Fail';
+
+  document.getElementById('mfResult').innerHTML =
+    `<strong style="color:var(--accent)">z</strong> = ${b0} + (${b1})(${x1}) + (${b2})(${x2}) + (${b3})(${x3}) = <strong>${z.toFixed(3)}</strong><br>` +
+    `<strong style="color:var(--accent)">P(pass)</strong> = σ(${z.toFixed(3)}) = <strong>${p.toFixed(5)}</strong> = ${(p * 100).toFixed(2)}%<br>` +
+    `<strong style="color:var(--accent)">Prediction:</strong> <strong style="color:${p >= 0.5 ? 'var(--green)' : 'var(--red)'};">${cls}</strong>`;
+});
+
+// ════════════════════════════════════════════════════
+// CLASSIFICATION CANVAS (2D with decision boundary)
+// ════════════════════════════════════════════════════
+const classCanvas = document.getElementById('classifyCanvas');
+const classCtx = classCanvas.getContext('2d');
+let classPoints = [];
+let classWeights = null;
+
+function addDemoData() {
+  classPoints = [];
+  // Class 0 (lower-left cluster)
+  for (let i = 0; i < 18; i++) classPoints.push({ x: 0.15 + Math.random() * 0.35, y: 0.1 + Math.random() * 0.4, cls: 0 });
+  // Class 1 (upper-right cluster)
+  for (let i = 0; i < 18; i++) classPoints.push({ x: 0.5 + Math.random() * 0.4, y: 0.5 + Math.random() * 0.4, cls: 1 });
+  // Some overlap
+  for (let i = 0; i < 6; i++) classPoints.push({ x: 0.3 + Math.random() * 0.3, y: 0.3 + Math.random() * 0.3, cls: Math.random() > 0.5 ? 0 : 1 });
+  fitLogistic();
+  drawClassCanvas();
+}
+
+function fitLogistic() {
+  // Simple gradient descent logistic regression on 2D data
+  if (classPoints.length < 2) { classWeights = null; return; }
+  const hasClass0 = classPoints.some(p => p.cls === 0);
+  const hasClass1 = classPoints.some(p => p.cls === 1);
+  if (!hasClass0 || !hasClass1) { classWeights = null; return; }
+
+  let w0 = 0, w1 = 0, w2 = 0;
+  const lr = 2.0;
+  const n = classPoints.length;
+
+  for (let epoch = 0; epoch < 500; epoch++) {
+    let dw0 = 0, dw1 = 0, dw2 = 0;
+    for (const p of classPoints) {
+      const z = w0 + w1 * p.x + w2 * p.y;
+      const pred = sigmoid(z);
+      const err = pred - p.cls;
+      dw0 += err;
+      dw1 += err * p.x;
+      dw2 += err * p.y;
+    }
+    w0 -= lr * dw0 / n;
+    w1 -= lr * dw1 / n;
+    w2 -= lr * dw2 / n;
+  }
+  classWeights = { w0, w1, w2 };
+}
+
+function drawClassCanvas() {
+  resizeCanvas(classCanvas);
+  const w = classCanvas.getBoundingClientRect().width;
+  const h = classCanvas.getBoundingClientRect().height;
+  const ctx = classCtx;
+  const threshold = parseFloat(document.getElementById('threshSlider').value);
+
+  ctx.fillStyle = '#faf7f2';
+  ctx.fillRect(0, 0, w, h);
+
+  const pad = 10;
+  const gw = w - pad * 2, gh = h - pad * 2;
+
+  // Draw probability heatmap if weights exist
+  if (classWeights) {
+    const { w0, w1, w2 } = classWeights;
+    const step = 6;
+    for (let px = 0; px < gw; px += step) {
+      for (let py = 0; py < gh; py += step) {
+        const fx = px / gw;
+        const fy = 1 - py / gh;
+        const z = w0 + w1 * fx + w2 * fy;
+        const p = sigmoid(z);
+        const cls = p >= threshold ? 1 : 0;
+        ctx.fillStyle = cls === 1
+          ? `rgba(45, 122, 58, ${0.04 + Math.abs(p - threshold) * 0.15})`
+          : `rgba(192, 57, 43, ${0.04 + Math.abs(p - threshold) * 0.15})`;
+        ctx.fillRect(pad + px, pad + py, step, step);
+      }
+    }
+
+    // Decision boundary line
+    ctx.beginPath();
+    ctx.strokeStyle = 'var(--accent)';
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([6, 4]);
+    // Boundary: w0 + w1*x + w2*y = logit(threshold)
+    const logitT = Math.log(threshold / (1 - threshold));
+    for (let px = 0; px <= gw; px += 2) {
+      const fx = px / gw;
+      const fy = (logitT - w0 - w1 * fx) / w2;
+      const screenY = pad + gh * (1 - fy);
+      if (px === 0) ctx.moveTo(pad + px, screenY);
+      else ctx.lineTo(pad + px, screenY);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Grid
+  ctx.strokeStyle = '#e2ddd5';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const x = pad + (i / 4) * gw;
+    const y = pad + (i / 4) * gh;
+    ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, pad + gh); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(pad + gw, y); ctx.stroke();
+  }
+
+  // Points
+  classPoints.forEach(p => {
+    const px = pad + p.x * gw;
+    const py = pad + (1 - p.y) * gh;
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fillStyle = p.cls === 1 ? '#2d7a3a' : '#c0392b';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Legend
+  ctx.font = '11px "IBM Plex Mono"';
+  ctx.textAlign = 'left';
+  ctx.beginPath(); ctx.arc(pad + 12, pad + 16, 5, 0, Math.PI * 2); ctx.fillStyle = '#c0392b'; ctx.fill();
+  ctx.fillStyle = '#3d3630'; ctx.fillText('Class 0', pad + 22, pad + 20);
+  ctx.beginPath(); ctx.arc(pad + 80, pad + 16, 5, 0, Math.PI * 2); ctx.fillStyle = '#2d7a3a'; ctx.fill();
+  ctx.fillStyle = '#3d3630'; ctx.fillText('Class 1', pad + 90, pad + 20);
+  if (classWeights) {
+    ctx.fillStyle = '#b8860b'; ctx.fillText(`boundary (t=${threshold.toFixed(2)})`, pad + 150, pad + 20);
+  }
+}
+
+classCanvas.addEventListener('click', e => {
+  const rect = classCanvas.getBoundingClientRect();
+  const pad = 10;
+  const gw = rect.width - pad * 2, gh = rect.height - pad * 2;
+  const mx = (e.clientX - rect.left - pad) / gw;
+  const my = 1 - (e.clientY - rect.top - pad) / gh;
+  if (mx < 0 || mx > 1 || my < 0 || my > 1) return;
+  classPoints.push({ x: mx, y: my, cls: 0 });
+  fitLogistic();
+  drawClassCanvas();
+});
+
+classCanvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const rect = classCanvas.getBoundingClientRect();
+  const pad = 10;
+  const gw = rect.width - pad * 2, gh = rect.height - pad * 2;
+  const mx = (e.clientX - rect.left - pad) / gw;
+  const my = 1 - (e.clientY - rect.top - pad) / gh;
+  if (mx < 0 || mx > 1 || my < 0 || my > 1) return;
+  classPoints.push({ x: mx, y: my, cls: 1 });
+  fitLogistic();
+  drawClassCanvas();
+});
+
+document.getElementById('threshSlider').addEventListener('input', e => {
+  document.getElementById('threshVal').textContent = parseFloat(e.target.value).toFixed(2);
+  drawClassCanvas();
+});
+
+document.getElementById('resetClassBtn').addEventListener('click', () => {
+  classPoints = [];
+  classWeights = null;
+  drawClassCanvas();
+});
+
+document.getElementById('demoDataBtn').addEventListener('click', addDemoData);
+
+// Init canvases
+window.addEventListener('resize', () => { drawSigmoid(); drawClassCanvas(); });
+setTimeout(() => { drawSigmoid(); drawClassCanvas(); }, 100);
+
+// ════════════════════════════════════════════════════
+// QUIZ ENGINE (event delegation)
+// ════════════════════════════════════════════════════
+function createQuiz(containerId, progressId, questions) {
+  const state = { current: 0, score: 0, answered: false };
+  const body = document.getElementById(containerId + '-body');
+  const progress = document.getElementById(progressId);
+
+  function render() {
+    if (state.current >= questions.length) {
+      const pct = Math.round((state.score / questions.length) * 100);
+      body.innerHTML = `<div class="quiz-score"><div class="score-num">${state.score}/${questions.length}</div><p>${pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort — review the missed concepts.' : 'Consider re-reading this module before moving on.'}</p><button class="btn primary quiz-restart">Restart</button></div>`;
+      progress.textContent = 'Done';
+      const restartBtn = body.querySelector('.quiz-restart');
+      if (restartBtn) restartBtn.addEventListener('click', () => {
+        state.current = 0; state.score = 0; state.answered = false; render();
+      });
+      return;
+    }
+    state.answered = false;
+    const q = questions[state.current];
+    progress.textContent = `${state.current + 1} / ${questions.length}`;
+
+    let html = `<div class="quiz-question">${q.q}</div>`;
+    q.options.forEach((opt, i) => {
+      html += `<button class="quiz-option" data-idx="${i}">${opt}</button>`;
+    });
+    html += `<div class="quiz-feedback" id="${containerId}-fb"></div>`;
+    html += `<button class="btn primary quiz-next" id="${containerId}-next">Next →</button>`;
+    body.innerHTML = html;
+
+    body.querySelectorAll('.quiz-option').forEach(btn => {
+      btn.addEventListener('click', function() { handleAnswer(parseInt(this.dataset.idx)); });
+    });
+    document.getElementById(containerId + '-next').addEventListener('click', () => { state.current++; render(); });
+  }
+
+  function handleAnswer(idx) {
+    if (state.answered) return;
+    state.answered = true;
+    const q = questions[state.current];
+    const btns = body.querySelectorAll('.quiz-option');
+    btns.forEach(b => b.disabled = true);
+    const fb = document.getElementById(containerId + '-fb');
+    if (idx === q.answer) {
+      state.score++;
+      btns[idx].classList.add('correct');
+      fb.className = 'quiz-feedback show correct-fb';
+      fb.textContent = '✓ Correct! ' + (q.explanation || '');
+    } else {
+      btns[idx].classList.add('wrong');
+      btns[q.answer].classList.add('correct');
+      fb.className = 'quiz-feedback show wrong-fb';
+      fb.innerHTML = `✗ The correct answer is: <strong>${q.options[q.answer]}</strong>. ${q.explanation || ''}`;
+    }
+    document.getElementById(containerId + '-next').classList.add('show');
+  }
+
+  render();
+}
+
+// ── MODULE QUIZZES ──
+createQuiz('quiz-m1', 'quiz-m1-progress', [
+  {
+    q: 'Logistic regression is primarily used for:',
+    options: ['Predicting continuous values', 'Classification (predicting categories)', 'Clustering data points', 'Dimensionality reduction'],
+    answer: 1,
+    explanation: 'Despite its name, logistic regression is a classification algorithm that predicts probabilities of class membership.'
+  },
+  {
+    q: 'What is the role of the sigmoid function in logistic regression?',
+    options: ['To speed up training', 'To reduce the number of features', 'To squash the linear output into a probability between 0 and 1', 'To calculate the distance between data points'],
+    answer: 2,
+    explanation: 'The sigmoid function maps any real-valued number into the (0, 1) range, making it interpretable as a probability.'
+  }
+]);
+
+createQuiz('quiz-m2', 'quiz-m2-progress', [
+  {
+    q: 'If z = 0, what is σ(z)?',
+    options: ['0', '0.25', '0.5', '1'],
+    answer: 2,
+    explanation: 'σ(0) = 1/(1+e⁰) = 1/(1+1) = 0.5. The sigmoid always equals 0.5 when z = 0.'
+  },
+  {
+    q: 'Given β₀ = −2 and β₁ = 1, what is the probability for x = 4?',
+    options: ['About 12%', 'About 50%', 'About 73%', 'About 88%'],
+    answer: 3,
+    explanation: 'z = −2 + 1×4 = 2. σ(2) = 1/(1+e⁻²) ≈ 0.8808 ≈ 88%. But wait — the answer choices list 73% and 88%. σ(2) ≈ 0.881, so about 88%.'
+  }
+]);
+
+createQuiz('quiz-m3', 'quiz-m3-progress', [
+  {
+    q: 'At the default threshold of 0.5, the decision boundary occurs where:',
+    options: ['σ(z) = 0', 'z = 0 (the linear equation equals zero)', 'z = 1', 'σ(z) = 1'],
+    answer: 1,
+    explanation: 'σ(0) = 0.5, so the boundary is where the linear combination z equals 0.'
+  },
+  {
+    q: 'Lowering the classification threshold from 0.5 to 0.3 will:',
+    options: ['Classify more instances as class 1 (positive)', 'Classify fewer instances as class 1', 'Have no effect on predictions', 'Change the model coefficients'],
+    answer: 0,
+    explanation: 'A lower threshold means more samples exceed it, so more are classified as class 1. This increases recall but may decrease precision.'
+  }
+]);
+
+createQuiz('quiz-m4', 'quiz-m4-progress', [
+  {
+    q: 'In logistic regression with multiple features, a positive coefficient β₂ means:',
+    options: ['Feature x₂ has no effect', 'Increasing x₂ decreases P(y=1)', 'Increasing x₂ increases P(y=1), holding other features constant', 'x₂ must be removed from the model'],
+    answer: 2,
+    explanation: 'A positive coefficient means higher values of that feature push the prediction toward the positive class.'
+  },
+  {
+    q: 'Why does feature scaling help logistic regression?',
+    options: ['It changes the model\'s predictions', 'It helps gradient descent converge faster and makes coefficients comparable', 'It is required — the model won\'t work without it', 'It removes multicollinearity'],
+    answer: 1,
+    explanation: 'Scaling ensures the optimizer doesn\'t struggle with features on wildly different scales, leading to faster convergence.'
+  }
+]);
+
+createQuiz('quiz-m5', 'quiz-m5-progress', [
+  {
+    q: 'Which method returns class probabilities in scikit-learn\'s LogisticRegression?',
+    options: ['predict()', 'predict_proba()', 'score()', 'decision_function()'],
+    answer: 1,
+    explanation: 'predict_proba() returns a 2D array with P(class 0) and P(class 1) for each sample.'
+  },
+  {
+    q: 'The C parameter in LogisticRegression controls:',
+    options: ['The number of classes', 'The learning rate', 'Inverse regularization strength — smaller C means stronger regularization', 'The classification threshold'],
+    answer: 2,
+    explanation: 'C is the inverse of regularization strength. Smaller C = more regularization = simpler model.'
+  }
+]);
+
+// ── FINAL QUIZ ──
+createQuiz('quiz-final', 'quiz-final-progress', [
+  {
+    q: 'Logistic regression is called a "parametric" model because:',
+    options: ['It uses parameters K and distance', 'It learns a fixed set of weights (β values) during training', 'It has no hyperparameters', 'It can only handle two features'],
+    answer: 1,
+    explanation: 'Parametric models learn a fixed number of parameters from data. The β coefficients are these parameters.'
+  },
+  {
+    q: 'The sigmoid function σ(z) always outputs values in which range?',
+    options: ['(−∞, +∞)', '[−1, 1]', '(0, 1)', '[0, 1]'],
+    answer: 2,
+    explanation: 'The sigmoid asymptotically approaches but never reaches 0 or 1, so the range is the open interval (0, 1).'
+  },
+  {
+    q: 'Given β₀ = −3, β₁ = 2, and x = 1, what is P(y=1)?',
+    options: ['About 12%', 'About 27%', 'About 50%', 'About 73%'],
+    answer: 1,
+    explanation: 'z = −3 + 2(1) = −1. σ(−1) = 1/(1+e¹) ≈ 1/3.718 ≈ 0.269 ≈ 27%.'
+  },
+  {
+    q: 'The loss function used to train logistic regression is:',
+    options: ['Mean Squared Error', 'Mean Absolute Error', 'Log Loss (Binary Cross-Entropy)', 'Hinge Loss'],
+    answer: 2,
+    explanation: 'Log loss heavily penalizes confident wrong predictions and is the standard loss for logistic regression.'
+  },
+  {
+    q: 'In a model with 5 features, the decision boundary is:',
+    options: ['A point', 'A line', 'A plane', 'A 4-dimensional hyperplane'],
+    answer: 3,
+    explanation: 'With n features, the decision boundary is an (n−1)-dimensional hyperplane. 5 features → 4D hyperplane.'
+  },
+  {
+    q: 'A large positive coefficient for feature x₃ means:',
+    options: ['x₃ is not important', 'Higher x₃ values strongly push the prediction toward class 1', 'Higher x₃ values push toward class 0', 'The model is overfitting on x₃'],
+    answer: 1,
+    explanation: 'The sign indicates direction and the magnitude indicates strength of the feature\'s effect on the log-odds.'
+  },
+  {
+    q: 'Why should you use scaler.transform() (not fit_transform()) on test data?',
+    options: ['fit_transform is slower', 'To prevent data leakage — only training stats should inform the scaling', 'It produces better accuracy', 'fit_transform doesn\'t work on test data'],
+    answer: 1,
+    explanation: 'fit_transform on test data would learn test set statistics, leaking future information into preprocessing.'
+  },
+  {
+    q: 'Setting C=0.01 in LogisticRegression results in:',
+    options: ['Almost no regularization', 'Very strong regularization (simpler model)', 'A higher learning rate', 'More iterations'],
+    answer: 1,
+    explanation: 'C is the inverse of regularization strength. Small C (like 0.01) = very strong regularization.'
+  },
+  {
+    q: 'model.predict_proba(X_test) returns:',
+    options: ['A single probability per sample', 'An array with [P(class 0), P(class 1)] per sample', 'The model coefficients', 'The log-odds'],
+    answer: 1,
+    explanation: 'predict_proba returns a 2D array where each row contains probabilities for all classes, summing to 1.'
+  },
+  {
+    q: 'How does logistic regression handle multiclass (3+ classes) in scikit-learn by default?',
+    options: ['It can\'t — you need a different algorithm', 'One-vs-Rest: trains one binary classifier per class', 'It uses a decision tree internally', 'It reduces to 2 classes by merging'],
+    answer: 1,
+    explanation: 'scikit-learn uses a One-vs-Rest (OvR) strategy by default, training one binary model per class.'
+  }
+]);
+
+// ════════════════════════════════════════════════════
+// CHAT TUTOR (rule-based)
+// ════════════════════════════════════════════════════
+document.getElementById('chatToggleBtn').addEventListener('click', () => {
+  document.getElementById('chatPanel').classList.toggle('open');
+});
+
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendChat();
+});
+document.getElementById('chatSendBtn').addEventListener('click', sendChat);
+
+const lrKB = [
+  { keys: ['what is logistic', 'define logistic', 'logistic regression'], answer: 'Logistic regression is a classification algorithm that uses the sigmoid function to model the probability that an instance belongs to a particular class. Despite its name, it\'s used for classification, not regression.' },
+  { keys: ['sigmoid', 'sigma', 'activation'], answer: 'The sigmoid function σ(z) = 1/(1+e⁻ᶻ) maps any real number to the (0,1) range. When z=0, σ=0.5. As z→+∞, σ→1. As z→−∞, σ→0. It\'s what turns the linear output into a probability.' },
+  { keys: ['probability', 'calculate prob', 'how to calculate'], answer: 'To calculate: (1) Compute z = β₀ + β₁x₁ + β₂x₂ + ..., (2) Apply sigmoid: P(y=1) = 1/(1+e⁻ᶻ). For example, with β₀=−4, β₁=1.5, x=5: z=3.5, P = σ(3.5) ≈ 0.97.' },
+  { keys: ['threshold', 'decision boundary', 'classify', 'classification'], answer: 'Classification uses a threshold (default 0.5): if P(y=1) ≥ threshold → predict class 1, else class 0. The decision boundary is where z=0, which corresponds to P=0.5. You can adjust the threshold for different precision/recall tradeoffs.' },
+  { keys: ['log loss', 'cross entropy', 'loss function', 'cost'], answer: 'Logistic regression minimizes log loss (binary cross-entropy): L = −(1/n) Σ[yᵢ·log(p̂ᵢ) + (1−yᵢ)·log(1−p̂ᵢ)]. It penalizes confident wrong predictions heavily.' },
+  { keys: ['coefficient', 'weight', 'interpret', 'beta', 'β'], answer: 'Each coefficient βᵢ represents the change in log-odds per unit increase in feature xᵢ. Positive β → higher xᵢ pushes toward class 1. Larger |β| means stronger influence. The intercept β₀ is the log-odds when all features are 0.' },
+  { keys: ['multiple feature', 'multi feature', 'many feature', 'expand'], answer: 'With multiple features: z = β₀ + β₁x₁ + β₂x₂ + ... + βₙxₙ. Each feature gets its own coefficient. The decision boundary becomes a hyperplane. Interpretation: each βᵢ is the effect of xᵢ holding other features constant.' },
+  { keys: ['scaling', 'normalize', 'standardize', 'feature scaling'], answer: 'Feature scaling helps gradient descent converge faster and makes coefficients comparable in magnitude. Use StandardScaler: fit_transform on training data, then transform (not fit_transform) on test data to avoid data leakage.' },
+  { keys: ['scikit', 'sklearn', 'code', 'implement', 'python'], answer: 'Use LogisticRegression from sklearn.linear_model. Key steps: (1) train_test_split, (2) StandardScaler, (3) model.fit(X_train, y_train), (4) model.predict(X_test) or model.predict_proba(X_test). Key params: C (regularization), penalty, max_iter.' },
+  { keys: ['regularization', 'overfit', 'c param', 'penalty'], answer: 'The C parameter controls regularization (inverse strength). Small C = strong regularization = simpler model. penalty can be "l2" (Ridge, default), "l1" (Lasso), or "none". Regularization prevents overfitting by penalizing large coefficients.' },
+  { keys: ['multiclass', 'more than two', 'three class', 'multi class'], answer: 'scikit-learn handles multiclass automatically using One-vs-Rest (OvR): it trains one binary classifier per class. predict_proba then returns one column per class. You can also use multi_class="multinomial" for softmax.' },
+  { keys: ['vs linear', 'difference linear', 'compare linear'], answer: 'Linear regression: continuous output, MSE loss, range (−∞,+∞). Logistic regression: probability output via sigmoid, log loss, range (0,1). Logistic regression is for classification; linear regression is for predicting continuous values.' },
+  { keys: ['predict_proba', 'probabilities', 'get prob'], answer: 'model.predict_proba(X) returns a 2D array where each row is [P(class 0), P(class 1)]. For custom thresholds: y_pred = (proba[:, 1] >= threshold).astype(int).' },
+  { keys: ['log odds', 'logit', 'odds'], answer: 'Log-odds (logit) = log(p/(1−p)) = β₀ + β₁x₁ + ... This is the linear part of logistic regression. The sigmoid converts log-odds back to probabilities. Each βᵢ changes the log-odds by βᵢ for a 1-unit increase in xᵢ.' },
+];
+
+function getBotReply(msg) {
+  const lower = msg.toLowerCase();
+  for (const entry of lrKB) {
+    if (entry.keys.some(k => lower.includes(k))) return entry.answer;
+  }
+  if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+    return 'Hey! Ask me anything about logistic regression — the sigmoid function, probability calculation, decision boundaries, coefficients, log loss, scikit-learn, etc.';
+  }
+  return 'Great question! I can help with: the sigmoid function, probability calculation, classification thresholds, decision boundaries, log loss, multi-feature models, coefficient interpretation, regularization, and scikit-learn code. Try asking about one of those!';
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  const container = document.getElementById('chatMessages');
+  container.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  setTimeout(() => {
+    container.innerHTML += `<div class="chat-msg bot">${getBotReply(msg)}</div>`;
+    container.scrollTop = container.scrollHeight;
+  }, 350);
+  container.scrollTop = container.scrollHeight;
+}
+</script>
+
+</body>
+</html>

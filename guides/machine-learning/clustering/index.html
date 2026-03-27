@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clustering — Intro to ML Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0e13;--surface:#14171e;--surface2:#1a1e28;--surface3:#222837;
+  --border:#2a3040;--border-hi:#3d4660;
+  --text:#d8dce6;--text-dim:#7e879c;--text-bright:#f0f2f7;
+  --accent:#5ce0b5;--accent-dim:rgba(92,224,181,.12);--accent-glow:rgba(92,224,181,.25);
+  --orange:#f59e42;--orange-dim:rgba(245,158,66,.12);
+  --red:#f06070;--red-dim:rgba(240,96,112,.12);
+  --blue:#5ea8f0;--blue-dim:rgba(94,168,240,.12);
+  --purple:#b07ef5;--purple-dim:rgba(176,126,245,.12);
+  --correct:#3dd68c;--correct-bg:rgba(61,214,140,.1);
+  --wrong:#f06070;--wrong-bg:rgba(240,96,112,.1);
+  --radius:10px;--radius-lg:16px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.7;min-height:100vh;overflow-x:hidden;
+}
+::selection{background:var(--accent-glow);color:var(--text-bright)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── NAV ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(12,14,19,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 24px;height:56px;
+}
+.topbar .logo{
+  font-family:'Fraunces',serif;font-weight:900;font-size:18px;color:var(--accent);
+  letter-spacing:-.5px;white-space:nowrap;
+}
+.topbar .logo span{color:var(--text-dim);font-weight:400;font-size:14px;margin-left:6px;font-family:'DM Sans',sans-serif}
+.tab-row{display:flex;gap:2px;margin-left:auto;height:100%}
+.tab-btn{
+  background:none;border:none;color:var(--text-dim);font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;padding:0 16px;cursor:pointer;
+  position:relative;transition:color .2s;height:100%;display:flex;align-items:center;
+  letter-spacing:.3px;white-space:nowrap;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent)}
+.tab-btn.active::after{
+  content:'';position:absolute;bottom:0;left:8px;right:8px;height:2px;
+  background:var(--accent);border-radius:2px 2px 0 0;
+}
+.progress-track{
+  position:fixed;top:56px;left:0;right:0;height:3px;background:var(--surface);z-index:99;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));
+  width:0%;transition:width .4s ease;
+}
+
+/* ── LAYOUT ── */
+main{padding:80px 24px 60px;max-width:860px;margin:0 auto}
+.section{display:none}
+.section.active{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+h1{
+  font-family:'Fraunces',serif;font-weight:900;font-size:clamp(28px,5vw,38px);
+  color:var(--text-bright);margin-bottom:8px;letter-spacing:-.5px;
+}
+h2{
+  font-family:'Fraunces',serif;font-weight:700;font-size:22px;
+  color:var(--text-bright);margin:40px 0 16px;letter-spacing:-.3px;
+  display:flex;align-items:center;gap:10px;
+}
+h2 .icon{font-size:20px}
+h3{font-weight:700;font-size:16px;color:var(--text-bright);margin:24px 0 10px}
+.subtitle{color:var(--text-dim);font-size:15px;margin-bottom:32px}
+p{margin-bottom:14px;font-size:15px}
+strong{color:var(--text-bright);font-weight:600}
+em{color:var(--accent);font-style:normal;font-weight:600}
+
+/* ── CARDS ── */
+.concept-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:24px;margin:20px 0;position:relative;overflow:hidden;
+}
+.concept-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--blue));
+}
+.concept-card.orange::before{background:linear-gradient(90deg,var(--orange),var(--red))}
+.concept-card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+
+.def-box{
+  background:var(--accent-dim);border-left:3px solid var(--accent);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 18px;margin:14px 0;font-size:14px;
+}
+.warn-box{
+  background:var(--orange-dim);border-left:3px solid var(--orange);
+  border-radius:0 var(--radius) var(--radius) 0;
+  padding:14px 18px;margin:14px 0;font-size:14px;
+}
+.warn-box strong{color:var(--orange)}
+
+code,.code-block{
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+}
+code{
+  background:var(--surface2);padding:2px 7px;border-radius:4px;color:var(--accent);
+  font-size:13px;
+}
+.code-block{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;margin:14px 0;overflow-x:auto;white-space:pre;line-height:1.6;
+  color:#b8c4d8;
+}
+.code-block .kw{color:var(--purple)}
+.code-block .fn{color:var(--blue)}
+.code-block .str{color:var(--accent)}
+.code-block .cm{color:var(--text-dim)}
+.code-block .num{color:var(--orange)}
+
+ol,ul{margin:10px 0 14px 24px;font-size:15px}
+li{margin-bottom:6px}
+li::marker{color:var(--accent)}
+
+/* ── STEPS ACCORDION ── */
+.step-list{counter-reset:step;margin:16px 0}
+.step{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  margin-bottom:8px;overflow:hidden;
+}
+.step-head{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;
+  font-weight:600;font-size:14px;color:var(--text-bright);counter-increment:step;
+  transition:background .2s;
+}
+.step-head:hover{background:var(--surface3)}
+.step-head::before{
+  content:counter(step);display:flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:50%;background:var(--accent-dim);
+  color:var(--accent);font-size:12px;font-weight:700;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;
+}
+.step-head .arrow{margin-left:auto;transition:transform .2s;color:var(--text-dim);font-size:12px}
+.step.open .step-head .arrow{transform:rotate(90deg)}
+.step-body{
+  max-height:0;overflow:hidden;transition:max-height .3s ease;
+  padding:0 16px;font-size:14px;
+}
+.step.open .step-body{max-height:600px;padding:0 16px 14px}
+
+/* ── COMPARISON TABLE ── */
+.cmp-table{
+  width:100%;border-collapse:separate;border-spacing:0;
+  margin:16px 0;font-size:13px;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);
+}
+.cmp-table th{
+  background:var(--surface2);color:var(--accent);font-weight:600;
+  padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);
+  font-size:12px;letter-spacing:.5px;text-transform:uppercase;
+}
+.cmp-table td{
+  padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;
+}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table tr:hover td{background:var(--surface2)}
+
+/* ── TABS inside sections ── */
+.inner-tabs{display:flex;gap:4px;margin:20px 0 0;flex-wrap:wrap}
+.inner-tab{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;
+  padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-dim);
+  border-bottom:none;transition:all .2s;font-family:'DM Sans',sans-serif;
+}
+.inner-tab:hover{color:var(--text)}
+.inner-tab.active{background:var(--surface);color:var(--accent);border-color:var(--border-hi)}
+.inner-panel{
+  display:none;background:var(--surface);border:1px solid var(--border);
+  border-radius:0 var(--radius) var(--radius) var(--radius);padding:20px;
+}
+.inner-panel.active{display:block;animation:fadeUp .25s ease}
+
+/* ── QUIZ ── */
+.quiz-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:24px;margin:20px 0;
+}
+.quiz-card .q-num{
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+  color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;
+}
+.quiz-card .q-text{font-size:15px;font-weight:600;color:var(--text-bright);margin-bottom:16px;line-height:1.6}
+.opt-btn{
+  display:block;width:100%;text-align:left;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 16px;margin-bottom:8px;font-size:14px;color:var(--text);
+  cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;line-height:1.5;
+}
+.opt-btn:hover:not(.chosen){background:var(--surface3);border-color:var(--border-hi)}
+.opt-btn.chosen.correct{background:var(--correct-bg);border-color:var(--correct);color:var(--correct)}
+.opt-btn.chosen.wrong{background:var(--wrong-bg);border-color:var(--wrong);color:var(--wrong)}
+.opt-btn.reveal-correct{border-color:var(--correct);opacity:.7}
+.explanation{
+  margin-top:12px;padding:14px 16px;border-radius:var(--radius);font-size:13px;
+  line-height:1.6;display:none;
+}
+.explanation.show{display:block;animation:fadeUp .25s ease}
+.explanation.right{background:var(--correct-bg);border:1px solid rgba(61,214,140,.2)}
+.explanation.wrong{background:var(--wrong-bg);border:1px solid rgba(240,96,112,.2)}
+
+/* ── SCORE ── */
+.score-bar{
+  display:flex;align-items:center;gap:16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;margin-bottom:24px;position:sticky;top:60px;z-index:10;
+}
+.score-label{font-size:13px;color:var(--text-dim);font-weight:600}
+.score-num{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--accent)}
+.score-meter{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.score-meter-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .4s ease}
+.reset-btn{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:6px 14px;font-size:12px;font-weight:600;color:var(--text-dim);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.reset-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── INTERACTIVE DEMO ── */
+.demo-canvas{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;margin:16px 0;position:relative;
+}
+.demo-canvas canvas{display:block;margin:0 auto;cursor:crosshair}
+.demo-controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.demo-btn{
+  background:var(--accent-dim);border:1px solid rgba(92,224,181,.25);border-radius:6px;
+  padding:6px 14px;font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.demo-btn:hover{background:var(--accent-glow)}
+.demo-btn.secondary{background:var(--surface3);border-color:var(--border);color:var(--text-dim)}
+.demo-btn.secondary:hover{border-color:var(--border-hi);color:var(--text)}
+.demo-info{font-size:12px;color:var(--text-dim);margin-left:auto;font-family:'JetBrains Mono',monospace}
+
+/* ── FOOTER ── */
+footer{
+  text-align:center;padding:40px 24px;color:var(--text-dim);font-size:12px;
+  border-top:1px solid var(--border);margin-top:40px;
+}
+
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .topbar{padding:0 12px;gap:8px}
+  .tab-btn{padding:0 10px;font-size:12px}
+  main{padding:72px 14px 40px}
+  .concept-card,.quiz-card{padding:18px}
+  .score-bar{flex-wrap:wrap;gap:10px;padding:12px 14px}
+}
+
+/* ── tag pills ── */
+.tag{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;padding:3px 9px;border-radius:4px;margin-right:6px;
+}
+.tag.green{background:var(--accent-dim);color:var(--accent)}
+.tag.orange{background:var(--orange-dim);color:var(--orange)}
+.tag.blue{background:var(--blue-dim);color:var(--blue)}
+.tag.purple{background:var(--purple-dim);color:var(--purple)}
+.tag.red{background:var(--red-dim);color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<nav class="topbar">
+  <div class="logo">Cluster<span>ML Guide</span></div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showSection('kmeans')">K-Means</button>
+    <button class="tab-btn" onclick="showSection('hierarchical')">Hierarchical</button>
+    <button class="tab-btn" onclick="showSection('other')">Other Algos</button>
+    <button class="tab-btn" onclick="showSection('quiz')">Quiz</button>
+  </div>
+</nav>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<main>
+
+<!-- ═══════════════ K-MEANS ═══════════════ -->
+<div class="section active" id="sec-kmeans">
+  <h1>K-Means Clustering</h1>
+  <p class="subtitle">Partitioning data into <em>k</em> non-overlapping groups by minimizing within-cluster variance.</p>
+
+  <h2><span class="icon">📌</span> What Is Clustering?</h2>
+  <div class="def-box">
+    <strong>Clustering</strong> is an <em>unsupervised learning</em> task that groups data points so that points within the same group (cluster) are more similar to each other than to points in other groups. There are no labels — the algorithm discovers structure on its own.
+  </div>
+
+  <h2><span class="icon">⚙️</span> The K-Means Algorithm</h2>
+  <div class="step-list">
+    <div class="step open"><div class="step-head" onclick="toggleStep(this)">Choose <em>k</em> (the number of clusters) <span class="arrow">▶</span></div>
+      <div class="step-body"><p>You must specify <em>k</em> before running. There's no single "correct" value — use the elbow or silhouette method to guide this choice.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Initialize <em>k</em> centroids <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Randomly place <em>k</em> centroids in feature space. Standard k-means picks random data points; <strong>k-means++</strong> spreads them out to converge faster.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Assign every point to the nearest centroid <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Use Euclidean distance. Each point belongs to exactly one cluster — the one whose centroid is closest.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Recompute centroids <span class="arrow">▶</span></div>
+      <div class="step-body"><p>The <strong>centroid</strong> of a cluster is the <em>mean</em> of all points assigned to it: <code>c_j = (1/|C_j|) Σ x_i</code>. This is where the name "k-<em>means</em>" comes from.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Repeat until convergence <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Alternate between assignment and update steps until centroids stop moving (or a max iteration limit is hit). Convergence is guaranteed but may be to a <strong>local optimum</strong>.</p></div></div>
+  </div>
+
+  <h2><span class="icon">📐</span> Centroid & Inertia Calculations</h2>
+  <div class="concept-card">
+    <h3>Cluster Centroid</h3>
+    <p>The centroid of cluster <em>C_j</em> is the component-wise mean of all points in the cluster.</p>
+    <p><strong>Example:</strong> Points (1,2), (3,4), (5,6) → centroid = ((1+3+5)/3, (2+4+6)/3) = <em>(3, 4)</em></p>
+    <h3>Inertia (WCSS)</h3>
+    <p><strong>Inertia</strong> = Σ over all clusters Σ over points in cluster ‖x_i − c_j‖². It's the total <em>within-cluster sum of squares</em> — the objective k-means minimizes.</p>
+    <div class="warn-box"><strong>Exam tip:</strong> Inertia always decreases as k increases. When k = n, inertia = 0. That's why we need the elbow method — minimizing inertia alone just gives us k = n.</div>
+  </div>
+
+  <h2><span class="icon">🎯</span> Choosing k: Elbow & Silhouette</h2>
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="showInner(this,'elbow-panel')">Elbow Method</div>
+    <div class="inner-tab" onclick="showInner(this,'sil-panel')">Silhouette Method</div>
+  </div>
+  <div class="inner-panel active" id="elbow-panel">
+    <p>Plot <strong>inertia vs. k</strong>. The "elbow" is where adding another cluster gives <em>diminishing returns</em> — inertia stops dropping sharply.</p>
+    <p>There's no formal rule; you look for the bend in the curve. If the plot is smooth with no clear elbow, try the silhouette method instead.</p>
+  </div>
+  <div class="inner-panel" id="sil-panel">
+    <p>The <strong>silhouette score</strong> for a point measures how similar it is to its own cluster vs. the nearest other cluster.</p>
+    <p><code>s(i) = (b(i) − a(i)) / max(a(i), b(i))</code></p>
+    <ul>
+      <li><strong>a(i)</strong> = mean distance from <em>i</em> to all other points in its cluster</li>
+      <li><strong>b(i)</strong> = mean distance from <em>i</em> to all points in the <em>nearest neighboring</em> cluster</li>
+    </ul>
+    <p>Range: <strong>−1 to +1</strong>. High = well-clustered. Near 0 = overlapping. Negative = probably misassigned.</p>
+    <p>Pick the <em>k</em> that maximizes the <strong>average silhouette score</strong> across all points.</p>
+  </div>
+
+  <h2><span class="icon">🐍</span> Scikit-learn Implementation</h2>
+  <div class="code-block"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> silhouette_score
+
+<span class="cm"># Fit k-means</span>
+km = KMeans(<span class="fn">n_clusters</span>=<span class="num">3</span>, <span class="fn">init</span>=<span class="str">'k-means++'</span>, <span class="fn">n_init</span>=<span class="num">10</span>, <span class="fn">random_state</span>=<span class="num">42</span>)
+km.<span class="fn">fit</span>(X)
+
+<span class="cm"># Key attributes</span>
+labels    = km.<span class="fn">labels_</span>        <span class="cm"># cluster assignment per point</span>
+centers   = km.<span class="fn">cluster_centers_</span> <span class="cm"># centroid coordinates</span>
+inertia   = km.<span class="fn">inertia_</span>        <span class="cm"># WCSS</span>
+
+<span class="cm"># Silhouette</span>
+sil = <span class="fn">silhouette_score</span>(X, labels)  <span class="cm"># avg silhouette</span></div>
+
+  <h2><span class="icon">⚠️</span> Limitations & Improvements</h2>
+  <div class="concept-card orange">
+    <h3>When K-Means Struggles</h3>
+    <ul>
+      <li><strong>Non-globular clusters</strong> — k-means assumes spherical clusters of similar size</li>
+      <li><strong>Varying cluster densities or sizes</strong> — small/dense vs. large/sparse</li>
+      <li><strong>High-dimensional data</strong> — Euclidean distance loses meaning (curse of dimensionality)</li>
+      <li><strong>Outliers</strong> — centroids are means, so outliers pull them away</li>
+      <li><strong>Must choose k</strong> in advance</li>
+    </ul>
+    <h3>Improvements</h3>
+    <ul>
+      <li><strong>K-Means++</strong> — smarter initialization that spreads initial centroids (default in sklearn)</li>
+      <li><strong>Mini-Batch K-Means</strong> — uses random subsets per iteration; much faster on large datasets</li>
+      <li><strong>Multiple random restarts</strong> (<code>n_init</code>) — run several times, keep best inertia</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ HIERARCHICAL ═══════════════ -->
+<div class="section" id="sec-hierarchical">
+  <h1>Hierarchical Clustering</h1>
+  <p class="subtitle">Building a tree of clusters — no need to specify <em>k</em> up front.</p>
+
+  <h2><span class="icon">📌</span> Core Definitions</h2>
+  <div class="def-box">
+    <strong>Hierarchical clustering</strong> creates a nested sequence of partitions, visualised as a <em>dendrogram</em> (tree diagram).
+  </div>
+  <div class="concept-card">
+    <p><span class="tag green">Agglomerative</span> <strong>Bottom-up:</strong> Start with each point as its own cluster, then merge the two closest clusters repeatedly until one cluster remains.</p>
+    <p><span class="tag purple">Divisive</span> <strong>Top-down:</strong> Start with all points in one cluster, then recursively split. Less common, more expensive.</p>
+  </div>
+
+  <h2><span class="icon">⚙️</span> Agglomerative Algorithm Steps</h2>
+  <div class="step-list">
+    <div class="step open"><div class="step-head" onclick="toggleStep(this)">Start: each point is a cluster <span class="arrow">▶</span></div>
+      <div class="step-body"><p>With <em>n</em> data points, you begin with <em>n</em> singleton clusters.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Compute pairwise distances between all clusters <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Use the chosen <strong>linkage criterion</strong> (single, complete, centroid, or Ward) to define "distance between clusters."</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Merge the two closest clusters <span class="arrow">▶</span></div>
+      <div class="step-body"><p>The pair with the smallest inter-cluster distance is combined into one new cluster.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Update the distance matrix <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Recompute distances from the new merged cluster to all remaining clusters.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Repeat until one cluster remains <span class="arrow">▶</span></div>
+      <div class="step-body"><p>This produces the full dendrogram. Cut it at the desired level to get your final clusters.</p></div></div>
+  </div>
+
+  <h2><span class="icon">🔗</span> Linkage Methods</h2>
+  <table class="cmp-table">
+    <thead><tr><th>Linkage</th><th>Dist Between Clusters A, B</th><th>Character</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Single</strong></td><td>min dist between any point in A and any point in B</td><td>Can find elongated clusters; prone to <em>chaining</em></td></tr>
+      <tr><td><strong>Complete</strong></td><td>max dist between any point in A and any point in B</td><td>Compact, roughly equal-size clusters; sensitive to outliers</td></tr>
+      <tr><td><strong>Centroid</strong></td><td>dist between cluster centroids</td><td>Simple but can produce <em>inversions</em> in the dendrogram</td></tr>
+      <tr><td><strong>Ward</strong></td><td>increase in total within-cluster variance after merging</td><td>Minimizes WCSS like k-means; tends to produce compact, balanced clusters</td></tr>
+    </tbody>
+  </table>
+  <div class="warn-box"><strong>Exam tip:</strong> Ward linkage is the most similar to k-means in spirit — both minimize variance. Single linkage is the most different — it chains.</div>
+
+  <h2><span class="icon">🌳</span> Reading a Dendrogram</h2>
+  <div class="concept-card purple">
+    <p>A <strong>dendrogram</strong> is a tree where:</p>
+    <ul>
+      <li>Leaves = individual data points</li>
+      <li>The <em>height</em> of a merge = the distance (or dissimilarity) at which two clusters joined</li>
+      <li>To choose <em>k</em> clusters, draw a <strong>horizontal cut line</strong>. The number of vertical lines it crosses = number of clusters.</li>
+      <li>Place the cut where there's the <em>largest vertical gap</em> (biggest jump in merge distance).</li>
+    </ul>
+    <p>Points connected below the cut line belong to the same cluster.</p>
+  </div>
+
+  <h2><span class="icon">🐍</span> Implementation</h2>
+  <div class="inner-tabs">
+    <div class="inner-tab active" onclick="showInner(this,'sklearn-hier')">scikit-learn</div>
+    <div class="inner-tab" onclick="showInner(this,'scipy-hier')">scipy.cluster</div>
+  </div>
+  <div class="inner-panel active" id="sklearn-hier">
+    <div class="code-block"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> AgglomerativeClustering
+
+agg = AgglomerativeClustering(
+    <span class="fn">n_clusters</span>=<span class="num">3</span>,
+    <span class="fn">linkage</span>=<span class="str">'ward'</span>     <span class="cm"># 'single','complete','average'</span>
+)
+labels = agg.<span class="fn">fit_predict</span>(X)</div>
+  </div>
+  <div class="inner-panel" id="scipy-hier">
+    <div class="code-block"><span class="kw">from</span> scipy.cluster.hierarchy <span class="kw">import</span> linkage, dendrogram, fcluster
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># Build linkage matrix</span>
+Z = <span class="fn">linkage</span>(X, <span class="fn">method</span>=<span class="str">'ward'</span>)
+
+<span class="cm"># Plot dendrogram</span>
+<span class="fn">dendrogram</span>(Z)
+plt.<span class="fn">show</span>()
+
+<span class="cm"># Cut to get k=3 clusters</span>
+labels = <span class="fn">fcluster</span>(Z, <span class="fn">t</span>=<span class="num">3</span>, <span class="fn">criterion</span>=<span class="str">'maxclust'</span>)</div>
+  </div>
+
+  <h2><span class="icon">⚖️</span> Pros & Cons</h2>
+  <div class="concept-card">
+    <h3>Advantages</h3>
+    <ul>
+      <li>No need to specify <em>k</em> in advance — choose from the dendrogram</li>
+      <li>Produces a full hierarchy — useful for exploring structure at multiple granularities</li>
+      <li>Works with any distance metric (not just Euclidean)</li>
+      <li>Deterministic — no random initialization</li>
+    </ul>
+    <h3>Disadvantages</h3>
+    <ul>
+      <li><strong>O(n³)</strong> time, <strong>O(n²)</strong> space — doesn't scale well to large datasets</li>
+      <li>Merges are permanent — cannot undo a bad early merge</li>
+      <li>Sensitive to noise and outliers (especially single linkage → chaining)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════ OTHER ALGORITHMS ═══════════════ -->
+<div class="section" id="sec-other">
+  <h1>Other Clustering Algorithms</h1>
+  <p class="subtitle">DBSCAN, Mean-Shift, and Affinity Propagation — each suited to different clustering goals.</p>
+
+  <h2><span class="icon">🎯</span> Matching Goals to Algorithms</h2>
+  <table class="cmp-table">
+    <thead><tr><th>Goal</th><th>Best Fit</th></tr></thead>
+    <tbody>
+      <tr><td>Find compact, equal-size spherical clusters</td><td><span class="tag green">K-Means</span></td></tr>
+      <tr><td>Explore hierarchical structure</td><td><span class="tag purple">Agglomerative</span></td></tr>
+      <tr><td>Discover arbitrarily shaped clusters & detect noise</td><td><span class="tag blue">DBSCAN</span></td></tr>
+      <tr><td>Find clusters without specifying k; "blob" finding</td><td><span class="tag orange">Mean-Shift</span></td></tr>
+      <tr><td>Let data points "vote" for exemplars; unknown k</td><td><span class="tag red">Affinity Propagation</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="icon">🔵</span> DBSCAN</h2>
+  <div class="def-box"><strong>DBSCAN</strong> = Density-Based Spatial Clustering of Applications with Noise. Clusters are dense regions separated by sparse regions.</div>
+  <div class="concept-card">
+    <h3>Key Parameters</h3>
+    <p><code>eps (ε)</code> — radius of the neighborhood. <code>min_samples</code> — minimum points in the ε-neighborhood to be a <strong>core point</strong>.</p>
+    <h3>Point Types</h3>
+    <ul>
+      <li><strong>Core point:</strong> has ≥ min_samples points within ε</li>
+      <li><strong>Border point:</strong> within ε of a core point but not itself core</li>
+      <li><strong>Noise point:</strong> neither core nor border → label = <em>−1</em></li>
+    </ul>
+  </div>
+  <div class="step-list">
+    <div class="step open"><div class="step-head" onclick="toggleStep(this)">Pick an unvisited point <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Start from any arbitrary unvisited point in the dataset.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Query its ε-neighborhood <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Find all points within distance ε. If count ≥ min_samples → it's a core point; start a new cluster.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Expand the cluster <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Add all ε-neighbors. For each that is also a core point, recursively add <em>their</em> neighbors. Continue until no more core-reachable points.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Repeat for remaining unvisited points <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Any point never reached is labelled noise (−1).</p></div></div>
+  </div>
+  <div class="code-block"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> DBSCAN
+
+db = DBSCAN(<span class="fn">eps</span>=<span class="num">0.5</span>, <span class="fn">min_samples</span>=<span class="num">5</span>)
+labels = db.<span class="fn">fit_predict</span>(X)
+<span class="cm"># Noise points have label == -1</span></div>
+
+  <h2><span class="icon">🟠</span> Mean-Shift Clustering</h2>
+  <div class="def-box"><strong>Mean-Shift</strong> moves each point toward the densest area of points within a bandwidth window, finding "peaks" in the density landscape.</div>
+  <div class="step-list">
+    <div class="step open"><div class="step-head" onclick="toggleStep(this)">Place a window on each data point <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Each point gets a kernel window of a fixed <strong>bandwidth</strong> radius.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Compute mean of points within each window <span class="arrow">▶</span></div>
+      <div class="step-body"><p>The "mean shift" vector points from the current center toward the region of higher density.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Shift window center to the mean <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Move the kernel to where the mean was computed. This climbs the density gradient.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Repeat until convergence <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Points that converge to the same peak are assigned the same cluster.</p></div></div>
+  </div>
+  <div class="code-block"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> MeanShift, estimate_bandwidth
+
+bw = <span class="fn">estimate_bandwidth</span>(X, <span class="fn">quantile</span>=<span class="num">0.2</span>)
+ms = MeanShift(<span class="fn">bandwidth</span>=bw)
+labels = ms.<span class="fn">fit_predict</span>(X)</div>
+
+  <h2><span class="icon">🔴</span> Affinity Propagation</h2>
+  <div class="def-box"><strong>Affinity Propagation</strong> passes "messages" between data points to find a set of representative <em>exemplars</em>. It discovers <em>k</em> automatically.</div>
+  <div class="step-list">
+    <div class="step open"><div class="step-head" onclick="toggleStep(this)">Compute similarity matrix <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Typically negative squared Euclidean distance: s(i,k) = −‖x_i − x_k‖². Diagonal s(k,k) = <strong>preference</strong> (controls number of clusters).</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Exchange "responsibility" and "availability" messages <span class="arrow">▶</span></div>
+      <div class="step-body"><p><strong>Responsibility r(i,k):</strong> how well-suited k is as an exemplar for i. <strong>Availability a(i,k):</strong> how appropriate it would be for i to choose k. Messages iterate back and forth.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Iterate until convergence <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Messages are damped to prevent oscillation. Convergence = exemplar assignments stop changing.</p></div></div>
+    <div class="step"><div class="step-head" onclick="toggleStep(this)">Assign each point to its exemplar <span class="arrow">▶</span></div>
+      <div class="step-body"><p>Points whose r(k,k) + a(k,k) > 0 become exemplars. Every other point is assigned to its best exemplar.</p></div></div>
+  </div>
+  <div class="code-block"><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> AffinityPropagation
+
+ap = AffinityPropagation(<span class="fn">damping</span>=<span class="num">0.9</span>, <span class="fn">random_state</span>=<span class="num">42</span>)
+labels = ap.<span class="fn">fit_predict</span>(X)
+exemplars = ap.<span class="fn">cluster_centers_indices_</span></div>
+
+  <h2><span class="icon">⚖️</span> Algorithm Comparison</h2>
+  <table class="cmp-table">
+    <thead><tr><th>Feature</th><th>DBSCAN</th><th>Mean-Shift</th><th>Affinity Prop</th></tr></thead>
+    <tbody>
+      <tr><td>Needs k?</td><td>No</td><td>No</td><td>No (uses preference)</td></tr>
+      <tr><td>Key param</td><td>ε, min_samples</td><td>bandwidth</td><td>damping, preference</td></tr>
+      <tr><td>Handles noise?</td><td>Yes (labels −1)</td><td>No</td><td>No</td></tr>
+      <tr><td>Cluster shapes</td><td>Arbitrary</td><td>Blob-like</td><td>Globular</td></tr>
+      <tr><td>Scalability</td><td>Good (with index)</td><td>Poor on large n</td><td>Poor — O(n²) messages</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════ QUIZ ═══════════════ -->
+<div class="section" id="sec-quiz">
+  <h1>Practice Quiz</h1>
+  <p class="subtitle">25 tough MCQs modeled after tricky exam questions. Pick wisely — explanations appear after each answer.</p>
+
+  <div class="score-bar">
+    <span class="score-label">Score</span>
+    <span class="score-num" id="scoreNum">0 / 0</span>
+    <div class="score-meter"><div class="score-meter-fill" id="scoreFill"></div></div>
+    <button class="reset-btn" onclick="resetQuiz()">Reset Quiz</button>
+  </div>
+
+  <div id="quizContainer"></div>
+</div>
+
+</main>
+
+<footer>Intro to ML — Clustering Study Guide</footer>
+
+<script>
+// ── SECTION NAVIGATION ──
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  window.scrollTo({top:0});
+  updateProgress();
+}
+
+// ── ACCORDION ──
+function toggleStep(el){
+  const step=el.parentElement;
+  step.classList.toggle('open');
+}
+
+// ── INNER TABS ──
+function showInner(btn,panelId){
+  const parent=btn.parentElement;
+  parent.querySelectorAll('.inner-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  let sibling=parent.nextElementSibling;
+  while(sibling && sibling.classList.contains('inner-panel')){
+    sibling.classList.remove('active');
+    sibling=sibling.nextElementSibling;
+  }
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ── PROGRESS ──
+function updateProgress(){
+  const tabs=['kmeans','hierarchical','other','quiz'];
+  const active=document.querySelector('.tab-btn.active');
+  const idx=tabs.indexOf([...document.querySelectorAll('.tab-btn')].indexOf(active)>=0?tabs[[...document.querySelectorAll('.tab-btn')].indexOf(active)]:'kmeans');
+  // simple: base on scroll + section
+  const pct=((tabs.indexOf(document.querySelector('.section.active').id.replace('sec-',''))+1)/tabs.length)*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+updateProgress();
+
+// ── QUIZ DATA ──
+const questions=[
+  {q:"What does k-means minimize?",opts:["Between-cluster sum of squares","Within-cluster sum of squares (inertia)","Silhouette score","Number of iterations"],ans:1,exp:"K-means minimizes inertia — the total within-cluster sum of squared distances from each point to its cluster's centroid."},
+  {q:"If you run k-means with k equal to the number of data points, what is the inertia?",opts:["Infinity","Undefined","1","0"],ans:3,exp:"Each point is its own centroid, so every distance is 0 and inertia = 0. This is why inertia alone can't choose k."},
+  {q:"K-means++ improves standard k-means by:",opts:["Using medians instead of means","Running more iterations","Choosing initial centroids that are spread apart","Automatically selecting k"],ans:2,exp:"K-means++ selects the first centroid randomly, then picks subsequent centroids with probability proportional to squared distance from existing centroids, spreading them out."},
+  {q:"The silhouette coefficient s(i) ranges from:",opts:["0 to 1","−1 to 0","−∞ to +∞","−1 to +1"],ans:3,exp:"s(i) = (b(i)−a(i))/max(a(i),b(i)), which is bounded between −1 (misassigned) and +1 (well-clustered)."},
+  {q:"A negative silhouette score for a data point suggests:",opts:["The point is a centroid","The point may be assigned to the wrong cluster","The point is noise","The algorithm has not converged"],ans:1,exp:"A negative silhouette means the point is closer to a neighboring cluster than to its own — it's likely misassigned."},
+  {q:"Which is NOT a weakness of k-means?",opts:["Assumes spherical clusters","Cannot handle non-globular shapes","Requires specifying k","Always converges to the global optimum"],ans:3,exp:"K-means is guaranteed to converge but only to a LOCAL optimum, not necessarily the global one. The other three are real weaknesses."},
+  {q:"In the elbow method, the 'elbow' is the value of k where:",opts:["Inertia first reaches zero","Silhouette score is negative","The rate of inertia decrease sharply slows","The number of iterations is minimized"],ans:2,exp:"The elbow is the point of diminishing returns — adding more clusters barely reduces inertia."},
+  {q:"Mini-Batch K-Means differs from standard K-Means by:",opts:["Using medoids instead of centroids","Processing random subsets of data per iteration","Using Manhattan distance","Running divisive splitting"],ans:1,exp:"Mini-Batch K-Means samples a random 'mini-batch' of points each iteration to update centroids, making it much faster on large data."},
+  {q:"In agglomerative clustering, the algorithm starts with:",opts:["All points in one cluster","k random clusters","Each point as its own cluster","Two clusters"],ans:2,exp:"Agglomerative = bottom-up. It starts with n singleton clusters and merges upward."},
+  {q:"Divisive clustering works by:",opts:["Merging clusters bottom-up","Splitting clusters top-down","Randomly assigning then refining","Using density estimation"],ans:1,exp:"Divisive = top-down. It starts with all data in one cluster and recursively splits."},
+  {q:"Which linkage is MOST prone to the chaining effect?",opts:["Complete","Ward","Single","Centroid"],ans:2,exp:"Single linkage uses the minimum distance between clusters. A chain of closely spaced points can link distant groups into one long cluster."},
+  {q:"Ward linkage merges the pair of clusters that:",opts:["Have the smallest max distance","Are closest by centroid distance","Produce the smallest increase in total within-cluster variance","Have the most points combined"],ans:2,exp:"Ward minimizes the increase in WCSS (within-cluster sum of squares) at each merge — similar in spirit to k-means."},
+  {q:"To choose the number of clusters from a dendrogram, you should:",opts:["Count the leaves","Cut at the height with the largest vertical gap","Always pick the root","Use the leftmost branch"],ans:1,exp:"The largest vertical gap represents the biggest jump in dissimilarity. Cutting there yields the most natural cluster separation."},
+  {q:"Centroid linkage can produce 'inversions' in a dendrogram. What is an inversion?",opts:["Two clusters swapping members","A merge occurring at a LOWER height than a previous merge","A cluster splitting spontaneously","The centroid moving outside the cluster"],ans:1,exp:"An inversion means a later merge distance is smaller than an earlier one, causing the dendrogram to go 'backward' — only centroid and median linkage can do this."},
+  {q:"The time complexity of standard agglomerative clustering is:",opts:["O(n)","O(n log n)","O(n²)","O(n³)"],ans:3,exp:"Standard agglomerative clustering is O(n³) time and O(n²) space due to the pairwise distance matrix and n−1 merge steps."},
+  {q:"Which is an ADVANTAGE of agglomerative clustering over k-means?",opts:["Faster on large datasets","No need to pre-specify k","Always finds the global optimum","Lower space complexity"],ans:1,exp:"Agglomerative clustering produces a full dendrogram, letting you choose k after the fact. However it is slower (O(n³)) and uses more space."},
+  {q:"In DBSCAN, a point with fewer than min_samples neighbors within ε that lies within ε of a core point is called:",opts:["A core point","A noise point","A border point","An outlier centroid"],ans:2,exp:"A border point is not dense enough to be core, but falls within ε of a core point, so it's included in that cluster."},
+  {q:"DBSCAN labels noise points as:",opts:["0","NaN","The nearest cluster's label","−1"],ans:3,exp:"Scikit-learn's DBSCAN assigns label −1 to noise points that are neither core nor border."},
+  {q:"Which algorithm is best suited for discovering clusters of arbitrary shape while ignoring noise?",opts:["K-Means","Affinity Propagation","DBSCAN","Mean-Shift"],ans:2,exp:"DBSCAN finds dense regions of any shape and explicitly labels low-density points as noise."},
+  {q:"Mean-shift clustering determines the number of clusters by:",opts:["User specification","Cross-validation","Finding peaks in the density estimate","Silhouette analysis"],ans:2,exp:"Mean-shift shifts each point toward the nearest density peak. The number of distinct peaks = number of clusters — discovered automatically."},
+  {q:"The key parameter in mean-shift clustering is:",opts:["eps","n_clusters","bandwidth","damping"],ans:2,exp:"The bandwidth controls the kernel size. It determines the scale at which density is estimated, affecting how many peaks are found."},
+  {q:"In affinity propagation, the 'preference' parameter controls:",opts:["The convergence speed","How many clusters are produced","The maximum iterations","The distance metric used"],ans:1,exp:"Preference = the diagonal of the similarity matrix s(k,k). Higher preference → more exemplars → more clusters. Lower → fewer."},
+  {q:"Affinity propagation identifies cluster representatives called:",opts:["Centroids","Medoids","Exemplars","Prototypes"],ans:2,exp:"Affinity propagation selects actual data points as 'exemplars' — representative members of each cluster."},
+  {q:"Which algorithm explicitly detects and labels outliers?",opts:["K-Means","Agglomerative clustering","Mean-Shift","DBSCAN"],ans:3,exp:"DBSCAN is the only one listed that labels points as noise (−1). K-means assigns every point to a cluster; so do mean-shift and agglomerative."},
+  {q:"You have a very large dataset (n > 1,000,000) with unknown cluster count and lots of noise. Which approach is most practical?",opts:["Agglomerative with Ward linkage","Affinity Propagation","DBSCAN","Mean-Shift"],ans:2,exp:"DBSCAN handles noise, doesn't require k, and scales well with spatial indexing. Agglomerative is O(n³), affinity prop is O(n²T), and mean-shift is slow on large n."}
+];
+
+// ── RENDER QUIZ ──
+let answered=0,correct=0;
+function renderQuiz(){
+  const c=document.getElementById('quizContainer');
+  c.innerHTML=questions.map((q,i)=>{
+    const optHTML=q.opts.map((o,j)=>`<button class="opt-btn" data-q="${i}" data-o="${j}" onclick="answer(this,${i},${j})">${String.fromCharCode(65+j)}.&nbsp; ${o}</button>`).join('');
+    return `<div class="quiz-card" id="qcard-${i}">
+      <div class="q-num">Question ${i+1} of ${questions.length}</div>
+      <div class="q-text">${q.q}</div>
+      ${optHTML}
+      <div class="explanation" id="exp-${i}">${q.exp}</div>
+    </div>`;
+  }).join('');
+}
+function answer(btn,qi,oi){
+  const card=document.getElementById('qcard-'+qi);
+  if(card.dataset.done) return;
+  card.dataset.done='1';
+  answered++;
+  const isCorrect=oi===questions[qi].ans;
+  if(isCorrect) correct++;
+  btn.classList.add('chosen',isCorrect?'correct':'wrong');
+  if(!isCorrect){
+    card.querySelectorAll('.opt-btn')[questions[qi].ans].classList.add('reveal-correct');
+  }
+  const exp=document.getElementById('exp-'+qi);
+  exp.classList.add('show',isCorrect?'right':'wrong');
+  updateScore();
+}
+function updateScore(){
+  document.getElementById('scoreNum').textContent=`${correct} / ${answered}`;
+  document.getElementById('scoreFill').style.width=(answered?((correct/answered)*100):0)+'%';
+}
+function resetQuiz(){
+  answered=0;correct=0;updateScore();
+  renderQuiz();
+}
+renderQuiz();
+</script>
+</body>
+</html>

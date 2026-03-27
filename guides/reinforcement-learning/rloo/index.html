@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RLOO — Leave-One-Out Policy Gradient</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0d0d0f;
+    --surface:  #141418;
+    --surface2: #1a1a20;
+    --border:   rgba(255,255,255,0.07);
+    --border2:  rgba(255,255,255,0.12);
+    --text:     #e8e6df;
+    --muted:    #6b6960;
+    --dim:      #3a3830;
+
+    --purple: #9b8ef5;
+    --purple-bg: rgba(155,142,245,0.1);
+    --amber:  #e8a838;
+    --amber-bg: rgba(232,168,56,0.1);
+    --teal:   #38c9a0;
+    --teal-bg: rgba(56,201,160,0.1);
+    --rose:   #f06080;
+    --rose-bg: rgba(240,96,128,0.1);
+
+    --pos: #38c9a0;
+    --neg: #f06080;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+    line-height: 1.6;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  h1 strong {
+    font-weight: 500;
+    color: #fff;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+  .subtitle code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--purple);
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .controls label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  select {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 400;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    outline: none;
+    flex: 1;
+    min-width: 180px;
+    transition: border-color 0.2s;
+  }
+  select:focus { border-color: var(--purple); }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+  .btn:hover { color: var(--text); border-color: rgba(255,255,255,0.25); background: var(--surface2); }
+  .btn:active { transform: scale(0.97); }
+
+  /* Section headers */
+  .section-header {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+
+  /* Panel */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  /* Completion rows */
+  .comp-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    transition: opacity 0.2s;
+  }
+  .comp-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .comp-row:first-child { padding-top: 0; }
+
+  .pill {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .pill-0 { background: var(--purple-bg); color: var(--purple); }
+  .pill-1 { background: var(--amber-bg); color: var(--amber); }
+  .pill-2 { background: var(--teal-bg);  color: var(--teal);  }
+  .pill-3 { background: var(--rose-bg);  color: var(--rose);  }
+
+  .comp-text {
+    font-size: 12.5px;
+    color: #a8a49b;
+    line-height: 1.45;
+  }
+
+  .bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+  }
+  .bar-track {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bar-0 { background: var(--purple); }
+  .bar-1 { background: var(--amber); }
+  .bar-2 { background: var(--teal); }
+  .bar-3 { background: var(--rose); }
+
+  .reward-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 32px;
+    text-align: right;
+    color: var(--text);
+  }
+
+  /* Baseline strip */
+  .baseline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .baseline-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    transition: border-color 0.2s;
+  }
+  .baseline-card:hover { border-color: var(--border2); }
+  .baseline-card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .baseline-card-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-0 { background: var(--purple); }
+  .dot-1 { background: var(--amber); }
+  .dot-2 { background: var(--teal); }
+  .dot-3 { background: var(--rose); }
+
+  /* Signal rows */
+  .signal-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .signal-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .signal-row:first-child { padding-top: 0; }
+
+  .signal-formula {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .signal-result {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+    white-space: nowrap;
+    min-width: 130px;
+  }
+  .sig-pos { color: var(--pos); }
+  .sig-neg { color: var(--neg); }
+  .sig-zero { color: var(--muted); }
+
+  /* Why panel */
+  .why-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--purple);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+  .why-panel p {
+    font-size: 13.5px;
+    color: #9e9a91;
+    line-height: 1.75;
+    margin-bottom: 10px;
+  }
+  .why-panel p:last-child { margin-bottom: 0; }
+  .why-panel strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .hi-0 { color: var(--purple); font-family: var(--mono); font-size: 12px; }
+  .hi-1 { color: var(--amber);  font-family: var(--mono); font-size: 12px; }
+  .hi-2 { color: var(--teal);   font-family: var(--mono); font-size: 12px; }
+  .hi-3 { color: var(--rose);   font-family: var(--mono); font-size: 12px; }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.06em;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Fade-in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .panel, .baseline-grid, .why-panel {
+    animation: fadeUp 0.3s ease both;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Policy gradient methods</div>
+    <h1><strong>RLOO</strong> — Reinforce<br>Leave-One-Out</h1>
+    <p class="subtitle">
+      Sample <code>k</code> completions per prompt. Score each one against the average of the others.
+      Lower variance, better gradients, no separate reward model needed.
+    </p>
+  </header>
+
+  <div class="controls">
+    <label>Prompt</label>
+    <select id="scenario-select" onchange="render()">
+      <option value="0">Explain gravity to a 5-year-old</option>
+      <option value="1">Write a haiku about rain</option>
+      <option value="2">Summarize the French Revolution</option>
+    </select>
+    <button class="btn" onclick="randomize()">↻ randomize</button>
+  </div>
+
+  <div class="section-header">Completions &amp; rewards</div>
+  <div class="panel" id="comp-panel"></div>
+
+  <div class="section-header">Leave-one-out baselines</div>
+  <div class="baseline-grid" id="baseline-grid"></div>
+
+  <div class="section-header">Learning signal = reward − baseline</div>
+  <div class="panel" id="signal-panel"></div>
+
+  <div class="section-header">Why this beats plain reinforce</div>
+  <div class="why-panel" id="why-panel"></div>
+
+  <footer>
+    <span>RLOO · Kool et al. 2019</span>
+    <span>rewards are illustrative</span>
+  </footer>
+
+</div>
+
+<script>
+const SCENARIOS = [
+  {
+    prompt: "Explain gravity to a 5-year-old",
+    completions: [
+      "Gravity is like a big hug the Earth gives everything, pulling stuff down toward the ground.",
+      "It's a fundamental force described by F = Gm₁m₂/r², with inverse-square dependence.",
+      "Imagine dropping a ball — gravity pulls it down because Earth is really, really heavy.",
+      "Everything with mass attracts everything else with mass through curved spacetime.",
+    ],
+  },
+  {
+    prompt: "Write a haiku about rain",
+    completions: [
+      "Soft drops on the roof / whisper stories of the sky / the earth drinks it in.",
+      "Rain falls down today / wet wet wet it's very wet / I don't like the rain.",
+      "Silver threads descend / weaving silence into earth / roots remember thirst.",
+      "Petrichor rises / after the storm clears away / fresh world left behind.",
+    ],
+  },
+  {
+    prompt: "Summarize the French Revolution",
+    completions: [
+      "The French Revolution (1789–1799) ended the monarchy, declared citizens' rights, and led to Napoleon's rise.",
+      "France had a revolution.",
+      "Citizens overthrew Louis XVI due to inequality and famine, establishing a republic before Napoleon took power.",
+      "A radical transformation of French society that reshaped the political landscape of Europe.",
+    ],
+  },
+];
+
+const COLORS = ['purple','amber','teal','rose'];
+
+let rewards = [];
+
+function initRewards(n) {
+  rewards = Array.from({length: n}, () => +(Math.random() * 7 + 1.5).toFixed(1));
+}
+
+function render() {
+  const s = SCENARIOS[+document.getElementById('scenario-select').value];
+  if (rewards.length !== s.completions.length) initRewards(s.completions.length);
+  const n = rewards.length;
+  const total = rewards.reduce((a,b) => a+b, 0);
+
+  // Completions
+  let compHtml = '';
+  s.completions.forEach((c, i) => {
+    const pct = Math.round((rewards[i] / 10) * 100);
+    compHtml += `
+      <div class="comp-row">
+        <div class="pill pill-${i}">C${i+1}</div>
+        <div class="comp-text">${c.length > 80 ? c.slice(0,80)+'…' : c}</div>
+        <div class="bar-cell">
+          <div class="bar-track"><div class="bar-fill bar-${i}" id="bar-${i}" style="width:${pct}%"></div></div>
+        </div>
+        <div class="reward-num" id="rval-${i}">${rewards[i].toFixed(1)}</div>
+      </div>`;
+  });
+  document.getElementById('comp-panel').innerHTML = compHtml;
+
+  // Baselines
+  let bHtml = '';
+  s.completions.forEach((_, i) => {
+    const b = (total - rewards[i]) / (n - 1);
+    bHtml += `
+      <div class="baseline-card">
+        <div class="baseline-card-label">
+          <div class="dot dot-${i}"></div>
+          C${i+1} baseline
+        </div>
+        <div class="baseline-card-val">${b.toFixed(2)}</div>
+      </div>`;
+  });
+  document.getElementById('baseline-grid').innerHTML = bHtml;
+
+  // Signals
+  const signals = s.completions.map((_, i) => {
+    const b = (total - rewards[i]) / (n - 1);
+    return +(rewards[i] - b).toFixed(2);
+  });
+
+  let sigHtml = '';
+  s.completions.forEach((_, i) => {
+    const sig = signals[i];
+    const b = (total - rewards[i]) / (n - 1);
+    const cls = sig > 0.05 ? 'sig-pos' : sig < -0.05 ? 'sig-neg' : 'sig-zero';
+    const arrow = sig > 0.05 ? '↑ reinforce' : sig < -0.05 ? '↓ discourage' : '≈ neutral';
+    const sigStr = (sig >= 0 ? '+' : '') + sig.toFixed(2);
+    sigHtml += `
+      <div class="signal-row">
+        <div class="pill pill-${i}">C${i+1}</div>
+        <div class="signal-formula">${rewards[i].toFixed(1)} − ${b.toFixed(2)} = <span class="${cls}">${sigStr}</span></div>
+        <div class="signal-result ${cls}">${sigStr} &nbsp; ${arrow}</div>
+      </div>`;
+  });
+  document.getElementById('signal-panel').innerHTML = sigHtml;
+
+  // Why block
+  const globalAvg = (total / n).toFixed(2);
+  const bestIdx  = signals.indexOf(Math.max(...signals));
+  const worstIdx = signals.indexOf(Math.min(...signals));
+  const bestSig  = (signals[bestIdx] >= 0 ? '+' : '') + signals[bestIdx].toFixed(2);
+  const worstSig = signals[worstIdx].toFixed(2);
+
+  document.getElementById('why-panel').innerHTML = `
+    <p>
+      Plain REINFORCE compares every completion against a <strong>fixed global average</strong>
+      (here: ${globalAvg}). If all completions happen to be mediocre, they all receive near-zero signal —
+      the model barely learns anything from that batch.
+    </p>
+    <p>
+      RLOO compares each completion against the <strong>average of the other completions in the same batch</strong>,
+      computed fresh for every sample. The signal is always relative and self-calibrating.
+    </p>
+    <p>
+      In this batch: <span class="hi-${bestIdx}">C${bestIdx+1} (${bestSig})</span> gets reinforced
+      because it outperformed its peers —
+      and <span class="hi-${worstIdx}">C${worstIdx+1} (${worstSig})</span> is discouraged
+      because it underperformed — regardless of their absolute reward values.
+      That relative comparison dramatically reduces gradient variance.
+    </p>`;
+}
+
+function randomize() {
+  const s = SCENARIOS[+document.getElementById('scenario-select').value];
+  initRewards(s.completions.length);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

@@ -24,9 +24,9 @@ interactive-guides/
 │   ├── shared.css          # Shared CSS variables
 │   └── nav.js              # CATEGORIES data + search + panel logic
 ├── guides/
-│   ├── machine-learning/   # 10 guides
-│   ├── computer-science/   # 5 guides
-│   ├── data-science/       # 1 guide
+│   ├── machine-learning/   # 15 guides
+│   ├── computer-science/   # 7 guides
+│   ├── data-science/       # 3 guides
 │   └── test-prep/          # 1 guide
 └── README.md
 ```

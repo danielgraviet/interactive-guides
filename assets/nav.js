@@ -19,6 +19,11 @@ const CATEGORIES = {
         meta: 'Interactive · Underfitting & overfitting',
       },
       {
+        title: 'Bootstrap Sampling Tutor',
+        path: './guides/machine-learning/boot-strapping/',
+        meta: 'Interactive · Resampling, sampling distributions',
+      },
+      {
         title: 'Naive Bayes',
         path: './guides/machine-learning/naive-bayes/',
         meta: 'Flashcards · Conditional probability',
@@ -67,6 +72,11 @@ const CATEGORIES = {
         title: 'Neural Networks with Keras',
         path: './guides/machine-learning/neural-networks-with-keras/',
         meta: 'Interactive · Keras, TensorFlow, and neural network fundamentals',
+      },
+      {
+        title: 'Clustering',
+        path: './guides/machine-learning/clustering/',
+        meta: 'Interactive · Unsupervised learning, similarity, and grouping',
       },
     ],
   },
@@ -137,6 +147,16 @@ const CATEGORIES = {
         title: '15-Minute Pre-Test Study Plan',
         path: './guides/test-prep/',
         meta: 'Study plan · Quick review before any exam',
+      },
+    ],
+  },
+  'reinforcement-learning': {
+    label: 'Reinforcement Learning',
+    lessons: [
+      {
+        title: 'RLOO',
+        path: './guides/reinforcement-learning/rloo/',
+        meta: 'Interactive · Leave-one-out policy gradient',
       },
     ],
   },

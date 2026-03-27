@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Bootstrap Sampling Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a78bfa;
+    --green: #22d3a0;
+    --red: #ff4d6d;
+    --yellow: #ffd166;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: rgba(255,255,255,0.07);
+    --glow: 0 0 20px rgba(0,229,255,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .header .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .header h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -2px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 15px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    height: 6px;
+    margin-bottom: 48px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  /* Nav tabs */
+  .nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .nav-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+  /* Section */
+  .section { display: none; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .section-title span { color: var(--accent2); }
+  .section-intro {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 32px;
+    line-height: 1.7;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: rgba(0,229,255,0.2); }
+  .card h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card h3 .icon { font-size: 20px; }
+  .card p { color: #94a3b8; line-height: 1.75; font-size: 14px; margin-bottom: 10px; }
+  .card p:last-child { margin-bottom: 0; }
+
+  /* Definition highlight */
+  .def-box {
+    background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(167,139,250,0.06));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  .def-box strong { color: var(--accent); }
+
+  /* Code block */
+  .code-block {
+    background: #050810;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+  .code-block .kw { color: var(--accent3); }
+  .code-block .fn { color: var(--accent); }
+  .code-block .str { color: var(--green); }
+  .code-block .cm { color: var(--muted); font-style: italic; }
+  .code-block .num { color: var(--yellow); }
+  .code-block .cls { color: var(--accent2); }
+
+  /* Properties list */
+  .prop-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .prop-list li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.65;
+  }
+  .prop-list li .badge {
+    background: var(--accent);
+    color: #000;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    min-width: 60px;
+    text-align: center;
+    margin-top: 2px;
+  }
+  .prop-list li .badge.oob { background: var(--accent2); }
+  .prop-list li .badge.cv { background: var(--accent3); }
+
+  /* Visual demo */
+  .demo-area {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+  .demo-area h4 {
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  .dataset-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .data-chip {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .data-chip.original { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .data-chip.selected { background: rgba(0,229,255,0.15); border-color: var(--accent); color: var(--accent); transform: scale(1.1); }
+  .data-chip.oob-chip { background: rgba(255,107,53,0.15); border-color: var(--accent2); color: var(--accent2); }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #33eaff; box-shadow: var(--glow); }
+  .btn-secondary { background: var(--surface2); color: var(--accent); border: 1px solid var(--accent); }
+  .btn-secondary:hover { background: rgba(0,229,255,0.1); }
+
+  .demo-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Quiz */
+  .quiz-container { display: flex; flex-direction: column; gap: 28px; }
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .quiz-card .q-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .quiz-card .q-text {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1.5;
+    font-family: 'Space Mono', monospace;
+  }
+  .option:hover:not(.disabled) { border-color: var(--accent); color: var(--accent); }
+  .option.correct { background: rgba(34,211,160,0.12); border-color: var(--green); color: var(--green); }
+  .option.wrong { background: rgba(255,77,109,0.12); border-color: var(--red); color: var(--red); }
+  .option.disabled { cursor: default; }
+  .option.reveal-correct { background: rgba(34,211,160,0.06); border-color: rgba(34,211,160,0.3); color: rgba(34,211,160,0.7); }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    font-family: 'Space Mono', monospace;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: rgba(34,211,160,0.08); border: 1px solid rgba(34,211,160,0.25); color: var(--green); }
+  .feedback.wrong-fb { background: rgba(255,77,109,0.08); border: 1px solid rgba(255,77,109,0.25); color: #ff8fa3; }
+
+  .quiz-score {
+    background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(167,139,250,0.08));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  .quiz-score.show { display: block; }
+  .quiz-score .score-num { font-size: 56px; font-weight: 800; color: var(--accent); }
+  .quiz-score p { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 13px; margin-top: 8px; }
+
+  /* What-if scenarios */
+  .whatif-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .whatif-header {
+    padding: 20px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.2s;
+  }
+  .whatif-header:hover { background: var(--surface2); }
+  .whatif-header .wi-q {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--yellow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .whatif-header .wi-q::before {
+    content: '?';
+    width: 28px; height: 28px;
+    background: rgba(255,209,102,0.15);
+    border: 1px solid rgba(255,209,102,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--yellow);
+    flex-shrink: 0;
+  }
+  .whatif-header .arrow { color: var(--muted); transition: transform 0.3s; font-size: 18px; }
+  .whatif-header.open .arrow { transform: rotate(180deg); }
+  .whatif-body {
+    display: none;
+    padding: 0 24px 24px;
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.75;
+    border-top: 1px solid var(--border);
+  }
+  .whatif-body.open { display: block; }
+  .whatif-body strong { color: var(--text); }
+  .whatif-body .highlight { color: var(--accent); font-weight: 700; }
+  .whatif-body .warn { color: var(--accent2); font-weight: 700; }
+
+  /* Comparison table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 20px 0; }
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td.highlight-cell { color: var(--green); font-weight: 700; font-family: 'Space Mono', monospace; }
+  td.warn-cell { color: var(--accent2); font-family: 'Space Mono', monospace; }
+
+  /* OOB visual */
+  .oob-legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+  }
+
+  /* Formula box */
+  .formula {
+    background: #050810;
+    border: 1px solid rgba(167,139,250,0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent3);
+    text-align: center;
+    margin: 16px 0;
+  }
+
+  /* Sampling dist viz */
+  #dist-canvas {
+    width: 100%;
+    height: 200px;
+    border-radius: 8px;
+    background: #050810;
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  .tip-box {
+    background: rgba(255,209,102,0.05);
+    border: 1px solid rgba(255,209,102,0.2);
+    border-left: 4px solid var(--yellow);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 16px 0;
+    line-height: 1.7;
+  }
+  .tip-box strong { color: var(--yellow); }
+
+  /* Slider */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 4px;
+    outline: none;
+    margin: 10px 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,229,255,0.5);
+  }
+
+  .counter-display {
+    font-family: 'Space Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+    margin: 8px 0;
+  }
+
+  /* Completion */
+  .completion-section {
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .completion-section h2 { font-size: 36px; font-weight: 800; margin-bottom: 16px; }
+  .completion-section h2 span { color: var(--accent); }
+  .completion-section p { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.8; }
+
+  .cheatsheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-top: 32px;
+    text-align: left;
+  }
+  .cheatsheet h3 { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-family: 'Space Mono', monospace; margin-bottom: 20px; }
+  .cs-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .cs-row:last-child { border-bottom: none; }
+  .cs-row .cs-key { color: var(--accent2); font-family: 'Space Mono', monospace; min-width: 200px; font-weight: 700; }
+  .cs-row .cs-val { color: #94a3b8; line-height: 1.6; }
+
+  @media (max-width: 600px) {
+    .nav-btn { font-size: 10px; padding: 6px 10px; }
+    .data-chip { width: 36px; height: 36px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="tag">CS 270 · Final Exam Prep</span>
+    <h1>Bootstrap <span>Sampling</span><br>Mastery Guide</h1>
+    <p>// interactive tutor · mini quizzes · what-if scenarios</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:16.6%"></div>
+  </div>
+
+  <nav class="nav" id="mainNav">
+    <button class="nav-btn active" onclick="showSection('s1',this,1)">01 Bootstrapping</button>
+    <button class="nav-btn" onclick="showSection('s2',this,2)">02 Sampling Dist.</button>
+    <button class="nav-btn" onclick="showSection('s3',this,3)">03 Properties</button>
+    <button class="nav-btn" onclick="showSection('s4',this,4)">04 OOB Samples</button>
+    <button class="nav-btn" onclick="showSection('s5',this,5)">05 Cross-Validation</button>
+    <button class="nav-btn" onclick="showSection('s6',this,6)">06 scikit-learn</button>
+  </nav>
+
+  <!-- ===================== SECTION 1: BOOTSTRAPPING ===================== -->
+  <div class="section active" id="s1">
+    <div class="section-title">What is <span>Bootstrapping?</span></div>
+    <div class="section-intro">The core concept — resampling with replacement to understand uncertainty.</div>
+
+    <div class="def-box">
+      <strong>Bootstrapping</strong> is a statistical resampling technique where you repeatedly draw samples <strong>with replacement</strong> from an existing dataset to estimate a statistic's sampling distribution — without collecting new data.
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">💡</span>The Core Idea</h3>
+      <p>Imagine you have a dataset of <strong>n</strong> observations. You can't go collect more data. Instead, you treat your dataset as a "population" and repeatedly sample from it <em>with replacement</em> to simulate what would happen if you collected many different datasets.</p>
+      <p>Each new sample (called a <strong>bootstrap sample</strong>) has the same size <em>n</em> as the original, but some observations appear multiple times and others don't appear at all.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🔄</span>Why "With Replacement"?</h3>
+      <p>Sampling <strong>with replacement</strong> means after picking an item, you put it back before the next draw. This allows duplicates. Without replacement, you'd just get the original dataset in a different order — that's useless.</p>
+      <p>The duplicates and missing values are exactly what introduces variation between bootstrap samples, mimicking natural data variability.</p>
+    </div>
+
+    <!-- Interactive demo -->
+    <div class="demo-area">
+      <h4>⚡ Interactive Demo — Draw a Bootstrap Sample</h4>
+      <div class="demo-label">Original Dataset (n=8)</div>
+      <div class="dataset-row" id="origData"></div>
+      <div class="demo-label" style="margin-top:16px">Bootstrap Sample (click to draw)</div>
+      <div class="dataset-row" id="bootData"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-primary" onclick="drawBootstrap()">Draw New Bootstrap Sample</button>
+        <span id="bootStats" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div class="tip-box"><strong>⚠️ Exam Tip:</strong> Bootstrapping is distinct from cross-validation. Bootstrap resamples <em>with</em> replacement. K-fold CV splits data <em>without</em> replacement. Know this distinction cold.</div>
+
+    <!-- What-if scenarios -->
+    <div style="margin-top:28px;margin-bottom:8px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent3);font-family:'Space Mono',monospace">What-If Scenarios</div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you sample WITHOUT replacement instead?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        You'd just get a <strong>permutation</strong> of your original data — each value appears exactly once. This gives <span class="warn">zero variance</span> in statistics computed across samples. You'd learn nothing about uncertainty. The whole point of bootstrapping is lost. <strong>Every bootstrap sample must use replacement.</strong>
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if your original dataset is tiny (n=3)?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        Bootstrapping still <em>works</em> mechanically, but the estimates become <span class="warn">unreliable</span>. With only 3 data points, bootstrap samples can only take on a limited number of unique configurations, and the estimates of variance/bias will be poor. Bootstrap assumes your original dataset is a <span class="highlight">representative sample</span> of the population — a tiny n makes that assumption fragile.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you use 10 bootstrap samples instead of 1000?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        Your estimates of the sampling distribution will be <span class="warn">noisy and unstable</span>. The bootstrap only converges to reliable estimates with many repetitions — typically <strong>B = 1000 to 10,000</strong> bootstrap samples. With B=10, your confidence intervals would have high variance themselves. More is almost always better (up to computational limits).
+      </div>
+    </div>
+
+    <!-- Mini Quiz -->
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 1</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q1_1">
+        <div class="q-num">Q1 of 2</div>
+        <div class="q-text">Which of the following best defines bootstrapping in machine learning?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q1_1',false,'Bootstrap is about hyperparameter tuning, not resampling.')">Tuning hyperparameters using a held-out validation set</div>
+          <div class="option" onclick="answer(this,'q1_1',true,'Correct! Bootstrap draws n samples WITH replacement from your dataset, creating new datasets of the same size that may have duplicates.')">Drawing n samples with replacement from your dataset to create new training sets</div>
+          <div class="option" onclick="answer(this,'q1_1',false,'Splitting is k-fold cross-validation, not bootstrapping.')">Splitting the dataset into k non-overlapping folds for evaluation</div>
+          <div class="option" onclick="answer(this,'q1_1',false,'Normalization has nothing to do with bootstrapping.')">Normalizing features to have zero mean and unit variance</div>
+        </div>
+        <div class="feedback" id="q1_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q1_2">
+        <div class="q-num">Q2 of 2</div>
+        <div class="q-text">A bootstrap sample of size n drawn from a dataset of size n will always contain exactly n unique observations.</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q1_2',false,'Because we sample with replacement, duplicates are expected. On average ~63.2% of original data points appear in each bootstrap sample.')">True</div>
+          <div class="option" onclick="answer(this,'q1_2',true,'Correct! With replacement means duplicates can occur, so typically only ~63.2% of unique observations appear in any given bootstrap sample.')">False</div>
+        </div>
+        <div class="feedback" id="q1_2_fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 2: SAMPLING DISTRIBUTION ===================== -->
+  <div class="section" id="s2">
+    <div class="section-title">Sampling <span>Distribution</span></div>
+    <div class="section-intro">Understanding what varies when you repeatedly sample from a population.</div>
+
+    <div class="def-box">
+      A <strong>sampling distribution</strong> is the probability distribution of a statistic (e.g., mean, variance, accuracy) computed over many random samples drawn from the same population. Bootstrap sampling <strong>approximates</strong> this distribution empirically.
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">📊</span>Why Does It Matter?</h3>
+      <p>In the real world, you have <em>one</em> dataset. You can only compute one mean, one accuracy, one F1 score. But how much would that value change if you'd collected different data? The sampling distribution answers this.</p>
+      <p>Bootstrap lets you estimate the sampling distribution by treating your dataset as a proxy for the population and resampling from it.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🧮</span>Key Statistics You Can Bootstrap</h3>
+      <table>
+        <tr><th>Statistic</th><th>What Bootstrap Estimates</th><th>Use Case</th></tr>
+        <tr><td>Mean / Median</td><td>Standard error, confidence interval</td><td>Parameter estimation</td></tr>
+        <tr><td>Model Accuracy</td><td>Variance of accuracy across data</td><td>Model evaluation</td></tr>
+        <tr><td>Feature Importance</td><td>Stability of important features</td><td>Random Forests</td></tr>
+        <tr><td>Any estimator θ̂</td><td>Bias and variance of θ̂</td><td>General inference</td></tr>
+      </table>
+    </div>
+
+    <div class="formula">
+      SE_boot = std( θ̂₁, θ̂₂, ..., θ̂_B )
+      <br><span style="font-size:11px;color:var(--muted)">Standard Error ≈ std dev of statistic computed across B bootstrap samples</span>
+    </div>
+
+    <!-- Interactive sampling distribution viz -->
+    <div class="demo-area">
+      <h4>⚡ Build a Sampling Distribution</h4>
+      <div style="margin-bottom:12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">
+        Each bootstrap sample estimates the mean. Run many samples to see the distribution form.
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="addBootstrapSamples(1)">+1 Sample</button>
+        <button class="btn btn-secondary" onclick="addBootstrapSamples(50)">+50 Samples</button>
+        <button class="btn btn-secondary" onclick="addBootstrapSamples(500)">+500 Samples</button>
+        <button class="btn btn-secondary" onclick="resetDist()">Reset</button>
+      </div>
+      <div class="counter-display" id="sampleCount">B = 0 samples</div>
+      <canvas id="dist-canvas"></canvas>
+      <div id="distStats" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-top:10px;text-align:center"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🎯</span>Bootstrap vs. Theoretical Sampling Distribution</h3>
+      <table>
+        <tr><th>Aspect</th><th>Theoretical</th><th>Bootstrap</th></tr>
+        <tr><td>Requires</td><td>Known population distribution</td><td>Just your data</td></tr>
+        <tr><td>Formula</td><td>SE = σ/√n (for mean)</td><td>std of bootstrap statistics</td></tr>
+        <tr><td>Assumptions</td><td>Normality, known σ</td><td class="highlight-cell">Minimal</td></tr>
+        <tr><td>Works for complex stats?</td><td class="warn-cell">Often no</td><td class="highlight-cell">Yes</td></tr>
+        <tr><td>Computational cost</td><td>Low</td><td class="warn-cell">Higher (needs many samples)</td></tr>
+      </table>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if the sampling distribution is NOT normal?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        That's exactly where bootstrapping <span class="highlight">shines</span>! Traditional statistics often require normality for confidence intervals. Bootstrap makes <strong>no distributional assumptions</strong>. Whether your sampling distribution is skewed, bimodal, or has heavy tails, bootstrap-based confidence intervals (like the percentile method) still work. Just take the 2.5th and 97.5th percentiles of your B bootstrap estimates.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you increase B (number of bootstrap iterations) to infinity?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        The bootstrap sampling distribution converges to a stable distribution. <strong>But</strong>: that distribution is only as good as your original dataset. Infinite B doesn't fix a biased or unrepresentative dataset — it just removes <em>Monte Carlo randomness</em> from the bootstrap estimate itself. The <span class="warn">fundamental limitation</span> is always the quality and size of your original sample.
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 2</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q2_1">
+        <div class="q-num">Q1 of 2</div>
+        <div class="q-text">The bootstrap standard error is computed as:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q2_1',false,'σ/√n is the theoretical formula requiring you know the population std dev σ.')">σ / √n, where σ is the population standard deviation</div>
+          <div class="option" onclick="answer(this,'q2_1',true,'Correct! Bootstrap SE = standard deviation of the statistic computed across all B bootstrap samples.')">The standard deviation of the statistic across all B bootstrap samples</div>
+          <div class="option" onclick="answer(this,'q2_1',false,'The mean of statistics tells you about the statistic\'s value, not its uncertainty.')">The mean of the statistic across all B bootstrap samples</div>
+          <div class="option" onclick="answer(this,'q2_1',false,'This is the range (max-min), which is a poor estimator of spread.')">The range of the statistic across bootstrap samples</div>
+        </div>
+        <div class="feedback" id="q2_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q2_2">
+        <div class="q-num">Q2 of 2</div>
+        <div class="q-text">A key advantage of bootstrap over parametric methods for constructing confidence intervals is:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q2_2',false,'Bootstrap is computationally more expensive, not less.')">It is computationally cheaper</div>
+          <div class="option" onclick="answer(this,'q2_2',false,'Bootstrap does not require larger samples — it works with what you have.')">It requires a larger sample size</div>
+          <div class="option" onclick="answer(this,'q2_2',true,'Correct! Bootstrap makes minimal distributional assumptions, making it valid for any statistic even with non-normal data.')">It does not require distributional assumptions about the data</div>
+          <div class="option" onclick="answer(this,'q2_2',false,'Bootstrap uses ALL data for the estimate; it doesn\'t hold out data like CV does.')">It uses a held-out test set for evaluation</div>
+        </div>
+        <div class="feedback" id="q2_2_fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 3: PROPERTIES ===================== -->
+  <div class="section" id="s3">
+    <div class="section-title">Properties of <span>Bootstrap Samples</span></div>
+    <div class="section-intro">The mathematical facts you must know cold for the exam.</div>
+
+    <ul class="prop-list">
+      <li>
+        <span class="badge">SIZE</span>
+        <div>Each bootstrap sample has <strong>the same size n as the original dataset</strong>. You always draw exactly n observations (with replacement) regardless of n's value.</div>
+      </li>
+      <li>
+        <span class="badge">REPLACE</span>
+        <div>Drawn <strong>with replacement</strong> — an individual observation can appear 0, 1, 2, or more times in a single bootstrap sample.</div>
+      </li>
+      <li>
+        <span class="badge">~63%</span>
+        <div>On average, each bootstrap sample contains approximately <strong>63.2% of the unique original observations</strong>. Formally: P(selected) = 1 − (1 − 1/n)ⁿ → 1 − 1/e ≈ 0.632 as n → ∞.</div>
+      </li>
+      <li>
+        <span class="badge oob">~37%</span>
+        <div>Consequently, roughly <strong>36.8% of observations are NOT selected</strong> and appear zero times — these are the out-of-bag (OOB) samples.</div>
+      </li>
+      <li>
+        <span class="badge cv">UNBIASED</span>
+        <div>The bootstrap sampling distribution is an <strong>approximately unbiased estimator</strong> of the true sampling distribution (for large n).</div>
+      </li>
+      <li>
+        <span class="badge" style="background:var(--accent3)">INDEP</span>
+        <div>Each bootstrap sample is drawn <strong>independently</strong> of all others. The B bootstrap samples are i.i.d. draws from the empirical distribution of your data.</div>
+      </li>
+    </ul>
+
+    <div class="formula">
+      P(observation i not selected in one draw) = 1 − 1/n<br>
+      P(not selected in any of n draws) = (1 − 1/n)ⁿ ≈ e⁻¹ ≈ 0.368<br>
+      P(selected at least once) ≈ <strong>0.632</strong>
+    </div>
+
+    <!-- Interactive probability demo -->
+    <div class="demo-area">
+      <h4>⚡ 63.2% Rule Explorer</h4>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:16px">
+        Adjust n to see how the expected fraction of unique observations in a bootstrap sample converges to 63.2%.
+      </div>
+      <div class="demo-label">Dataset size n = <span id="nVal">10</span></div>
+      <input type="range" min="2" max="10000" value="10" id="nSlider" oninput="updateProbCalc()">
+      <div class="counter-display" id="probDisplay">63.2% unique</div>
+      <div id="probFormula" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);text-align:center"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">📐</span>Expected Number of Duplicates</h3>
+      <p>In a bootstrap sample of size n, the expected number of times a specific observation appears follows a <strong>Poisson distribution with λ=1</strong> (approximately, for large n):</p>
+      <table>
+        <tr><th>Appearances</th><th>Probability</th><th>Meaning</th></tr>
+        <tr><td>0 times</td><td class="warn-cell">≈ 36.8%</td><td>OOB — can be used for validation</td></tr>
+        <tr><td>1 time</td><td>≈ 36.8%</td><td>Normal inclusion</td></tr>
+        <tr><td>2 times</td><td>≈ 18.4%</td><td>Duplicate</td></tr>
+        <tr><td>3+ times</td><td>≈ 8.0%</td><td>Multiple copies</td></tr>
+      </table>
+    </div>
+
+    <div class="tip-box"><strong>⚠️ Exam Trap:</strong> Your professor might ask "what fraction of data is used for training in bootstrap?" The answer is <em>all n observations are drawn</em> (some multiple times), but only ~63.2% are <em>unique</em>. Be precise about what the question is asking!</div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if n=2? Does the 63.2% rule still hold?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        No! With n=2: P(selected) = 1 − (1 − 1/2)² = 1 − 0.25 = <span class="highlight">0.75</span>. The 63.2% is an <strong>asymptotic result</strong> that requires n to be large. For small n, the exact formula (1 − (1-1/n)ⁿ) must be used. This is why you saw the slider above approach 63.2% only as n grows large.
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 3</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q3_1">
+        <div class="q-num">Q1 of 3</div>
+        <div class="q-text">You have a dataset with n=500 observations. On average, how many unique observations will appear in a single bootstrap sample?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q3_1',false,'250 would be 50% — the correct answer approaches 63.2%.')">250</div>
+          <div class="option" onclick="answer(this,'q3_1',true,'Correct! 0.632 × 500 ≈ 316 unique observations appear on average in each bootstrap sample.')">~316</div>
+          <div class="option" onclick="answer(this,'q3_1',false,'500 would mean no duplicates, which contradicts sampling with replacement.')">500</div>
+          <div class="option" onclick="answer(this,'q3_1',false,'184 is approximately the number NOT selected (OOB), not the selected ones.')">~184</div>
+        </div>
+        <div class="feedback" id="q3_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q3_2">
+        <div class="q-num">Q2 of 3</div>
+        <div class="q-text">As n → ∞, the probability that a specific observation is NOT included in a bootstrap sample converges to:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q3_2',false,'0 would mean every observation always appears — that\'s not true with replacement sampling.')">0</div>
+          <div class="option" onclick="answer(this,'q3_2',false,'0.5 is not the correct limit. Consider (1 - 1/n)^n as n → ∞.')">0.5</div>
+          <div class="option" onclick="answer(this,'q3_2',true,'Correct! (1-1/n)^n → e^(-1) ≈ 0.368 as n → ∞. This is the famous OOB probability.')">1/e ≈ 0.368</div>
+          <div class="option" onclick="answer(this,'q3_2',false,'0.632 is the probability of BEING selected, not the probability of being excluded.')">0.632</div>
+        </div>
+        <div class="feedback" id="q3_2_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q3_3">
+        <div class="q-num">Q3 of 3</div>
+        <div class="q-text">Which of the following is TRUE about bootstrap samples?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q3_3',false,'Bootstrap samples are independent of each other — they\'re all drawn fresh from the original dataset.')">Each bootstrap sample depends on the previous one</div>
+          <div class="option" onclick="answer(this,'q3_3',false,'Bootstrap samples always have exactly n draws, same as original dataset size.')">A bootstrap sample can have more than n observations</div>
+          <div class="option" onclick="answer(this,'q3_3',true,'Correct! Sampling with replacement means any observation can be selected 0, 1, 2, or more times in a single bootstrap sample.')">A single observation can appear multiple times in one bootstrap sample</div>
+          <div class="option" onclick="answer(this,'q3_3',false,'Bootstrap samples always have exactly n observations (same size as original).')">Bootstrap samples are always smaller than the original dataset</div>
+        </div>
+        <div class="feedback" id="q3_3_fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 4: OOB SAMPLES ===================== -->
+  <div class="section" id="s4">
+    <div class="section-title">Out-of-Bag <span>(OOB) Samples</span></div>
+    <div class="section-intro">The "free" validation set you get with every bootstrap sample.</div>
+
+    <div class="def-box">
+      <strong>Out-of-Bag (OOB) samples</strong> are the observations from the original dataset that were <strong>NOT selected</strong> in a given bootstrap sample. Since ~36.8% of observations are excluded on average, these form a natural validation set — at no extra cost.
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🎁</span>Why OOB is Powerful</h3>
+      <p>When you train a model on a bootstrap sample, the OOB observations are completely <strong>unseen by that model</strong>. You can use them to estimate generalization error — this is called the <strong>OOB error</strong>.</p>
+      <p>With B bootstrap samples, each observation will be OOB in roughly 36.8% of them. You can aggregate these OOB predictions to get a robust estimate of model performance — <strong>without needing a separate test set.</strong></p>
+    </div>
+
+    <!-- OOB visualization -->
+    <div class="demo-area">
+      <h4>⚡ OOB Sample Visualizer</h4>
+      <div class="demo-label">Original Dataset</div>
+      <div class="dataset-row" id="oobOrigData"></div>
+      <div style="margin-top:16px;margin-bottom:8px;">
+        <button class="btn btn-primary" onclick="drawOOBSample()">Draw Bootstrap Sample</button>
+      </div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:16px">
+        <div style="flex:1;min-width:200px">
+          <div class="demo-label">In-Bag (Training)</div>
+          <div class="dataset-row" id="oobInBag"></div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div class="demo-label">Out-of-Bag (Validation ✓)</div>
+          <div class="dataset-row" id="oobOutBag"></div>
+        </div>
+      </div>
+      <div class="oob-legend" style="margin-top:16px">
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,255,0.3);border:2px solid var(--accent)"></div>In-Bag (train)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,107,53,0.3);border:2px solid var(--accent2)"></div>Out-of-Bag (validate)</div>
+      </div>
+      <div id="oobStats" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);margin-top:12px"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🌲</span>OOB in Random Forests</h3>
+      <p>Random Forests are <em>built on bootstrapping</em>. Each tree is trained on a bootstrap sample. The OOB samples for each tree provide a way to estimate the forest's generalization error:</p>
+      <ol style="margin-left:20px;line-height:2;color:#94a3b8;font-size:14px">
+        <li>For each observation i, find all trees where i was OOB</li>
+        <li>Aggregate predictions from those trees (majority vote or average)</li>
+        <li>Compare to true label → compute OOB error</li>
+      </ol>
+      <p style="margin-top:12px">The OOB error is a <strong>pessimistically biased</strong> estimate (tends to be slightly worse than true test error), but it's cheap and doesn't require holding out data.</p>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">⚖️</span>OOB Error vs. Cross-Validation</h3>
+      <table>
+        <tr><th>Property</th><th>OOB Error</th><th>K-Fold CV</th></tr>
+        <tr><td>Training size</td><td class="warn-cell">~63.2% of n</td><td class="highlight-cell">~(k-1)/k of n</td></tr>
+        <tr><td>Computational cost</td><td class="highlight-cell">Free (side effect)</td><td class="warn-cell">k × training cost</td></tr>
+        <tr><td>Requires extra runs?</td><td class="highlight-cell">No</td><td class="warn-cell">Yes (k runs)</td></tr>
+        <tr><td>Bias</td><td class="warn-cell">Slightly pessimistic</td><td>Lower bias</td></tr>
+        <tr><td>Works without bootstrapping?</td><td class="warn-cell">No</td><td class="highlight-cell">Yes</td></tr>
+      </table>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if an observation ends up in EVERY bootstrap sample (never OOB)?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        With enough bootstrap samples (B), this becomes <strong>very unlikely</strong> — the probability of being OOB in at least one sample approaches 1 quickly. However, with small B, some observations might never be OOB. This is one reason why you want <span class="highlight">large B</span>. In practice, with B ≥ 100, virtually all observations will have been OOB in some samples, giving reliable OOB error estimates.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you use OOB error as your ONLY evaluation metric?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        That's actually a reasonable choice for Random Forests and other bootstrap-based ensembles! OOB error is commonly used in practice. However, keep in mind: (1) it's slightly <span class="warn">pessimistic</span> since each model was trained on only ~63% of data; (2) it only works when the algorithm inherently uses bootstrapping. For other models, you'd need CV instead.
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 4</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q4_1">
+        <div class="q-num">Q1 of 2</div>
+        <div class="q-text">In Random Forests, OOB error is computed by:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q4_1',false,'OOB error uses the OOB observations — not the training data — for evaluation.')">Computing training error on bootstrap samples</div>
+          <div class="option" onclick="answer(this,'q4_1',false,'OOB doesn\'t require a separate held-out test set — that\'s a key advantage!')">Setting aside 20% of data before any training</div>
+          <div class="option" onclick="answer(this,'q4_1',true,'Exactly right! For each observation, aggregate predictions from trees where it was OOB, then compare to true label.')">For each observation, averaging predictions from trees where it was not in the training set</div>
+          <div class="option" onclick="answer(this,'q4_1',false,'K-fold CV splits data without replacement — this is not OOB.')">Averaging test errors across k equal-sized folds</div>
+        </div>
+        <div class="feedback" id="q4_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q4_2">
+        <div class="q-num">Q2 of 2</div>
+        <div class="q-text">Which statement about OOB error is most accurate?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q4_2',false,'OOB error tends to be slightly pessimistic (slightly worse than true test error) because each model is trained on only ~63% of data.')">OOB error is an optimistic estimate of generalization error</div>
+          <div class="option" onclick="answer(this,'q4_2',true,'Correct! OOB error tends to be slightly pessimistic because models are trained on ~63% of data, but it\'s still a useful, free estimate of generalization performance.')">OOB error tends to be a slightly pessimistic estimate of generalization error</div>
+          <div class="option" onclick="answer(this,'q4_2',false,'OOB error is reliable precisely because OOB samples were unseen during training for each model.')">OOB error is unreliable because OOB samples were used in training</div>
+          <div class="option" onclick="answer(this,'q4_2',false,'OOB error is computed without any extra training runs — it\'s a free side effect of bootstrapping.')">OOB error requires training k additional models</div>
+        </div>
+        <div class="feedback" id="q4_2_fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 5: CROSS-VALIDATION ===================== -->
+  <div class="section" id="s5">
+    <div class="section-title">Bootstrap for <span>Cross-Validation</span></div>
+    <div class="section-intro">Using bootstrap samples to estimate model generalization error.</div>
+
+    <div class="def-box">
+      <strong>Bootstrap cross-validation</strong> uses repeated bootstrap sampling to estimate model error. For each of B bootstrap samples, train a model on the in-bag data and evaluate on the OOB data, then aggregate results across all B iterations.
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🔁</span>The Bootstrap CV Algorithm</h3>
+      <ol style="margin-left:20px;line-height:2.2;color:#94a3b8;font-size:14px;counter-reset:steps">
+        <li><strong style="color:var(--accent)">Draw</strong> bootstrap sample Sᵦ of size n (with replacement)</li>
+        <li><strong style="color:var(--accent)">Train</strong> model fᵦ on Sᵦ (the in-bag observations)</li>
+        <li><strong style="color:var(--accent)">Evaluate</strong> fᵦ on observations NOT in Sᵦ (OOB set)</li>
+        <li><strong style="color:var(--accent)">Repeat</strong> steps 1–3 for b = 1, 2, ..., B</li>
+        <li><strong style="color:var(--accent)">Aggregate</strong>: for each observation, average predictions from all models where it was OOB</li>
+        <li><strong style="color:var(--accent)">Compute</strong> final error over all observations</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🆚</span>Bootstrap CV vs. K-Fold CV</h3>
+      <table>
+        <tr><th>Feature</th><th>Bootstrap CV</th><th>K-Fold CV</th></tr>
+        <tr><td>Sampling method</td><td>With replacement</td><td>Without replacement</td></tr>
+        <tr><td>Training set size</td><td class="warn-cell">~63% of n</td><td class="highlight-cell">~(k-1)/k × n (e.g. 80% for k=5)</td></tr>
+        <tr><td>Bias direction</td><td class="warn-cell">Pessimistic (trains on less data)</td><td>Varies by k</td></tr>
+        <tr><td>Variance</td><td class="highlight-cell">Lower (more samples possible)</td><td>Higher (especially for small k)</td></tr>
+        <tr><td>Overlap between folds?</td><td class="warn-cell">Yes (different OOB sets overlap)</td><td class="highlight-cell">No</td></tr>
+        <tr><td>Best use case</td><td>Random Forests, bagging</td><td>General model selection</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🔬</span>The .632 Bootstrap Estimator</h3>
+      <p>Because Bootstrap CV is slightly pessimistic (trains on only ~63.2% of data), Efron proposed a correction called the <strong>.632 estimator</strong>:</p>
+      <div class="formula">
+        ε̂_.632 = 0.368 × ε_train + 0.632 × ε_OOB
+      </div>
+      <p style="font-size:13px;color:#94a3b8">This blends the training error (optimistic) with OOB error (pessimistic) weighted by the expected fraction of in-bag vs. OOB observations. A further refinement is the <strong>.632+</strong> estimator which adjusts for overfitting.</p>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you use Bootstrap CV on a very small dataset (n=20)?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        Bootstrap CV can be <strong>advantageous</strong> over k-fold for small datasets. With k-fold (k=10) on n=20, each fold has only 2 samples — tiny test sets. Bootstrap can generate many (B=1000) evaluation instances, giving more stable error estimates. However, the pessimistic bias from training on only ~63% of 20 samples is more pronounced. The <span class="highlight">.632 estimator</span> becomes especially important here.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if the model completely memorizes (overfits) bootstrap training data?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        The OOB error will correctly detect this! A massively overfit model will have near-zero training error but high OOB error. This is exactly why OOB/bootstrap CV is valuable. However, note: the <span class="warn">.632 estimator breaks down</span> for severely overfit models — the .632+ estimator was specifically designed to handle this case, using a "no-information rate" correction.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you want to do model SELECTION using bootstrap CV?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        You can use bootstrap CV for model selection, but be careful! If you use the same data to select hyperparameters AND report the final error, you have <span class="warn">selection bias</span>. Best practice: use bootstrap CV on a training set for model selection, then evaluate the final model on a completely held-out test set. Never report OOB/bootstrap error on the same data you used for selection as if it were an unbiased test error.
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 5</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q5_1">
+        <div class="q-num">Q1 of 2</div>
+        <div class="q-text">The .632 bootstrap estimator corrects for:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q5_1',false,'The .632 estimator does not address class imbalance.')">Class imbalance in the training data</div>
+          <div class="option" onclick="answer(this,'q5_1',true,'Correct! Because bootstrap trains on only ~63.2% of data, OOB error is pessimistic. The .632 estimator blends training error (0.368 weight) with OOB error (0.632 weight) to correct this.')">The pessimistic bias from training on only ~63% of the data</div>
+          <div class="option" onclick="answer(this,'q5_1',false,'Overfitting is handled by the .632+ estimator, not the basic .632.')">Severe overfitting to the training bootstrap samples</div>
+          <div class="option" onclick="answer(this,'q5_1',false,'The .632 estimator is a bias correction, not a speed optimization.')">The computational cost of large B</div>
+        </div>
+        <div class="feedback" id="q5_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q5_2">
+        <div class="q-num">Q2 of 2</div>
+        <div class="q-text">Compared to 5-fold cross-validation, bootstrap cross-validation typically has:</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q5_2',false,'Bootstrap CV generally has lower variance than k-fold because you can run many more B iterations.')">Higher variance and lower bias</div>
+          <div class="option" onclick="answer(this,'q5_2',true,'Correct! Bootstrap trains on ~63% of data (vs ~80% for 5-fold), making it more pessimistically biased. But with large B, variance can be lower.')">Higher bias (pessimistic) and potentially lower variance</div>
+          <div class="option" onclick="answer(this,'q5_2',false,'Bootstrap CV has higher bias, not lower, since it trains on less data per iteration.')">Lower bias and lower variance</div>
+          <div class="option" onclick="answer(this,'q5_2',false,'Bias and variance characteristics are meaningfully different between bootstrap and k-fold CV.')">Identical bias and variance properties</div>
+        </div>
+        <div class="feedback" id="q5_2_fb"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 6: SCIKIT-LEARN ===================== -->
+  <div class="section" id="s6">
+    <div class="section-title">Bootstrap in <span>scikit-learn</span></div>
+    <div class="section-intro">Implementing bootstrap sampling in Python — what the API looks like and how to use it.</div>
+
+    <div class="card">
+      <h3><span class="icon">🐍</span>resample() — The Core Function</h3>
+      <p>scikit-learn provides <code style="color:var(--accent);font-family:'Space Mono',monospace">sklearn.utils.resample()</code> for manual bootstrapping. It returns a bootstrap sample (with replacement by default).</p>
+
+      <div class="code-block">
+<span class="kw">from</span> sklearn.utils <span class="kw">import</span> <span class="fn">resample</span><br>
+<span class="kw">import</span> numpy <span class="kw">as</span> np<br><br>
+<span class="cm"># Original dataset</span><br>
+X = np.<span class="fn">array</span>([[<span class="num">1</span>,<span class="num">2</span>],[<span class="num">3</span>,<span class="num">4</span>],[<span class="num">5</span>,<span class="num">6</span>],[<span class="num">7</span>,<span class="num">8</span>],[<span class="num">9</span>,<span class="num">10</span>]])<br>
+y = np.<span class="fn">array</span>([<span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>])<br><br>
+<span class="cm"># Draw one bootstrap sample (n_samples defaults to len(X))</span><br>
+X_boot, y_boot = <span class="fn">resample</span>(X, y,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;replace=<span class="kw">True</span>,&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># with replacement</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;n_samples=<span class="num">5</span>,&nbsp;&nbsp;&nbsp;<span class="cm"># same size as original</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;random_state=<span class="num">42</span>)<br><br>
+<span class="cm"># Get OOB indices</span><br>
+all_indices = np.<span class="fn">arange</span>(<span class="fn">len</span>(X))<br>
+boot_indices = [i <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(X))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> i <span class="kw">in</span> <span class="fn">set</span>(np.<span class="fn">where</span>(np.<span class="fn">isin</span>(X, X_boot))[<span class="num">0</span>])]<br>
+oob_indices = np.<span class="fn">setdiff1d</span>(all_indices, boot_indices)
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🔁</span>Full Bootstrap CV Loop</h3>
+      <div class="code-block">
+<span class="kw">from</span> sklearn.utils <span class="kw">import</span> <span class="fn">resample</span><br>
+<span class="kw">from</span> sklearn.tree <span class="kw">import</span> <span class="cls">DecisionTreeClassifier</span><br>
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> <span class="fn">accuracy_score</span><br>
+<span class="kw">import</span> numpy <span class="kw">as</span> np<br><br>
+n, B = <span class="fn">len</span>(X), <span class="num">1000</span>&nbsp;&nbsp;<span class="cm"># dataset size, num bootstrap rounds</span><br>
+oob_errors = []<br><br>
+<span class="kw">for</span> b <span class="kw">in</span> <span class="fn">range</span>(B):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># 1. Draw bootstrap sample (indices)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;boot_idx = <span class="fn">resample</span>(<span class="fn">range</span>(n), replace=<span class="kw">True</span>, n_samples=n)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;oob_idx = <span class="fn">list</span>(<span class="fn">set</span>(<span class="fn">range</span>(n)) - <span class="fn">set</span>(boot_idx))<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># 2. Train on in-bag data</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;model = <span class="cls">DecisionTreeClassifier</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;model.<span class="fn">fit</span>(X[boot_idx], y[boot_idx])<br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># 3. Evaluate on OOB data</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> <span class="fn">len</span>(oob_idx) > <span class="num">0</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y_pred = model.<span class="fn">predict</span>(X[oob_idx])<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;err = <span class="num">1</span> - <span class="fn">accuracy_score</span>(y[oob_idx], y_pred)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;oob_errors.<span class="fn">append</span>(err)<br><br>
+oob_error = np.<span class="fn">mean</span>(oob_errors)<br>
+<span class="fn">print</span>(<span class="str">f"OOB Error: {oob_error:.4f}"</span>)
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🌲</span>Random Forest — Built-in OOB</h3>
+      <p>scikit-learn's <code style="color:var(--accent);font-family:'Space Mono',monospace">RandomForestClassifier</code> has native OOB support via <code style="color:var(--accent);font-family:'Space Mono',monospace">oob_score=True</code>:</p>
+      <div class="code-block">
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> <span class="cls">RandomForestClassifier</span><br>
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> <span class="fn">load_iris</span><br><br>
+X, y = <span class="fn">load_iris</span>(return_X_y=<span class="kw">True</span>)<br><br>
+rf = <span class="cls">RandomForestClassifier</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n_estimators=<span class="num">100</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;oob_score=<span class="kw">True</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># ← enables OOB evaluation</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;bootstrap=<span class="kw">True</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># ← default, use bootstrap samples</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;random_state=<span class="num">42</span><br>
+)<br>
+rf.<span class="fn">fit</span>(X, y)<br><br>
+<span class="fn">print</span>(<span class="str">f"OOB Score: {rf.oob_score_:.4f}"</span>)&nbsp;<span class="cm"># OOB accuracy</span><br>
+<span class="fn">print</span>(<span class="str">f"OOB Decision: {rf.oob_decision_function_[:5]}"</span>)
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="icon">🎯</span>Key API Parameters to Know</h3>
+      <table>
+        <tr><th>Parameter</th><th>Class</th><th>Effect</th></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">bootstrap=True</code></td><td>RandomForest*</td><td class="highlight-cell">Enables bootstrap sampling (default)</td></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">oob_score=True</code></td><td>RandomForest*</td><td>Computes OOB evaluation score</td></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">replace=True</code></td><td>resample()</td><td class="highlight-cell">Sampling with replacement (default)</td></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">n_samples=n</code></td><td>resample()</td><td>Size of the bootstrap sample</td></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">max_samples</code></td><td>RandomForest*</td><td>Fraction/count of samples to draw per tree</td></tr>
+        <tr><td><code style="color:var(--accent);font-family:'Space Mono',monospace">.oob_score_</code></td><td>RandomForest*</td><td>Access OOB accuracy after fitting</td></tr>
+      </table>
+    </div>
+
+    <div class="tip-box"><strong>⚠️ Exam Tip:</strong> When <code style="font-family:'Space Mono',monospace">bootstrap=False</code> in RandomForest, each tree uses the FULL dataset — OOB score becomes undefined and <code style="font-family:'Space Mono',monospace">oob_score=True</code> will raise an error. Know this interaction!</div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you set bootstrap=False in RandomForestClassifier?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        Each tree is trained on the <strong>full dataset</strong> instead of a bootstrap sample. This makes the forest less diverse (trees are more correlated) and eliminates OOB samples. Setting <code style="color:var(--accent);font-family:'Space Mono',monospace">oob_score=True</code> simultaneously will cause a <span class="warn">ValueError</span>. You lose the ensemble's ability to decorrelate trees via data subsampling — a key feature of Random Forests.
+      </div>
+    </div>
+
+    <div class="whatif-card">
+      <div class="whatif-header" onclick="toggleWhatif(this)">
+        <span class="wi-q">What if you want a 95% confidence interval on accuracy using bootstrap?</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="whatif-body">
+        Use the <strong>percentile bootstrap method</strong>: collect accuracy values from B OOB evaluations, then take the 2.5th and 97.5th percentiles as your 95% CI. In code: <code style="color:var(--accent);font-family:'Space Mono',monospace">np.percentile(accuracies, [2.5, 97.5])</code>. No normality assumption needed — that's the beauty of the bootstrap approach.
+      </div>
+    </div>
+
+    <div style="margin-top:32px;margin-bottom:12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);font-family:'Space Mono',monospace">Mini Quiz — Section 6</div>
+    <div class="quiz-container">
+      <div class="quiz-card" id="q6_1">
+        <div class="q-num">Q1 of 3</div>
+        <div class="q-text">After fitting a RandomForestClassifier with oob_score=True, how do you access the OOB accuracy?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q6_1',false,'This is how you compute it; the attribute to READ the stored score is different.')">rf.compute_oob_score()</div>
+          <div class="option" onclick="answer(this,'q6_1',false,'oob_error_ doesn\'t exist as a standard attribute — and it would be error, not accuracy.')">rf.oob_error_</div>
+          <div class="option" onclick="answer(this,'q6_1',true,'Correct! After fitting with oob_score=True, rf.oob_score_ gives the OOB accuracy.')">rf.oob_score_</div>
+          <div class="option" onclick="answer(this,'q6_1',false,'oob_decision_function_ gives per-sample probability estimates, not the overall accuracy score.')">rf.oob_decision_function_</div>
+        </div>
+        <div class="feedback" id="q6_1_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q6_2">
+        <div class="q-num">Q2 of 3</div>
+        <div class="q-text">Which sklearn function is used to manually draw bootstrap samples?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q6_2',false,'train_test_split splits data without replacement — it\'s for creating train/test sets, not bootstrap samples.')">sklearn.model_selection.train_test_split()</div>
+          <div class="option" onclick="answer(this,'q6_2',false,'KFold creates non-overlapping folds without replacement — the opposite of bootstrapping.')">sklearn.model_selection.KFold()</div>
+          <div class="option" onclick="answer(this,'q6_2',true,'Correct! sklearn.utils.resample() with replace=True draws bootstrap samples. It\'s the standard way to manually implement bootstrapping.')">sklearn.utils.resample()</div>
+          <div class="option" onclick="answer(this,'q6_2',false,'BootstrapSampler doesn\'t exist in sklearn\'s API.')">sklearn.utils.BootstrapSampler()</div>
+        </div>
+        <div class="feedback" id="q6_2_fb"></div>
+      </div>
+
+      <div class="quiz-card" id="q6_3">
+        <div class="q-num">Q3 of 3</div>
+        <div class="q-text">You set oob_score=True but bootstrap=False in RandomForestClassifier. What happens when you call .fit()?</div>
+        <div class="options">
+          <div class="option" onclick="answer(this,'q6_3',false,'sklearn would not silently ignore this — it detects the invalid combination.')">It silently ignores oob_score and trains normally</div>
+          <div class="option" onclick="answer(this,'q6_3',false,'Without bootstrap sampling, there are no OOB samples to evaluate on.')">OOB score is computed using the full training set</div>
+          <div class="option" onclick="answer(this,'q6_3',true,'Correct! sklearn raises a ValueError because OOB score requires bootstrap sampling — there are no OOB samples when bootstrap=False.')">A ValueError is raised because OOB requires bootstrap=True</div>
+          <div class="option" onclick="answer(this,'q6_3',false,'sklearn would not automatically switch to cross-validation — it raises an error instead.')">sklearn automatically switches to k-fold cross-validation</div>
+        </div>
+        <div class="feedback" id="q6_3_fb"></div>
+      </div>
+    </div>
+
+    <!-- Final score summary -->
+    <div style="margin-top:40px">
+      <div class="completion-section">
+        <h2>🎓 You've covered <span>all 6 topics!</span></h2>
+        <p>Check your running score below and review any section where you got answers wrong.</p>
+        <div style="margin:28px auto;max-width:400px">
+          <div style="font-family:'Space Mono',monospace;font-size:48px;font-weight:700;color:var(--accent)" id="finalScore">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;color:var(--muted);margin-top:4px">total correct answers</div>
+          <button class="btn btn-primary" style="margin-top:20px" onclick="computeFinalScore()">Calculate My Score</button>
+        </div>
+      </div>
+
+      <div class="cheatsheet">
+        <h3>// Quick-Reference Cheatsheet</h3>
+        <div class="cs-row"><span class="cs-key">Bootstrapping</span><span class="cs-val">Draw n samples WITH replacement from dataset; treats data as proxy for population</span></div>
+        <div class="cs-row"><span class="cs-key">Sampling Distribution</span><span class="cs-val">Distribution of a statistic across many samples; bootstrap estimates it empirically</span></div>
+        <div class="cs-row"><span class="cs-key">63.2% Rule</span><span class="cs-val">Each bootstrap sample contains ~63.2% unique obs; follows 1 - 1/e ≈ 0.632</span></div>
+        <div class="cs-row"><span class="cs-key">OOB Samples</span><span class="cs-val">~36.8% of obs not selected per sample; used as free validation set</span></div>
+        <div class="cs-row"><span class="cs-key">OOB Error Bias</span><span class="cs-val">Slightly pessimistic (trains on ~63% data); .632 estimator corrects this</span></div>
+        <div class="cs-row"><span class="cs-key">Bootstrap SE</span><span class="cs-val">std(θ̂₁...θ̂_B) — std dev of statistic across all B bootstrap estimates</span></div>
+        <div class="cs-row"><span class="cs-key">sklearn resample()</span><span class="cs-val">sklearn.utils.resample(X, replace=True, n_samples=n) for manual bootstrap</span></div>
+        <div class="cs-row"><span class="cs-key">RandomForest OOB</span><span class="cs-val">RandomForestClassifier(oob_score=True, bootstrap=True); access via .oob_score_</span></div>
+        <div class="cs-row"><span class="cs-key">.632 Estimator</span><span class="cs-val">ε̂ = 0.368 × ε_train + 0.632 × ε_OOB</span></div>
+        <div class="cs-row"><span class="cs-key">bootstrap=False trap</span><span class="cs-val">Setting oob_score=True with bootstrap=False raises ValueError in sklearn</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ======== NAVIGATION ========
+function showSection(id, btn, num) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('progressFill').style.width = (num / 6 * 100) + '%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ======== WHAT-IF TOGGLES ========
+function toggleWhatif(header) {
+  const body = header.nextElementSibling;
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ======== QUIZ ENGINE ========
+const quizAnswered = {};
+let totalCorrect = 0, totalAnswered = 0;
+
+function answer(el, qid, isCorrect, explanation) {
+  if (quizAnswered[qid]) return;
+  quizAnswered[qid] = true;
+
+  const options = el.parentElement.querySelectorAll('.option');
+  options.forEach(o => o.classList.add('disabled'));
+
+  const fb = document.getElementById(qid + '_fb');
+  fb.classList.add('show');
+
+  if (isCorrect) {
+    el.classList.add('correct');
+    fb.classList.add('correct-fb');
+    fb.textContent = '✓ ' + explanation;
+    totalCorrect++;
+  } else {
+    el.classList.add('wrong');
+    fb.classList.add('wrong-fb');
+    fb.textContent = '✗ ' + explanation;
+    // reveal correct
+    options.forEach(o => {
+      if (!o.classList.contains('wrong') && !o.classList.contains('correct')) {
+        // find the correct one
+      }
+    });
+  }
+  totalAnswered++;
+}
+
+function computeFinalScore() {
+  document.getElementById('finalScore').textContent = totalCorrect + ' / ' + totalAnswered;
+}
+
+// ======== SECTION 1: BOOTSTRAP DEMO ========
+const origValues = [12, 27, 34, 41, 58, 63, 75, 89];
+const origDataEl = document.getElementById('origData');
+origValues.forEach(v => {
+  const chip = document.createElement('div');
+  chip.className = 'data-chip original';
+  chip.textContent = v;
+  origDataEl.appendChild(chip);
+});
+
+function drawBootstrap() {
+  const bootDataEl = document.getElementById('bootData');
+  bootDataEl.innerHTML = '';
+  const selected = [];
+  for (let i = 0; i < origValues.length; i++) {
+    const idx = Math.floor(Math.random() * origValues.length);
+    selected.push(idx);
+  }
+  const uniqueSelected = new Set(selected);
+  selected.forEach(idx => {
+    const chip = document.createElement('div');
+    chip.className = 'data-chip selected';
+    chip.textContent = origValues[idx];
+    bootDataEl.appendChild(chip);
+  });
+  const nUnique = uniqueSelected.size;
+  const nOOB = origValues.length - nUnique;
+  document.getElementById('bootStats').textContent =
+    `→ ${nUnique} unique obs (${(nUnique/origValues.length*100).toFixed(0)}%) | ${nOOB} OOB`;
+}
+drawBootstrap();
+
+// ======== SECTION 2: SAMPLING DISTRIBUTION ========
+let bootMeans = [];
+const popData = Array.from({length: 30}, () => Math.round(Math.random() * 40 + 30));
+
+function addBootstrapSamples(count) {
+  for (let i = 0; i < count; i++) {
+    const sample = Array.from({length: popData.length}, () => popData[Math.floor(Math.random() * popData.length)]);
+    const mean = sample.reduce((a, b) => a + b, 0) / sample.length;
+    bootMeans.push(mean);
+  }
+  renderDist();
+}
+
+function resetDist() {
+  bootMeans = [];
+  renderDist();
+}
+
+function renderDist() {
+  const canvas = document.getElementById('dist-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W; canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  document.getElementById('sampleCount').textContent = `B = ${bootMeans.length} samples`;
+
+  if (bootMeans.length < 2) {
+    ctx.fillStyle = 'rgba(0,229,255,0.3)';
+    ctx.font = '12px Space Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Add samples to build the distribution...', W/2, H/2);
+    document.getElementById('distStats').textContent = '';
+    return;
+  }
+
+  // histogram
+  const min = Math.min(...bootMeans), max = Math.max(...bootMeans);
+  const bins = 30;
+  const binWidth = (max - min) / bins || 1;
+  const counts = new Array(bins).fill(0);
+  bootMeans.forEach(v => {
+    const idx = Math.min(Math.floor((v - min) / binWidth), bins - 1);
+    counts[idx]++;
+  });
+  const maxCount = Math.max(...counts);
+
+  const barW = W / bins;
+  counts.forEach((c, i) => {
+    const h = (c / maxCount) * (H - 30);
+    const x = i * barW;
+    const y = H - h;
+    const alpha = 0.4 + 0.6 * (c / maxCount);
+    ctx.fillStyle = `rgba(0, 229, 255, ${alpha})`;
+    ctx.fillRect(x + 1, y, barW - 2, h);
+  });
+
+  // mean line
+  const mean = bootMeans.reduce((a, b) => a + b, 0) / bootMeans.length;
+  const mx = ((mean - min) / ((max - min) || 1)) * W;
+  ctx.strokeStyle = '#ff6b35';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(mx, 0); ctx.lineTo(mx, H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  const std = Math.sqrt(bootMeans.reduce((a, b) => a + (b - mean) ** 2, 0) / bootMeans.length);
+  document.getElementById('distStats').textContent =
+    `Mean = ${mean.toFixed(2)} | SE = ${std.toFixed(3)} | n = ${bootMeans.length}`;
+}
+
+// ======== SECTION 3: PROBABILITY SLIDER ========
+function updateProbCalc() {
+  const n = parseInt(document.getElementById('nSlider').value);
+  document.getElementById('nVal').textContent = n;
+  const prob = 1 - Math.pow(1 - 1/n, n);
+  document.getElementById('probDisplay').textContent = (prob * 100).toFixed(2) + '% unique';
+  document.getElementById('probFormula').textContent =
+    `1 - (1 - 1/${n})^${n} = ${prob.toFixed(6)}`;
+}
+updateProbCalc();
+
+// ======== SECTION 4: OOB VISUALIZER ========
+const oobValues = [11, 22, 33, 44, 55, 66, 77, 88, 99, 100];
+const oobOrigEl = document.getElementById('oobOrigData');
+oobValues.forEach(v => {
+  const chip = document.createElement('div');
+  chip.className = 'data-chip original';
+  chip.textContent = v;
+  oobOrigEl.appendChild(chip);
+});
+
+function drawOOBSample() {
+  const selected = new Set();
+  const drawn = [];
+  for (let i = 0; i < oobValues.length; i++) {
+    const idx = Math.floor(Math.random() * oobValues.length);
+    selected.add(idx);
+    drawn.push(idx);
+  }
+  const oob = oobValues.map((v, i) => i).filter(i => !selected.has(i));
+
+  const inBagEl = document.getElementById('oobInBag');
+  const outBagEl = document.getElementById('oobOutBag');
+  inBagEl.innerHTML = ''; outBagEl.innerHTML = '';
+
+  // show unique in-bag
+  [...selected].forEach(idx => {
+    const chip = document.createElement('div');
+    chip.className = 'data-chip selected';
+    chip.textContent = oobValues[idx];
+    inBagEl.appendChild(chip);
+  });
+
+  oob.forEach(idx => {
+    const chip = document.createElement('div');
+    chip.className = 'data-chip oob-chip';
+    chip.textContent = oobValues[idx];
+    outBagEl.appendChild(chip);
+  });
+
+  document.getElementById('oobStats').textContent =
+    `In-bag: ${selected.size} unique (${(selected.size/oobValues.length*100).toFixed(0)}%) | OOB: ${oob.length} observations (${(oob.length/oobValues.length*100).toFixed(0)}%)`;
+}
+</script>
+</body>
+</html>

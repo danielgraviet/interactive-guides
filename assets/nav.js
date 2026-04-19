@@ -103,6 +103,16 @@ const CATEGORIES = {
         path: './guides/machine-learning/final-clustering/',
         meta: 'Interactive · K-means, HAC, DBSCAN, silhouette score',
       },
+      {
+        title: 'Dimensionality Reduction: A Field Guide',
+        path: './guides/machine-learning/final-dimensionality-reduction/',
+        meta: 'Interactive · PCA, t-SNE, ICA, curse of dimensionality',
+      },
+      {
+        title: 'Understanding Cross-Entropy',
+        path: './guides/machine-learning/cross-entropy/',
+        meta: 'Interactive · Loss functions, entropy, and information theory',
+      },
     ],
   },
   'computer-science': {

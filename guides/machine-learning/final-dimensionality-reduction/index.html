@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Dimensionality Reduction Study Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --paper: #f4efe6;
+    --paper-warm: #ebe4d4;
+    --rule: #2a2620;
+    --accent: #c8441f;
+    --accent-soft: #e8a893;
+    --correct: #3d6b3d;
+    --wrong: #a02c2c;
+    --muted: #7a7267;
+    --highlight: #f0d878;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(200,68,31,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(61,107,61,0.04) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    border-bottom: 2px solid var(--rule);
+    padding: 24px 40px 20px;
+    background: var(--paper);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background: rgba(244, 239, 230, 0.95);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .masthead {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .masthead em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .course-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .progress-track {
+    max-width: 1200px;
+    margin: 12px auto 0;
+    height: 3px;
+    background: var(--paper-warm);
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* ---------- NAVIGATION ---------- */
+  nav.toc {
+    max-width: 1200px;
+    margin: 32px auto 0;
+    padding: 0 40px;
+  }
+  .toc-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 0;
+  }
+  .toc-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 10px;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .toc-item:hover {
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .toc-item.active {
+    color: var(--ink);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ---------- MAIN CONTENT ---------- */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+  section {
+    margin-bottom: 96px;
+    scroll-margin-top: 180px;
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 20px;
+    max-width: 90%;
+  }
+  h2 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  .lede {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 32px;
+    padding-left: 20px;
+    border-left: 3px solid var(--accent);
+    font-weight: 400;
+  }
+  h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin: 32px 0 12px;
+    letter-spacing: -0.01em;
+  }
+  h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 24px 0 8px;
+  }
+  p { margin-bottom: 14px; }
+  p + p { margin-top: 0; }
+  strong {
+    font-weight: 600;
+    background: linear-gradient(transparent 65%, var(--highlight) 65%);
+    padding: 0 2px;
+  }
+  em.term {
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--paper-warm);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  /* ---------- CALLOUT BOXES ---------- */
+  .callout {
+    margin: 24px 0;
+    padding: 20px 24px;
+    border: 1px solid var(--rule);
+    background: var(--paper-warm);
+    position: relative;
+  }
+  .callout-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .callout-label::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .callout.trap {
+    border-left: 4px solid var(--accent);
+    background: #f8e8e0;
+  }
+  .callout.trap .callout-label { color: var(--accent); }
+  .callout.insight {
+    border-left: 4px solid var(--correct);
+    background: #e8f0e4;
+  }
+  .callout.insight .callout-label { color: var(--correct); }
+
+  /* ---------- COMPARISON TABLE ---------- */
+  .compare {
+    margin: 24px 0;
+    border: 1px solid var(--rule);
+    overflow-x: auto;
+  }
+  .compare table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .compare th {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .compare td {
+    padding: 12px;
+    border-bottom: 1px solid var(--paper-warm);
+    vertical-align: top;
+  }
+  .compare tr:last-child td { border-bottom: none; }
+  .compare tr:nth-child(even) td { background: rgba(235, 228, 212, 0.3); }
+
+  /* ---------- INTERACTIVE VISUALS ---------- */
+  .viz {
+    margin: 32px 0;
+    padding: 24px;
+    background: #fefaf2;
+    border: 1px solid var(--rule);
+  }
+  .viz-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .viz-controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    font-size: 13px;
+  }
+  .viz-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .viz-controls input[type="range"] {
+    width: 160px;
+    accent-color: var(--accent);
+  }
+  .viz-controls .val {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .viz-controls button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .viz-controls button:hover { background: var(--accent); }
+  svg.viz-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: white;
+    border: 1px solid var(--paper-warm);
+  }
+  .viz-readout {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+  .viz-readout strong {
+    background: none;
+    color: var(--ink);
+  }
+
+  /* ---------- QUIZ ---------- */
+  .quiz {
+    margin: 32px 0;
+    padding: 28px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    position: relative;
+  }
+  .quiz::before {
+    content: 'Q';
+    position: absolute;
+    top: -20px;
+    left: 24px;
+    font-family: 'Fraunces', serif;
+    font-weight: 800;
+    font-style: italic;
+    font-size: 52px;
+    color: var(--accent);
+    background: var(--paper);
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--ink);
+    line-height: 1;
+  }
+  .quiz-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-soft);
+    margin-bottom: 10px;
+    margin-top: 8px;
+  }
+  .quiz-question {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    line-height: 1.45;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .quiz-option {
+    background: rgba(244, 239, 230, 0.05);
+    border: 1px solid rgba(244, 239, 230, 0.2);
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--paper);
+    text-align: left;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .quiz-option:hover:not(.disabled) {
+    background: rgba(244, 239, 230, 0.1);
+    border-color: var(--accent-soft);
+  }
+  .quiz-option.disabled { cursor: default; }
+  .quiz-option .letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-soft);
+    flex-shrink: 0;
+  }
+  .quiz-option.correct {
+    background: rgba(61, 107, 61, 0.3);
+    border-color: var(--correct);
+  }
+  .quiz-option.wrong {
+    background: rgba(160, 44, 44, 0.25);
+    border-color: var(--wrong);
+  }
+  .quiz-option.reveal-correct {
+    background: rgba(61, 107, 61, 0.2);
+    border-color: var(--correct);
+  }
+  .quiz-explanation {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background: rgba(244, 239, 230, 0.08);
+    border-left: 3px solid var(--accent);
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+  }
+  .quiz-explanation.show { display: block; }
+  .quiz-explanation strong {
+    background: none;
+    color: var(--highlight);
+  }
+  .quiz-explanation .verdict {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .quiz-explanation .verdict.correct { color: #8fbd8f; }
+  .quiz-explanation .verdict.wrong { color: var(--accent-soft); }
+
+  /* ---------- SCORE TRACKER ---------- */
+  .score-tracker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 6px 10px;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+  }
+  .score-tracker strong {
+    background: none;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    border-top: 2px solid var(--rule);
+    padding: 40px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 60px;
+  }
+  footer em {
+    color: var(--accent);
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 14px;
+  }
+
+  /* ---------- FINAL EXAM BUTTON ---------- */
+  .final-exam-cta {
+    text-align: center;
+    padding: 48px 0;
+  }
+  .final-exam-cta button {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    padding: 18px 40px;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.2s;
+    border: 2px solid var(--accent);
+  }
+  .final-exam-cta button:hover {
+    background: transparent;
+    color: var(--accent);
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 700px) {
+    header { padding: 16px 20px; }
+    nav.toc { padding: 0 20px; }
+    main { padding: 24px 20px; }
+    .toc-inner { grid-template-columns: repeat(2, 1fr); }
+    h2 { font-size: 32px; }
+    .quiz { padding: 20px 18px; }
+    .quiz::before { font-size: 40px; width: 42px; height: 42px; top: -16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="course-info">CS 270 · Final Prep · Spring 2026</div>
+      <div class="masthead">Dimensionality <em>Reduction</em></div>
+    </div>
+    <div class="score-tracker" id="scoreTracker">Score: <strong><span id="scoreVal">0</span> / <span id="scoreTotal">0</span></strong></div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+</header>
+
+<nav class="toc">
+  <div class="toc-inner">
+    <a class="toc-item" data-target="curse">01 · Curse of D</a>
+    <a class="toc-item" data-target="fs">02 · Feature Selection</a>
+    <a class="toc-item" data-target="fr">03 · Feature Reduction</a>
+    <a class="toc-item" data-target="varcov">04 · Var & Covar</a>
+    <a class="toc-item" data-target="pca">05 · PCA</a>
+    <a class="toc-item" data-target="tsne">06 · t-SNE</a>
+    <a class="toc-item" data-target="umap">07 · UMAP</a>
+    <a class="toc-item" data-target="final">08 · Mixed Exam</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============================================= -->
+<!-- 1. CURSE OF DIMENSIONALITY                    -->
+<!-- ============================================= -->
+<section id="curse">
+  <div class="section-number">§ 01</div>
+  <h2>The Curse of <em>Dimensionality</em></h2>
+  <p class="lede">As dimensions grow, geometry stops behaving the way your intuition expects. Data becomes sparse, distances become meaningless, and every model you trust starts to fail in strange, quiet ways.</p>
+
+  <h3>The core idea</h3>
+  <p>The "curse" refers to a bundle of counterintuitive phenomena that emerge as the number of features <code>d</code> grows. The phrase was coined by Richard Bellman in the 1960s, and it shows up everywhere: in nearest-neighbor classifiers, density estimation, optimization, and clustering.</p>
+
+  <h4>The three faces of the curse</h4>
+  <p><strong>1. Exponential data requirements.</strong> To cover a unit hypercube with a fixed density of samples, you need an exponential number of points in <code>d</code>. If 10 points cover a 1D interval, you need 10<sup>d</sup> points to cover a <code>d</code>-dimensional cube at the same density. A dataset that felt rich in 2D is catastrophically sparse in 50D.</p>
+
+  <p><strong>2. Distance concentration.</strong> In high dimensions, the distance from a query point to its <em class="term">nearest</em> neighbor and its <em class="term">farthest</em> neighbor become nearly equal. The ratio (max − min) / min → 0. This is why k-NN, k-means, and any method built on Euclidean distance can silently break.</p>
+
+  <p><strong>3. Volume concentrates in the shell.</strong> In a high-dimensional ball, almost all the volume sits near the surface, not the interior. A thin shell of width ε around a unit ball contains nearly 100% of the volume once <code>d</code> is large. "Typical" points are all near the boundary.</p>
+
+  <div class="viz">
+    <div class="viz-title">Interactive — Distance Concentration</div>
+    <div class="viz-controls">
+      <label>Dimensions <span class="val" id="curseDimVal">2</span>
+        <input type="range" id="curseDim" min="1" max="500" value="2">
+      </label>
+      <button onclick="runCurseSim()">Resample</button>
+    </div>
+    <svg class="viz-svg" id="curseSvg" viewBox="0 0 800 220"></svg>
+    <div class="viz-readout" id="curseReadout"></div>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p>Students often say "the curse of dimensionality means models overfit in high dimensions." That's a <em>consequence</em>, not the definition. The curse is fundamentally <strong>geometric</strong> — about how distance, volume, and density behave. Overfitting is one downstream symptom.</p>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-label">Key insight</div>
+    <p>High-dimensional data rarely fills its ambient space. Real data usually lies on a much lower-dimensional <em class="term">manifold</em>. This is the "blessing" that makes dimensionality reduction possible at all: the intrinsic dimension is smaller than <code>d</code>.</p>
+  </div>
+
+  <div class="quiz" data-qid="curse1">
+    <div class="quiz-label">Question · Conceptual</div>
+    <div class="quiz-question">In a dataset with 1,000 features, a student finds that their k-NN classifier performs no better than random guessing. Which explanation is <em>most precise</em>?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>The model is overfitting because there are too many parameters.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>k-NN is a weak algorithm and always underperforms on large feature spaces.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Pairwise Euclidean distances concentrate as dimension grows, so "nearest" carries almost no information.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>The training set is too small relative to the number of classes.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> This is the distance-concentration face of the curse. For k-NN, the ratio of the farthest to nearest distance approaches 1 in high-D, so the notion of "closest point" loses discriminative power. A is a different concept (model complexity), B is wrong (k-NN is perfectly good in low-D), and D could be true for any algorithm and isn't specific to the symptom described.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="curse2">
+    <div class="quiz-label">Question · Geometric</div>
+    <div class="quiz-question">Consider a 100-dimensional unit ball. Roughly what fraction of its volume lies within the outer shell of thickness 0.1 (i.e., radius between 0.9 and 1.0)?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>About 10%, since the shell is 10% of the radius.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>About 50%.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>More than 99.99%.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>It depends on the coordinate system.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> The volume of a <code>d</code>-ball scales with <code>r<sup>d</sup></code>. The inner ball of radius 0.9 holds a fraction 0.9<sup>100</sup> ≈ 0.0000266 of the total volume. So <strong>&gt;99.99%</strong> of the volume sits in the outer 10% shell. This is why "typical" points in high-D are nearly all at the boundary — a huge violation of 2D/3D intuition.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 2. FEATURE SELECTION                          -->
+<!-- ============================================= -->
+<section id="fs">
+  <div class="section-number">§ 02</div>
+  <h2>Feature <em>Selection</em></h2>
+  <p class="lede">Choose a subset of the original features. Throw the rest away. The features that survive still mean exactly what they meant before.</p>
+
+  <h3>Why selection over reduction?</h3>
+  <p>Feature selection preserves <strong>interpretability</strong>. If your dataset has columns like "age," "blood pressure," and "cholesterol," the features you keep are still literally age, blood pressure, and cholesterol. Your doctor can read the model. Contrast this with PCA, where you end up with "0.4 × age − 0.7 × BP + 0.6 × chol" — mathematically fine, clinically opaque.</p>
+
+  <h4>Three families of methods</h4>
+
+  <div class="compare">
+    <table>
+      <thead>
+        <tr><th>Family</th><th>How it decides</th><th>Example</th><th>Tradeoff</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Filter</strong></td>
+          <td>Score each feature independently using a statistic (correlation, mutual info, chi-squared). Ignores the model.</td>
+          <td>Rank features by Pearson correlation with target, keep top k.</td>
+          <td>Fast, model-agnostic. Misses feature interactions — two weak features can be strong together and filters will drop both.</td>
+        </tr>
+        <tr>
+          <td><strong>Wrapper</strong></td>
+          <td>Train the model on candidate subsets and use its performance as the score. Treats the model as a black box.</td>
+          <td>Forward selection, backward elimination, recursive feature elimination (RFE).</td>
+          <td>Catches interactions, finds subsets tuned to the model. Expensive — exponential in the worst case, risk of overfitting the selection itself.</td>
+        </tr>
+        <tr>
+          <td><strong>Embedded</strong></td>
+          <td>Selection happens <em>during</em> model training as part of the learning objective.</td>
+          <td>L1 (Lasso) regularization, tree-based feature importance.</td>
+          <td>Best of both worlds in practice — integrated with training, usually efficient. Tied to a specific model family.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p>A feature with <strong>zero correlation to the target</strong> is not necessarily useless. Filter methods will drop it, but it might be essential in combination with another feature (classic example: XOR — each input is independently uncorrelated with the output but together determine it perfectly). This is the fundamental blind spot of univariate filters.</p>
+  </div>
+
+  <div class="quiz" data-qid="fs1">
+    <div class="quiz-label">Question · Method classification</div>
+    <div class="quiz-question">You fit a Lasso (L1-regularized) linear regression and observe that 40 of your 100 features have coefficients of exactly zero. This is an example of which type of feature selection?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Filter method, because L1 filters out features below a threshold.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>Wrapper method, because it wraps the linear model.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Embedded method, because selection occurs as part of model training.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>It is not feature selection — it is feature reduction.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> L1 regularization is the textbook example of an <strong>embedded</strong> method — selection is baked into the loss function itself, happening during training rather than before (filter) or around (wrapper) it. And importantly, it <em>is</em> selection, not reduction: the surviving features are still the original features with their original meanings. D is the tempting wrong answer if you've confused "shrinks the feature set" with "transforms the feature space."</p>
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="fs2">
+    <div class="quiz-label">Question · Why it fails</div>
+    <div class="quiz-question">A filter method ranks features by their individual correlation with the target and keeps the top 10. Which scenario is this approach <em>most likely</em> to handle poorly?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>A dataset where features are on very different scales.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>A dataset where the target is an XOR of two features, each with near-zero individual correlation.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>A dataset with a small number of samples.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>A dataset where most features are highly correlated with the target.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Filter methods evaluate features <strong>one at a time</strong>. In an XOR relationship, each input feature has near-zero individual correlation with the target, so the filter will discard both — destroying the signal. This is the canonical failure mode and exactly what wrapper and embedded methods are designed to catch.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 3. FEATURE REDUCTION                          -->
+<!-- ============================================= -->
+<section id="fr">
+  <div class="section-number">§ 03</div>
+  <h2>Feature <em>Reduction</em></h2>
+  <p class="lede">Rather than picking a subset, construct new features as combinations of the old ones. Fewer dimensions, but each dimension is a hybrid.</p>
+
+  <h3>Selection vs. Reduction — the crucial distinction</h3>
+  <p>This distinction is a classic MCQ trap. Both shrink the feature count, but they do it differently:</p>
+
+  <div class="compare">
+    <table>
+      <thead>
+        <tr><th></th><th>Feature Selection</th><th>Feature Reduction (Extraction)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>What it outputs</strong></td><td>A <em>subset</em> of original features</td><td>New <em>combinations</em> (usually linear or nonlinear projections)</td></tr>
+        <tr><td><strong>Interpretability</strong></td><td>High — features keep their meanings</td><td>Lower — new features are mixtures</td></tr>
+        <tr><td><strong>Information loss</strong></td><td>Discards entire columns</td><td>Can preserve most of the variance across all original columns</td></tr>
+        <tr><td><strong>Typical methods</strong></td><td>Lasso, RFE, mutual info ranking</td><td>PCA, t-SNE, UMAP, autoencoders, LDA</td></tr>
+        <tr><td><strong>When to use</strong></td><td>When interpretability matters or features are cheap to compute</td><td>When you need maximal compression or are feeding into a downstream model</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Linear vs. nonlinear reduction</h4>
+  <p>Reduction methods also split along the <strong>linear / nonlinear</strong> axis. PCA and LDA are linear — the new features are weighted sums of the old. t-SNE, UMAP, and autoencoders are nonlinear — they can capture curved manifolds that linear projections would flatten into uselessness.</p>
+
+  <div class="callout insight">
+    <div class="callout-label">Key insight</div>
+    <p>Feature reduction is fundamentally about finding a <strong>lower-dimensional representation that preserves some structure</strong>. What structure? It depends on the method:</p>
+    <p style="margin-top:8px;"><strong>PCA</strong> preserves <em>variance</em>. <strong>LDA</strong> preserves <em>class separability</em>. <strong>t-SNE / UMAP</strong> preserve <em>local neighborhoods</em>. Each answers a different question, and choosing the wrong one for your task gives misleading results.</p>
+  </div>
+
+  <div class="quiz" data-qid="fr1">
+    <div class="quiz-label">Question · Definitional</div>
+    <div class="quiz-question">Which of the following is a feature <em>reduction</em> technique, not a feature <em>selection</em> technique?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Recursive feature elimination with a random forest.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>Keeping the 20 features with the highest mutual information score.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Projecting the data onto the top 3 principal components.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Dropping features that have more than 50% missing values.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> PCA creates <em>new</em> features (principal components) that are linear combinations of the originals — this is reduction/extraction. A, B, and D all retain or discard <em>original</em> features unchanged, which makes them selection.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 4. VARIANCE AND COVARIANCE                    -->
+<!-- ============================================= -->
+<section id="varcov">
+  <div class="section-number">§ 04</div>
+  <h2>Variance and <em>Covariance</em></h2>
+  <p class="lede">Before PCA makes sense, you need to feel what variance and covariance <em>are</em> — not just compute them, but see the ellipse they draw.</p>
+
+  <h3>Variance — how far a single variable spreads</h3>
+  <p>For a single feature <code>X</code>, variance measures the average squared deviation from the mean:</p>
+  <p style="text-align:center; font-family:'JetBrains Mono', monospace; font-size:15px; padding:10px 0;">Var(X) = E[(X − μ)²] = (1/n) Σ (xᵢ − x̄)²</p>
+  <p>Variance is always ≥ 0. It is measured in the squared units of <code>X</code>. Standard deviation (its square root) lives in the original units and is often more interpretable.</p>
+
+  <h3>Covariance — how two variables move together</h3>
+  <p style="text-align:center; font-family:'JetBrains Mono', monospace; font-size:15px; padding:10px 0;">Cov(X, Y) = E[(X − μ<sub>X</sub>)(Y − μ<sub>Y</sub>)]</p>
+
+  <p>The <strong>sign</strong> tells you the relationship type. The <strong>magnitude</strong> depends on the scales of <code>X</code> and <code>Y</code>, which makes raw covariance hard to compare across variable pairs.</p>
+
+  <ul style="margin: 12px 0 12px 24px;">
+    <li><strong>Positive:</strong> when X is above its mean, Y tends to be above its mean.</li>
+    <li><strong>Negative:</strong> when X is above its mean, Y tends to be below its mean.</li>
+    <li><strong>Zero (or near zero):</strong> no <em>linear</em> relationship — but nonlinear relationships can still exist.</li>
+  </ul>
+
+  <h4>The covariance matrix</h4>
+  <p>For a dataset with <code>d</code> features, the covariance matrix <code>Σ</code> is a <code>d × d</code> symmetric matrix where:</p>
+  <ul style="margin: 12px 0 12px 24px;">
+    <li><strong>Diagonal entries</strong> Σ<sub>ii</sub> = Var(X<sub>i</sub>) — the variance of each feature.</li>
+    <li><strong>Off-diagonal entries</strong> Σ<sub>ij</sub> = Cov(X<sub>i</sub>, X<sub>j</sub>) — pairwise covariances.</li>
+    <li>The matrix is always <strong>symmetric</strong> and <strong>positive semi-definite</strong>.</li>
+  </ul>
+
+  <div class="viz">
+    <div class="viz-title">Interactive — covariance shapes the scatter</div>
+    <div class="viz-controls">
+      <label>Var(X) <span class="val" id="vxVal">1.0</span>
+        <input type="range" id="vx" min="0.2" max="3.0" step="0.1" value="1.0">
+      </label>
+      <label>Var(Y) <span class="val" id="vyVal">1.0</span>
+        <input type="range" id="vy" min="0.2" max="3.0" step="0.1" value="1.0">
+      </label>
+      <label>Cov(X,Y) <span class="val" id="cxyVal">0.0</span>
+        <input type="range" id="cxy" min="-1.5" max="1.5" step="0.05" value="0.0">
+      </label>
+      <button onclick="drawCovariance()">Resample</button>
+    </div>
+    <svg class="viz-svg" id="covSvg" viewBox="0 0 800 400"></svg>
+    <div class="viz-readout" id="covReadout"></div>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p><strong>Zero covariance ≠ independence.</strong> Covariance detects only <em>linear</em> relationships. Two variables can be perfectly deterministically related (e.g., <code>Y = X²</code> with <code>X</code> symmetric around zero) and still have covariance exactly zero. Independence implies zero covariance; the reverse is not true (except for jointly Gaussian variables, where they coincide).</p>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p>Covariance is <strong>scale-dependent</strong>. If you change X from meters to millimeters, its covariance with Y grows by 1000×. For scale-free comparison, use the <strong>Pearson correlation</strong> ρ = Cov(X,Y) / (σ<sub>X</sub> σ<sub>Y</sub>), which always lies in [−1, 1]. This is also why <em>PCA requires standardization</em> when features have different units.</p>
+  </div>
+
+  <div class="quiz" data-qid="vc1">
+    <div class="quiz-label">Question · Conceptual</div>
+    <div class="quiz-question">Two random variables X and Y satisfy <code>Cov(X, Y) = 0</code>. Which statement is <em>guaranteed</em>?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>X and Y are independent.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>X and Y have no linear relationship.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>X and Y are identically distributed.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>X and Y cannot be related in any way.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Covariance captures linear association only. A is the classic trap — zero covariance does not imply independence (except in the jointly Gaussian case). A deterministic nonlinear relationship like <code>Y = X²</code> with symmetric X has zero covariance but full dependence.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="vc2">
+    <div class="quiz-label">Question · Matrix structure</div>
+    <div class="quiz-question">Which of the following is <em>never</em> true of a valid covariance matrix?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>It is symmetric.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>Its diagonal entries are non-negative.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>It has a negative eigenvalue.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Its off-diagonal entries can be negative.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> A covariance matrix is positive semi-definite, meaning all eigenvalues are ≥ 0. A negative eigenvalue would correspond to some linear combination of variables having negative variance — impossible. A, B, and D are all legal (off-diagonal entries can absolutely be negative — that just means the pair of variables has negative covariance).
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 5. PCA                                        -->
+<!-- ============================================= -->
+<section id="pca">
+  <div class="section-number">§ 05</div>
+  <h2>Principal Component <em>Analysis</em></h2>
+  <p class="lede">Find the directions your data stretches farthest. Call those axes. Forget the rest.</p>
+
+  <h3>The intuition in one sentence</h3>
+  <p>PCA rotates the coordinate system so that the new axes — the <strong>principal components</strong> — point along directions of maximum variance. The first PC captures the most variance, the second captures the most remaining variance while being orthogonal to the first, and so on.</p>
+
+  <h3>The recipe</h3>
+  <ol style="margin: 12px 0 12px 24px;">
+    <li><strong>Center</strong> the data — subtract the mean of each feature. <em>(Critical. Skipping this gives you the wrong answer.)</em></li>
+    <li><strong>Standardize</strong> if features are on different scales (divide by each feature's std. dev.).</li>
+    <li>Compute the <strong>covariance matrix</strong> Σ of the centered data.</li>
+    <li>Find its <strong>eigenvectors and eigenvalues</strong>. Sort eigenvalues in descending order.</li>
+    <li>The top <code>k</code> eigenvectors form the projection matrix <code>W</code>.</li>
+    <li>Project: <code>X<sub>new</sub> = X W</code>. Done.</li>
+  </ol>
+
+  <p>Equivalently, you can skip explicitly forming the covariance matrix and apply <strong>SVD</strong> directly to the centered data matrix: <code>X = UΣVᵀ</code>, and the columns of <code>V</code> are your principal components. This is what libraries use in practice — it's numerically more stable.</p>
+
+  <h4>The variance / eigenvalue connection</h4>
+  <p>This is the heart of PCA and a favorite exam target:</p>
+  <p style="padding: 12px 16px; background: var(--paper-warm); border-left: 3px solid var(--accent); font-family:'Fraunces',serif; font-size:17px;">
+    The eigenvalue λ<sub>i</sub> of the covariance matrix equals <strong>the variance of the data along the corresponding principal component</strong>.
+  </p>
+  <p>So the "explained variance ratio" of the <code>i</code>-th component is λ<sub>i</sub> / (Σ λ<sub>j</sub>). A scree plot shows these ratios and you typically pick <code>k</code> at the elbow or at a cumulative threshold (e.g., 95%).</p>
+
+  <div class="viz">
+    <div class="viz-title">Interactive — the PCA axes</div>
+    <div class="viz-controls">
+      <label>Angle (°) <span class="val" id="pcaAngleVal">30</span>
+        <input type="range" id="pcaAngle" min="0" max="180" step="1" value="30">
+      </label>
+      <label>Spread ratio <span class="val" id="pcaRatioVal">3.0</span>
+        <input type="range" id="pcaRatio" min="1" max="8" step="0.2" value="3.0">
+      </label>
+      <button onclick="drawPCA()">Resample</button>
+    </div>
+    <svg class="viz-svg" id="pcaSvg" viewBox="0 0 800 400"></svg>
+    <div class="viz-readout" id="pcaReadout"></div>
+  </div>
+
+  <h4>What PCA is — and isn't</h4>
+  <div class="compare">
+    <table>
+      <thead><tr><th>PCA IS</th><th>PCA IS NOT</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A <strong>linear</strong> transformation</td>
+          <td>Nonlinear — it cannot unfold a manifold like a Swiss roll</td>
+        </tr>
+        <tr>
+          <td><strong>Unsupervised</strong> — uses no label information</td>
+          <td>Class-aware — that's LDA, which maximizes class separability</td>
+        </tr>
+        <tr>
+          <td>Variance-maximizing</td>
+          <td>Distance-preserving in general (except in the subspace it keeps)</td>
+        </tr>
+        <tr>
+          <td>Sensitive to feature scale — so standardize first</td>
+          <td>A feature selector — it transforms all features into new ones</td>
+        </tr>
+        <tr>
+          <td>Invertible up to reconstruction error</td>
+          <td>Lossless (unless you keep all <code>d</code> components)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p><strong>PCA ≠ best for classification.</strong> The direction of maximum variance is not necessarily the direction that separates classes. A common exam setup: imagine two class clusters stretched along one axis but separated along another. PCA will keep the stretch direction (high variance) and throw away the separation direction (lower variance). <strong>LDA</strong> is the supervised alternative that uses class labels to find the separating direction.</p>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p>Forgetting to <strong>center</strong> the data gives mathematically valid eigenvectors of <code>XᵀX</code>, but they no longer correspond to directions of variance — they correspond to directions of largest overall magnitude, which is a different thing. Forgetting to <strong>standardize</strong> lets a single high-variance feature (e.g., income in dollars vs. age in years) dominate PC1 for purely unit-based reasons.</p>
+  </div>
+
+  <div class="quiz" data-qid="pca1">
+    <div class="quiz-label">Question · Core mechanics</div>
+    <div class="quiz-question">In PCA, the principal components are the eigenvectors of the covariance matrix. The corresponding eigenvalues represent:</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>The distance of each component from the origin.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>The variance of the data along each principal component.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>The correlation between the component and the target label.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>The number of data points projected onto each component.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Each eigenvalue equals the variance of the projected data along its eigenvector. This is why we sort eigenvalues in descending order and keep the top <code>k</code> — we keep the <code>k</code> directions with highest variance. C is wrong because PCA is unsupervised and never sees the target label.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="pca2">
+    <div class="quiz-label">Question · Failure mode</div>
+    <div class="quiz-question">Consider a binary classification problem where classes are arranged like this: within-class spread is 10 along direction A, and the two class centers are separated by 2 along direction B (orthogonal to A). You apply PCA and keep only the first principal component. What happens?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Classification accuracy improves because noise is removed.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>The classes become harder to separate because PC1 aligns with direction A, not B.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>PCA always preserves class separability.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>PC1 will align with direction B since that's the discriminative direction.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> PCA is unsupervised and maximizes variance. Direction A has much higher variance (spread of 10) than direction B (spread of 2), so PC1 aligns with A — the <em>nonseparating</em> direction. Projecting onto PC1 collapses the class-separation information entirely. This is the canonical "PCA for classification can fail" example and a textbook motivator for <strong>LDA</strong>.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="pca3">
+    <div class="quiz-label">Question · Preprocessing</div>
+    <div class="quiz-question">You have a dataset with features: "age" (years, range 20–70), "income" (dollars, range 30,000–200,000), and "height" (cm, range 150–200). You run PCA without standardizing first. What is the most likely outcome?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>The first principal component will reflect a balanced mix of all three features.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>The first principal component will be dominated by income, simply because of its numeric scale.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>PCA will fail and throw an error.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>PCA is scale-invariant, so nothing changes.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Variance is computed in the feature's own units, so a feature measured in dollars will have vastly larger raw variance than one in years or centimeters. PC1 will collapse onto income almost entirely — not because income is "important," but because of its units. This is why standardization (z-score) is essentially mandatory when features have different scales.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 6. t-SNE                                      -->
+<!-- ============================================= -->
+<section id="tsne">
+  <div class="section-number">§ 06</div>
+  <h2>t-Distributed Stochastic Neighbor <em>Embedding</em></h2>
+  <p class="lede">A nonlinear method obsessed with one thing: preserving who your <em>neighbors</em> are. It makes beautiful cluster pictures. It also lies to you in very specific ways, and you need to know which ones.</p>
+
+  <h3>The intuition</h3>
+  <p>t-SNE (2008, van der Maaten &amp; Hinton) tries to place points in low-D such that <strong>points that were close in high-D stay close, and points that were far in high-D stay far</strong>. It does this probabilistically: it turns pairwise distances into probabilities of "being neighbors," and matches the high-D neighbor distribution to the low-D neighbor distribution.</p>
+
+  <h3>The mechanism, in pieces</h3>
+  <p><strong>1. High-D neighbor probabilities.</strong> For each point, place a Gaussian around it in the high-D space. The probability <code>p<sub>j|i</sub></code> that point <code>j</code> is a neighbor of point <code>i</code> is proportional to the Gaussian density at <code>j</code>. The Gaussian's bandwidth is tuned per-point via a parameter called <strong>perplexity</strong>, which roughly equals "effective number of neighbors."</p>
+
+  <p><strong>2. Low-D neighbor probabilities.</strong> In the low-D space, do the same but with a <strong>Student's t-distribution</strong> (with 1 degree of freedom = Cauchy). The t-distribution has heavier tails than a Gaussian, which gives far-apart points extra "room" to be placed far apart without penalty — this is what prevents the infamous "crowding problem" that afflicted the earlier SNE algorithm.</p>
+
+  <p><strong>3. Match the distributions.</strong> Minimize the KL divergence between the high-D and low-D neighbor distributions using gradient descent. Points iteratively move in the low-D space until neighborhoods align.</p>
+
+  <div class="viz">
+    <div class="viz-title">Interactive — the effect of perplexity</div>
+    <div class="viz-controls">
+      <label>Perplexity <span class="val" id="perpVal">30</span>
+        <input type="range" id="perp" min="2" max="100" step="1" value="30">
+      </label>
+      <button onclick="drawTSNE()">Re-embed</button>
+    </div>
+    <svg class="viz-svg" id="tsneSvg" viewBox="0 0 800 400"></svg>
+    <div class="viz-readout" id="tsneReadout"></div>
+  </div>
+
+  <h4>What t-SNE preserves — and what it doesn't</h4>
+
+  <div class="callout trap">
+    <div class="callout-label">Critical exam territory</div>
+    <p><strong>t-SNE preserves local structure. It does not preserve global structure.</strong></p>
+    <p style="margin-top:8px;">This has specific, testable consequences:</p>
+    <ul style="margin: 8px 0 0 20px;">
+      <li><strong>Cluster sizes are meaningless.</strong> A tiny cluster in the t-SNE plot may not be a "denser" cluster in the original data — t-SNE expands and contracts regions to suit its neighbor-matching objective.</li>
+      <li><strong>Distances between clusters are meaningless.</strong> Two clusters appearing far apart in the plot may be close in the original space, or vice versa.</li>
+      <li><strong>Perplexity dramatically changes the picture.</strong> Different perplexities can produce qualitatively different plots of the same data. It is not a method of absolute truth.</li>
+      <li><strong>It's stochastic.</strong> Different random seeds produce different embeddings. Run it more than once.</li>
+    </ul>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Another trap</div>
+    <p>t-SNE <strong>does not learn a mapping function</strong>. If you add a new data point later, you cannot simply apply t-SNE to project it — you need to re-run the whole optimization (or use an approximation like parametric t-SNE). This is a fundamental difference from PCA, which gives you an explicit projection matrix you can reuse.</p>
+  </div>
+
+  <div class="quiz" data-qid="tsne1">
+    <div class="quiz-label">Question · What it preserves</div>
+    <div class="quiz-question">You produce a 2D t-SNE plot. Three clusters appear: A, B, and C. In the plot, A and B are close to each other, and C is far across the canvas. What can you conclude about the original high-dimensional relationships?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>A and B are similar in the original space; C is dissimilar from both.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>C contains more variance than A or B.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Very little — between-cluster distances in t-SNE plots are not meaningful.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>A, B, and C are definitely three distinct classes in the data.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> t-SNE is tuned to preserve <em>local</em> neighborhoods, not global geometry. The distance between two clusters on a t-SNE plot is essentially an artifact of the optimization and has no reliable relationship to their high-D distance. A and D are exactly the kind of overinterpretation the van der Maaten / Wattenberg "How to Use t-SNE Effectively" paper warns against.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="tsne2">
+    <div class="quiz-label">Question · Mechanism</div>
+    <div class="quiz-question">Why does t-SNE use a Student's t-distribution in the low-dimensional space instead of a Gaussian?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Because t-distributions are cheaper to compute.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>Its heavier tails let distant points remain far apart, mitigating the crowding problem.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>Because Gaussians cannot be used to model probability distributions.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>To make the algorithm supervised.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> The heavy tails are the whole point. When you compress high-D space into 2D, there isn't enough "room" for all the distant points — in a Gaussian scheme, moderate distances get attractive forces that crowd everything together. The t-distribution (specifically Cauchy, df=1) assigns higher probability to large distances, meaning distant points can stay distant in 2D without incurring a huge penalty. This is the <strong>crowding problem</strong> solution and the key innovation over the original SNE.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="tsne3">
+    <div class="quiz-label">Question · Practical usage</div>
+    <div class="quiz-question">You train a model and want to deploy it. As new data streams in, you want to visualize where each new point lands relative to your training data. What's the problem with using vanilla t-SNE for this?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>t-SNE cannot handle real-valued data.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>t-SNE does not produce a reusable mapping; it re-optimizes from scratch each run.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>t-SNE cannot produce a 2D output.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>t-SNE requires class labels to run.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Vanilla t-SNE doesn't learn a function <code>f: high-D → low-D</code>; it just positions a specific set of points. New points don't have coordinates, and you'd have to re-optimize (and even then, the previous points could shift). Contrast with PCA (explicit projection matrix) and UMAP (can fit + transform new data).
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 7. UMAP                                       -->
+<!-- ============================================= -->
+<section id="umap">
+  <div class="section-number">§ 07</div>
+  <h2>Uniform Manifold Approximation and <em>Projection</em></h2>
+  <p class="lede">The spiritual successor to t-SNE — faster, scalable to millions of points, preserves more global structure, and built on a pile of topology that you do not need to fully understand to use well.</p>
+
+  <h3>What UMAP brings to the table</h3>
+  <p>UMAP (2018, McInnes et al.) was designed to address t-SNE's main limitations. It builds a graph of the data's local neighborhoods in high-D, then finds a low-D layout whose graph structure matches. The key advantages:</p>
+
+  <ul style="margin: 12px 0 12px 24px;">
+    <li><strong>Much faster</strong> than t-SNE on large datasets — can embed millions of points.</li>
+    <li><strong>Preserves more global structure</strong> — between-cluster distances in UMAP plots are <em>more</em> meaningful than in t-SNE (though still not fully trustworthy).</li>
+    <li><strong>Produces a reusable mapping.</strong> You can fit UMAP on training data and then transform new data points into the same embedding space — something t-SNE cannot do.</li>
+    <li><strong>Flexible output dimension.</strong> Useful not just for 2D/3D visualization but also as a general-purpose dimensionality reduction tool feeding into downstream models.</li>
+  </ul>
+
+  <h3>The two main parameters</h3>
+
+  <div class="compare">
+    <table>
+      <thead><tr><th>Parameter</th><th>What it controls</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>n_neighbors</code></td>
+          <td>Size of the local neighborhood used to construct the graph.</td>
+          <td><strong>Small</strong> (5–15): focuses on very local structure, fragments the data into many small pieces. <strong>Large</strong> (50+): captures more global structure, may smear out fine detail.</td>
+        </tr>
+        <tr>
+          <td><code>min_dist</code></td>
+          <td>Minimum distance points are allowed to occupy in the low-D embedding.</td>
+          <td><strong>Small</strong> (0.0–0.1): tightly packs similar points, emphasizes cluster structure. <strong>Large</strong> (0.5+): spreads points out, emphasizes broad topological relationships.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>UMAP vs. t-SNE — the comparison you'll be tested on</h4>
+  <div class="compare">
+    <table>
+      <thead><tr><th></th><th>t-SNE</th><th>UMAP</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Speed</strong></td><td>Slow; scales poorly past ~100k points</td><td>Fast; handles millions of points</td></tr>
+        <tr><td><strong>Global structure</strong></td><td>Largely destroyed</td><td>Better preserved (though not perfectly)</td></tr>
+        <tr><td><strong>Local structure</strong></td><td>Excellent</td><td>Excellent</td></tr>
+        <tr><td><strong>Reusable mapping</strong></td><td>No</td><td>Yes — can transform new points</td></tr>
+        <tr><td><strong>Theoretical basis</strong></td><td>Probabilistic neighbor matching (KL divergence)</td><td>Topological / manifold approximation (cross-entropy on fuzzy simplicial sets)</td></tr>
+        <tr><td><strong>Output dimensions</strong></td><td>Usually 2 or 3; higher is unstable</td><td>Any dimension; useful as general-purpose feature extractor</td></tr>
+        <tr><td><strong>Main knob</strong></td><td>Perplexity</td><td>n_neighbors &amp; min_dist</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-label">Key insight</div>
+    <p>Both t-SNE and UMAP are <strong>manifold learning</strong> methods — they assume the data lies on a curved surface embedded in high-D space, and they try to flatten that surface into 2D or 3D. PCA, by contrast, is strictly linear and would <em>rip apart</em> a curved manifold like the classic Swiss roll.</p>
+  </div>
+
+  <div class="callout trap">
+    <div class="callout-label">Common trap</div>
+    <p>UMAP is <strong>still imperfect on global structure</strong>. It's better than t-SNE, but cluster-to-cluster distances are still not a reliable readout of high-D distances. Students sometimes read "UMAP preserves global structure" as "UMAP plots can be interpreted quantitatively." They can't be. Treat all UMAP/t-SNE plots as <em>qualitative</em>, not quantitative.</p>
+  </div>
+
+  <div class="quiz" data-qid="umap1">
+    <div class="quiz-label">Question · Method comparison</div>
+    <div class="quiz-question">Which of the following is a capability of UMAP that vanilla t-SNE lacks?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Producing a 2D visualization.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>Handling high-dimensional input.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Transforming new, unseen data points into the same embedding space after fitting.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Being deterministic across runs with different random seeds.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> UMAP's fit/transform paradigm is a major practical advantage — you can fit on training data and then map new test points onto the same embedding. Vanilla t-SNE has to re-optimize from scratch. D is a distractor: UMAP also has stochasticity and produces different results with different seeds.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="umap2">
+    <div class="quiz-label">Question · Tuning</div>
+    <div class="quiz-question">A researcher runs UMAP with <code>n_neighbors=5</code> and gets many small, fragmented clusters. They want the visualization to reflect more of the broad, global structure of the dataset. What should they do?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Decrease <code>n_neighbors</code> further to 2.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>Increase <code>n_neighbors</code> to a larger value like 50.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>Set <code>min_dist</code> to 0.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Switch to PCA, which always preserves global structure better.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> <code>n_neighbors</code> controls the local/global tradeoff. Small values zoom in on tight local structure and fragment the dataset; large values widen the neighborhood and emphasize broad topology. C would actually tighten clusters further (concentrates points). D is not clearly true — PCA preserves variance, which is a different notion of "global."
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="umap3">
+    <div class="quiz-label">Question · Mixed — final boss of this section</div>
+    <div class="quiz-question">A student applies both PCA and UMAP to the same dataset of 50,000 points with 200 features. They find that UMAP reveals three distinct clusters, but PCA with 2 components does not separate them at all. Which interpretation is most accurate?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>PCA is broken; they should trust UMAP entirely.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>The clusters do not exist; UMAP is hallucinating them.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>The cluster structure likely lies along a nonlinear manifold that UMAP can capture but linear PCA cannot.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>The dataset has too many features for PCA.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> PCA is strictly linear — if clusters are separated along a curved manifold (think Swiss roll, or concentric rings), a linear projection will mix them together while UMAP can unfold the manifold. This scenario is a textbook motivator for nonlinear methods. B is too strong — UMAP <em>can</em> hallucinate structure with bad parameters, but when the result is stable across parameters and seeds, it's usually real. A is overconfident in the opposite direction.
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- 8. FINAL MIXED EXAM                           -->
+<!-- ============================================= -->
+<section id="final">
+  <div class="section-number">§ 08</div>
+  <h2>Mixed <em>Final Exam</em></h2>
+  <p class="lede">All seven topics, unpredictable order, harder traps. This is what the professor's MCQs look like.</p>
+
+  <div class="quiz" data-qid="f1">
+    <div class="quiz-label">Question 1 · Mixed</div>
+    <div class="quiz-question">Which of the following statements is <em>true</em>?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>PCA is a feature selection method.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>t-SNE and UMAP both produce deterministic embeddings.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>The curse of dimensionality explains why distance-based methods degrade as feature count grows.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Lasso is a wrapper feature selection method.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> A is wrong (PCA is reduction/extraction, not selection). B is wrong (both have stochastic components). D is wrong (Lasso is embedded, not wrapper).
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f2">
+    <div class="quiz-label">Question 2 · Mixed</div>
+    <div class="quiz-question">You want to reduce 1,000 features to 2 dimensions for a scatter plot, and you need the plot to reflect the <em>global</em> geometry of the data (cluster-to-cluster distances should be meaningful). Which method is the best fit?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="true"><span class="letter">A</span><span>PCA</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>t-SNE</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>Lasso</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Recursive feature elimination</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>A is correct.</strong> Of the reduction methods, PCA best preserves global linear structure (variance directions), and distances in its projection are metric. t-SNE explicitly destroys global structure. UMAP is better than t-SNE globally but still not metric. C and D are selection methods and don't create new axes.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f3">
+    <div class="quiz-label">Question 3 · Mixed</div>
+    <div class="quiz-question">A dataset has 5 features. Three of them are nearly identical copies of each other (high pairwise correlation). You apply PCA. Roughly what should happen?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>You will still need 5 components to capture all variance.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>The first principal component will capture most of the shared variance among the three correlated features, and you can likely reduce to ~3 components with little loss.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>PCA cannot be applied when features are correlated.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>The three correlated features will be dropped entirely.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Correlated features share variance, and PCA is <em>designed</em> to collapse that shared variance into a single direction. The three near-copies will largely project onto one principal component. C is backwards — PCA loves correlated features; that's when reduction is most effective. D confuses reduction with selection (PCA doesn't drop features, it combines them).
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f4">
+    <div class="quiz-label">Question 4 · Mixed</div>
+    <div class="quiz-question">Your colleague claims: "I ran t-SNE with perplexity 30, and cluster A has diameter 5 while cluster B has diameter 15, so cluster B has three times the spread of cluster A in the original data." What's wrong?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Nothing — cluster diameter in t-SNE is directly proportional to high-D spread.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>t-SNE cluster sizes are not meaningful; they depend on local density and optimization dynamics.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>The perplexity of 30 is incorrect for cluster comparisons.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>t-SNE doesn't produce clusters at all.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> t-SNE preserves <em>local neighborhoods</em>, not distances or sizes. A dense cluster will be drawn differently than a sparse one, and the relative sizes of clusters on the plot don't correspond to their original spreads. This is one of the most frequently cited misuses of t-SNE.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f5">
+    <div class="quiz-label">Question 5 · Mixed</div>
+    <div class="quiz-question">Which statement correctly distinguishes feature selection from feature reduction?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Feature selection is always faster than feature reduction.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>Feature selection produces new features; feature reduction discards existing ones.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>Feature selection keeps a subset of original features; feature reduction creates new features as combinations of the originals.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Feature reduction is supervised; feature selection is unsupervised.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> B is exactly reversed. A is false (PCA is very fast). D is false (both families contain supervised and unsupervised methods; e.g., mutual-info selection is supervised, PCA reduction is unsupervised).
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f6">
+    <div class="quiz-label">Question 6 · Mixed</div>
+    <div class="quiz-question">A covariance matrix with 100 features has eigenvalues sorted in descending order: λ₁ = 50, λ₂ = 30, λ₃ = 10, λ₄ = 5, λ₅ through λ₁₀₀ ≈ 0. You want to retain 90% of the total variance via PCA. How many components do you keep?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>1</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>3</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>4</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>100</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> Total variance = sum of all eigenvalues ≈ 50 + 30 + 10 + 5 = 95 (others are negligible). Cumulative explained variance: PC1 = 50/95 ≈ 52.6%, PC1+2 = 80/95 ≈ 84.2%, PC1+2+3 = 90/95 ≈ 94.7%. So 3 components gets you past 90%.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f7">
+    <div class="quiz-label">Question 7 · Mixed</div>
+    <div class="quiz-question">You train an image classifier on 50×50 grayscale images (2,500 features). You need to visualize the data in 2D to inspect cluster structure and you suspect classes lie on a nonlinear manifold. You also need to project new test images into the same space for live monitoring. Best choice?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>PCA to 2 components — simplest and fastest.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">B</span><span>t-SNE — best known for visualization.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">C</span><span>UMAP — handles nonlinearity and supports transforming new data.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Lasso — will pick the 2 most important pixels.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>C is correct.</strong> Three constraints: (1) 2D visualization — all options can do this. (2) Nonlinear manifold — rules out PCA (linear) and Lasso (selects pixels, not combinations). (3) Must project new test data — rules out t-SNE, which has no reusable mapping. Only UMAP satisfies all three.
+    </div>
+  </div>
+
+  <div class="quiz" data-qid="f8">
+    <div class="quiz-label">Question 8 · Mixed</div>
+    <div class="quiz-question">You have data with 3 features. Cov(X₁,X₂) = 0, Cov(X₁,X₃) = 0, Cov(X₂,X₃) = 0, and all three have equal variance. Running PCA on this dataset would:</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="false"><span class="letter">A</span><span>Produce one dominant principal component.</span></button>
+      <button class="quiz-option" data-correct="true"><span class="letter">B</span><span>Produce three principal components with approximately equal eigenvalues — PCA gives no meaningful reduction.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">C</span><span>Fail because the covariance matrix is singular.</span></button>
+      <button class="quiz-option" data-correct="false"><span class="letter">D</span><span>Produce zero principal components.</span></button>
+    </div>
+    <div class="quiz-explanation">
+      <span class="verdict"></span>
+      <strong>B is correct.</strong> The covariance matrix is a scalar multiple of the identity (equal diagonal, zero off-diagonal). Its eigenvalues are all equal, and every direction has the same variance — there is no "preferred" direction. PCA gives you a valid orthogonal basis but no reduction opportunity: dropping any component costs exactly 1/3 of the variance. This is PCA's fundamental limitation: <strong>it requires redundancy (correlation) in the features to be useful.</strong>
+    </div>
+  </div>
+
+  <div class="final-exam-cta">
+    <button onclick="showFinalScore()">See Final Score</button>
+  </div>
+  <div id="finalScoreDisplay" style="display:none; text-align:center; margin-top:24px; padding:32px; background:var(--ink); color:var(--paper);">
+    <div class="quiz-label" style="color:var(--accent-soft);">Your final exam result</div>
+    <div id="finalScoreText" style="font-family:'Fraunces',serif; font-size:56px; font-weight:800; letter-spacing:-0.02em; line-height:1; margin:12px 0;"></div>
+    <div id="finalScoreMsg" style="font-family:'Fraunces',serif; font-size:18px; font-style:italic; color:var(--accent-soft);"></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <em>Good luck on your final.</em><br><br>
+  CS 270 · Dimensionality Reduction · Built for deep conceptual mastery
+</footer>
+
+<script>
+// ============= QUIZ STATE =============
+const quizState = {};
+let totalQuestions = 0;
+let correctAnswers = 0;
+
+document.querySelectorAll('.quiz').forEach(q => {
+  const qid = q.dataset.qid;
+  quizState[qid] = { answered: false, correct: null };
+  totalQuestions++;
+
+  q.querySelectorAll('.quiz-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      if (quizState[qid].answered) return;
+      const isCorrect = opt.dataset.correct === 'true';
+      quizState[qid].answered = true;
+      quizState[qid].correct = isCorrect;
+
+      // Disable all options
+      q.querySelectorAll('.quiz-option').forEach(o => {
+        o.classList.add('disabled');
+        if (o.dataset.correct === 'true' && !isCorrect) {
+          o.classList.add('reveal-correct');
+        }
+      });
+
+      if (isCorrect) {
+        opt.classList.add('correct');
+        correctAnswers++;
+      } else {
+        opt.classList.add('wrong');
+      }
+
+      const explanation = q.querySelector('.quiz-explanation');
+      const verdict = explanation.querySelector('.verdict');
+      verdict.textContent = isCorrect ? '✓ Correct' : '✗ Not quite';
+      verdict.className = 'verdict ' + (isCorrect ? 'correct' : 'wrong');
+      explanation.classList.add('show');
+
+      updateScore();
+    });
+  });
+});
+
+document.getElementById('scoreTotal').textContent = totalQuestions;
+
+function updateScore() {
+  document.getElementById('scoreVal').textContent = correctAnswers;
+  const answered = Object.values(quizState).filter(s => s.answered).length;
+  document.getElementById('progressFill').style.width = (answered / totalQuestions * 100) + '%';
+}
+
+function showFinalScore() {
+  const display = document.getElementById('finalScoreDisplay');
+  display.style.display = 'block';
+  document.getElementById('finalScoreText').textContent = correctAnswers + '/' + totalQuestions;
+  const pct = correctAnswers / totalQuestions;
+  let msg;
+  if (pct === 1) msg = "Flawless. You're ready.";
+  else if (pct >= 0.85) msg = "Strong performance. Review the ones you missed and you're set.";
+  else if (pct >= 0.7) msg = "Solid base. Go back and re-read the sections tied to your wrong answers.";
+  else if (pct >= 0.5) msg = "There are gaps. Re-study the callout boxes — they're where the traps live.";
+  else msg = "Start over from the top. The concepts are there; you need another pass.";
+  document.getElementById('finalScoreMsg').textContent = msg;
+  display.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ============= TOC NAVIGATION =============
+document.querySelectorAll('.toc-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.getElementById(item.dataset.target);
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+// Active section highlighting
+const sections = document.querySelectorAll('section');
+const tocItems = document.querySelectorAll('.toc-item');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    const rect = s.getBoundingClientRect();
+    if (rect.top <= 200) current = s.id;
+  });
+  tocItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.target === current);
+  });
+});
+
+// ============= VIZ 1: CURSE OF DIMENSIONALITY =============
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function runCurseSim() {
+  const d = parseInt(document.getElementById('curseDim').value);
+  document.getElementById('curseDimVal').textContent = d;
+
+  const N = 500;
+  // Generate N points uniformly in [0,1]^d, compute pairwise distances from origin-ish reference
+  const points = [];
+  for (let i = 0; i < N; i++) {
+    const p = [];
+    for (let j = 0; j < d; j++) p.push(Math.random());
+    points.push(p);
+  }
+  // Compute distances from point 0 to all others
+  const dists = [];
+  for (let i = 1; i < N; i++) {
+    let s = 0;
+    for (let j = 0; j < d; j++) {
+      const diff = points[0][j] - points[i][j];
+      s += diff * diff;
+    }
+    dists.push(Math.sqrt(s));
+  }
+  dists.sort((a, b) => a - b);
+  const minD = dists[0];
+  const maxD = dists[dists.length - 1];
+  const ratio = (maxD - minD) / minD;
+
+  // Draw histogram
+  const svg = document.getElementById('curseSvg');
+  svg.innerHTML = '';
+  const W = 800, H = 220, pad = 30;
+  const bins = 40;
+  const lo = Math.min(...dists);
+  const hi = Math.max(...dists);
+  const binW = (hi - lo) / bins;
+  const counts = new Array(bins).fill(0);
+  dists.forEach(x => {
+    const b = Math.min(bins - 1, Math.floor((x - lo) / binW));
+    counts[b]++;
+  });
+  const maxC = Math.max(...counts);
+  const bw = (W - 2 * pad) / bins;
+  counts.forEach((c, i) => {
+    const h = (c / maxC) * (H - 2 * pad);
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', pad + i * bw);
+    rect.setAttribute('y', H - pad - h);
+    rect.setAttribute('width', bw - 1);
+    rect.setAttribute('height', h);
+    rect.setAttribute('fill', '#c8441f');
+    rect.setAttribute('opacity', '0.75');
+    svg.appendChild(rect);
+  });
+  // Axis labels
+  const xl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  xl.setAttribute('x', pad);
+  xl.setAttribute('y', H - 8);
+  xl.setAttribute('font-family', 'JetBrains Mono');
+  xl.setAttribute('font-size', '11');
+  xl.setAttribute('fill', '#7a7267');
+  xl.textContent = 'min: ' + minD.toFixed(2);
+  svg.appendChild(xl);
+  const xr = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  xr.setAttribute('x', W - pad);
+  xr.setAttribute('y', H - 8);
+  xr.setAttribute('text-anchor', 'end');
+  xr.setAttribute('font-family', 'JetBrains Mono');
+  xr.setAttribute('font-size', '11');
+  xr.setAttribute('fill', '#7a7267');
+  xr.textContent = 'max: ' + maxD.toFixed(2);
+  svg.appendChild(xr);
+  const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  title.setAttribute('x', W / 2);
+  title.setAttribute('y', 20);
+  title.setAttribute('text-anchor', 'middle');
+  title.setAttribute('font-family', 'Fraunces');
+  title.setAttribute('font-size', '14');
+  title.setAttribute('fill', '#1a1814');
+  title.textContent = 'Distribution of distances from one point to ' + (N - 1) + ' others';
+  svg.appendChild(title);
+
+  document.getElementById('curseReadout').innerHTML =
+    'In <strong>d = ' + d + '</strong>, the ratio (max − min) / min = <strong>' + ratio.toFixed(3) + '</strong>. ' +
+    'As d grows, this ratio shrinks toward 0 — all pairwise distances concentrate around the same value, and "nearest neighbor" loses meaning.';
+}
+runCurseSim();
+document.getElementById('curseDim').addEventListener('input', runCurseSim);
+
+// ============= VIZ 2: COVARIANCE ELLIPSE =============
+function drawCovariance() {
+  const vx = parseFloat(document.getElementById('vx').value);
+  const vy = parseFloat(document.getElementById('vy').value);
+  let cxy = parseFloat(document.getElementById('cxy').value);
+  document.getElementById('vxVal').textContent = vx.toFixed(1);
+  document.getElementById('vyVal').textContent = vy.toFixed(1);
+  document.getElementById('cxyVal').textContent = cxy.toFixed(2);
+
+  // Ensure positive semi-definite
+  const maxC = Math.sqrt(vx * vy) * 0.99;
+  if (Math.abs(cxy) > maxC) cxy = Math.sign(cxy) * maxC;
+
+  // Generate correlated gaussian samples via Cholesky-like
+  // Sigma = [[vx, cxy], [cxy, vy]]
+  // L = chol(Sigma): L11 = sqrt(vx), L21 = cxy/sqrt(vx), L22 = sqrt(vy - cxy^2/vx)
+  const L11 = Math.sqrt(vx);
+  const L21 = cxy / L11;
+  const L22 = Math.sqrt(Math.max(0, vy - cxy * cxy / vx));
+
+  const N = 300;
+  const samples = [];
+  for (let i = 0; i < N; i++) {
+    const z1 = randn(), z2 = randn();
+    const x = L11 * z1;
+    const y = L21 * z1 + L22 * z2;
+    samples.push([x, y]);
+  }
+
+  const svg = document.getElementById('covSvg');
+  svg.innerHTML = '';
+  const W = 800, H = 400, cx = W / 2, cy = H / 2;
+  const scale = 50;
+
+  // Axes
+  const axH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axH.setAttribute('x1', 0); axH.setAttribute('x2', W);
+  axH.setAttribute('y1', cy); axH.setAttribute('y2', cy);
+  axH.setAttribute('stroke', '#d4cebf'); axH.setAttribute('stroke-width', '1');
+  svg.appendChild(axH);
+  const axV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  axV.setAttribute('x1', cx); axV.setAttribute('x2', cx);
+  axV.setAttribute('y1', 0); axV.setAttribute('y2', H);
+  axV.setAttribute('stroke', '#d4cebf'); axV.setAttribute('stroke-width', '1');
+  svg.appendChild(axV);
+
+  // Points
+  samples.forEach(([x, y]) => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', cx + x * scale);
+    circle.setAttribute('cy', cy - y * scale);
+    circle.setAttribute('r', '2.5');
+    circle.setAttribute('fill', '#1a1814');
+    circle.setAttribute('opacity', '0.55');
+    svg.appendChild(circle);
+  });
+
+  // Compute eigenvectors of covariance matrix for ellipse orientation
+  const tr = vx + vy;
+  const det = vx * vy - cxy * cxy;
+  const disc = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+  const lam1 = tr / 2 + disc;
+  const lam2 = tr / 2 - disc;
+  // eigenvector for lam1: (cxy, lam1 - vx) if cxy != 0, else axis-aligned
+  let vx1, vy1;
+  if (Math.abs(cxy) > 1e-6) {
+    vx1 = cxy; vy1 = lam1 - vx;
+    const n = Math.sqrt(vx1 * vx1 + vy1 * vy1);
+    vx1 /= n; vy1 /= n;
+  } else {
+    if (vx >= vy) { vx1 = 1; vy1 = 0; } else { vx1 = 0; vy1 = 1; }
+  }
+  const angle = Math.atan2(vy1, vx1) * 180 / Math.PI;
+
+  // Draw 2-sigma ellipse
+  const ell = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  ell.setAttribute('cx', cx);
+  ell.setAttribute('cy', cy);
+  ell.setAttribute('rx', 2 * Math.sqrt(lam1) * scale);
+  ell.setAttribute('ry', 2 * Math.sqrt(lam2) * scale);
+  ell.setAttribute('transform', 'rotate(' + (-angle) + ' ' + cx + ' ' + cy + ')');
+  ell.setAttribute('fill', 'none');
+  ell.setAttribute('stroke', '#c8441f');
+  ell.setAttribute('stroke-width', '2.5');
+  ell.setAttribute('stroke-dasharray', '6 4');
+  svg.appendChild(ell);
+
+  // Principal axis lines
+  const len = Math.sqrt(lam1) * scale * 2.2;
+  const mainAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  mainAxis.setAttribute('x1', cx - vx1 * len);
+  mainAxis.setAttribute('y1', cy + vy1 * len);
+  mainAxis.setAttribute('x2', cx + vx1 * len);
+  mainAxis.setAttribute('y2', cy - vy1 * len);
+  mainAxis.setAttribute('stroke', '#c8441f');
+  mainAxis.setAttribute('stroke-width', '2');
+  svg.appendChild(mainAxis);
+
+  const corr = cxy / Math.sqrt(vx * vy);
+  document.getElementById('covReadout').innerHTML =
+    'Covariance matrix Σ = [[' + vx.toFixed(2) + ', ' + cxy.toFixed(2) + '], [' + cxy.toFixed(2) + ', ' + vy.toFixed(2) + ']]. ' +
+    'Pearson correlation ρ = <strong>' + corr.toFixed(3) + '</strong>. ' +
+    'Eigenvalues: λ₁ = ' + lam1.toFixed(2) + ', λ₂ = ' + lam2.toFixed(2) + '. ' +
+    'The red dashed ellipse is the 2σ contour; the red line is the direction of the first principal component.';
+}
+drawCovariance();
+['vx', 'vy', 'cxy'].forEach(id => {
+  document.getElementById(id).addEventListener('input', drawCovariance);
+});
+
+// ============= VIZ 3: PCA =============
+function drawPCA() {
+  const angleDeg = parseFloat(document.getElementById('pcaAngle').value);
+  const ratio = parseFloat(document.getElementById('pcaRatio').value);
+  document.getElementById('pcaAngleVal').textContent = angleDeg.toFixed(0);
+  document.getElementById('pcaRatioVal').textContent = ratio.toFixed(1);
+
+  const theta = angleDeg * Math.PI / 180;
+  const cosT = Math.cos(theta), sinT = Math.sin(theta);
+
+  const N = 250;
+  const samples = [];
+  for (let i = 0; i < N; i++) {
+    // Generate along x-axis with high variance, y with low
+    const a = randn() * ratio;
+    const b = randn() * 1;
+    // Rotate
+    const x = a * cosT - b * sinT;
+    const y = a * sinT + b * cosT;
+    samples.push([x, y]);
+  }
+
+  // Compute sample covariance
+  let mx = 0, my = 0;
+  samples.forEach(([x, y]) => { mx += x; my += y; });
+  mx /= N; my /= N;
+  let vx = 0, vy = 0, cxy = 0;
+  samples.forEach(([x, y]) => {
+    vx += (x - mx) ** 2;
+    vy += (y - my) ** 2;
+    cxy += (x - mx) * (y - my);
+  });
+  vx /= N; vy /= N; cxy /= N;
+
+  // Eigen-decomp
+  const tr = vx + vy;
+  const det = vx * vy - cxy * cxy;
+  const disc = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+  const lam1 = tr / 2 + disc;
+  const lam2 = tr / 2 - disc;
+  let ex, ey;
+  if (Math.abs(cxy) > 1e-6) {
+    ex = cxy; ey = lam1 - vx;
+    const n = Math.sqrt(ex * ex + ey * ey);
+    ex /= n; ey /= n;
+  } else {
+    if (vx >= vy) { ex = 1; ey = 0; } else { ex = 0; ey = 1; }
+  }
+
+  const svg = document.getElementById('pcaSvg');
+  svg.innerHTML = '';
+  const W = 800, H = 400, cx = W / 2, cy = H / 2;
+  const scale = 30;
+
+  // Axes
+  ['x', 'y'].forEach(ax => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    if (ax === 'x') {
+      line.setAttribute('x1', 0); line.setAttribute('x2', W);
+      line.setAttribute('y1', cy); line.setAttribute('y2', cy);
+    } else {
+      line.setAttribute('x1', cx); line.setAttribute('x2', cx);
+      line.setAttribute('y1', 0); line.setAttribute('y2', H);
+    }
+    line.setAttribute('stroke', '#d4cebf');
+    line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+  });
+
+  // Points
+  samples.forEach(([x, y]) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', cx + x * scale);
+    c.setAttribute('cy', cy - y * scale);
+    c.setAttribute('r', '2.5');
+    c.setAttribute('fill', '#1a1814');
+    c.setAttribute('opacity', '0.55');
+    svg.appendChild(c);
+  });
+
+  // PC1 (red, long)
+  const len1 = Math.sqrt(lam1) * scale * 2.3;
+  const pc1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  pc1.setAttribute('x1', cx - ex * len1); pc1.setAttribute('y1', cy + ey * len1);
+  pc1.setAttribute('x2', cx + ex * len1); pc1.setAttribute('y2', cy - ey * len1);
+  pc1.setAttribute('stroke', '#c8441f'); pc1.setAttribute('stroke-width', '3');
+  svg.appendChild(pc1);
+
+  // PC2 (green, short, orthogonal)
+  const ex2 = -ey, ey2 = ex;
+  const len2 = Math.sqrt(lam2) * scale * 2.3;
+  const pc2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  pc2.setAttribute('x1', cx - ex2 * len2); pc2.setAttribute('y1', cy + ey2 * len2);
+  pc2.setAttribute('x2', cx + ex2 * len2); pc2.setAttribute('y2', cy - ey2 * len2);
+  pc2.setAttribute('stroke', '#3d6b3d'); pc2.setAttribute('stroke-width', '3');
+  svg.appendChild(pc2);
+
+  // Labels
+  const l1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  l1.setAttribute('x', cx + ex * len1 + 8);
+  l1.setAttribute('y', cy - ey * len1);
+  l1.setAttribute('font-family', 'Fraunces');
+  l1.setAttribute('font-size', '13');
+  l1.setAttribute('font-style', 'italic');
+  l1.setAttribute('fill', '#c8441f');
+  l1.textContent = 'PC1 (λ=' + lam1.toFixed(2) + ')';
+  svg.appendChild(l1);
+
+  const l2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  l2.setAttribute('x', cx + ex2 * len2 + 8);
+  l2.setAttribute('y', cy - ey2 * len2);
+  l2.setAttribute('font-family', 'Fraunces');
+  l2.setAttribute('font-size', '13');
+  l2.setAttribute('font-style', 'italic');
+  l2.setAttribute('fill', '#3d6b3d');
+  l2.textContent = 'PC2 (λ=' + lam2.toFixed(2) + ')';
+  svg.appendChild(l2);
+
+  const total = lam1 + lam2;
+  const pct1 = (lam1 / total * 100).toFixed(1);
+  const pct2 = (lam2 / total * 100).toFixed(1);
+
+  document.getElementById('pcaReadout').innerHTML =
+    '<strong>PC1</strong> (red) captures <strong>' + pct1 + '%</strong> of the variance; <strong>PC2</strong> (green) captures <strong>' + pct2 + '%</strong>. ' +
+    'Notice PC1 aligns with the long axis of the cloud — it finds maximum variance regardless of the original x/y axes. ' +
+    'PC2 is orthogonal to PC1 and captures the remaining variance. Rotating the source data rotates the PCs with it.';
+}
+drawPCA();
+['pcaAngle', 'pcaRatio'].forEach(id => {
+  document.getElementById(id).addEventListener('input', drawPCA);
+});
+
+// ============= VIZ 4: t-SNE (illustrative) =============
+function drawTSNE() {
+  const perp = parseInt(document.getElementById('perp').value);
+  document.getElementById('perpVal').textContent = perp;
+
+  // Generate three synthetic clusters in "high-D" (we'll simulate with 2D for visualization)
+  // But display how perplexity affects an illustrative embedding
+  const svg = document.getElementById('tsneSvg');
+  svg.innerHTML = '';
+  const W = 800, H = 400;
+
+  const clusters = [
+    { cx: 200, cy: 200, n: 50, color: '#c8441f' },
+    { cx: 450, cy: 150, n: 50, color: '#3d6b3d' },
+    { cx: 550, cy: 300, n: 50, color: '#4a5899' }
+  ];
+
+  // Simulate perplexity effect: low perp = tight small clumps, high perp = spread blobs that merge
+  // Small perplexity: points stay tightly around centers
+  // Large perplexity: points spread, clusters start bleeding together
+  const spreadFactor = Math.max(8, perp * 0.55);
+  const clusterPullFactor = Math.max(0, (60 - perp) / 60); // when perp is low, clusters stay separate
+  const bleed = Math.min(1, perp / 80);
+
+  clusters.forEach(cl => {
+    for (let i = 0; i < cl.n; i++) {
+      const jx = randn() * spreadFactor;
+      const jy = randn() * spreadFactor;
+      // Bleed effect: pull centers toward global center when perplexity very high
+      const gx = 400 + (cl.cx - 400) * (1 - bleed * 0.4);
+      const gy = 225 + (cl.cy - 225) * (1 - bleed * 0.4);
+      const x = gx + jx;
+      const y = gy + jy;
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', Math.max(10, Math.min(W - 10, x)));
+      c.setAttribute('cy', Math.max(10, Math.min(H - 10, y)));
+      c.setAttribute('r', '4');
+      c.setAttribute('fill', cl.color);
+      c.setAttribute('opacity', '0.7');
+      svg.appendChild(c);
+    }
+  });
+
+  let description;
+  if (perp < 10) description = 'Very low perplexity — tight, fragmented clusters; sensitive to noise. t-SNE sees very few "neighbors" per point.';
+  else if (perp < 40) description = 'Moderate perplexity (typical range 5–50) — the sweet spot for most datasets.';
+  else description = 'Very high perplexity — clusters spread out and begin to bleed into each other. Local neighborhoods grow so large they lose specificity.';
+
+  document.getElementById('tsneReadout').innerHTML =
+    'Perplexity ≈ effective number of neighbors each point "sees." ' +
+    '<strong>' + description + '</strong> ' +
+    'Van der Maaten recommends perplexity between 5 and 50 for most datasets. Running t-SNE at multiple perplexities is good practice — if a cluster structure appears robustly across settings, it is probably real. <em>(This is an illustrative simulation, not a real t-SNE run.)</em>';
+}
+drawTSNE();
+document.getElementById('perp').addEventListener('input', drawTSNE);
+
+</script>
+
+</body>
+</html>

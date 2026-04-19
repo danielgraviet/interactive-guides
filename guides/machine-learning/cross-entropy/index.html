@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Cross-Entropy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --ink: #1f2420;
+    --ink-soft: #4a5248;
+    --muted: #8a9188;
+    --forest: #2d5a3d;
+    --forest-light: #4a7c5a;
+    --forest-pale: #e8f0ea;
+    --rule: #d8dcd4;
+    --paper: #ffffff;
+    --highlight: #fff4c2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    padding: 80px 40px 40px;
+    border-bottom: 1px solid var(--rule);
+    text-align: center;
+  }
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    max-width: 700px;
+    margin: 0 auto 20px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--forest);
+    font-weight: 500;
+  }
+  .subtitle {
+    font-size: 19px;
+    color: var(--ink-soft);
+    max-width: 560px;
+    margin: 0 auto;
+    font-style: italic;
+  }
+
+  /* ---------- PROGRESS ---------- */
+  .progress-container {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--rule);
+    backdrop-filter: blur(8px);
+    background: rgba(250, 250, 247, 0.92);
+  }
+  .progress-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+  }
+  .progress-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 2px;
+    background: var(--rule);
+    position: relative;
+  }
+  .progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--forest);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* ---------- MAIN ---------- */
+  main {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+  section {
+    margin-bottom: 96px;
+    scroll-margin-top: 100px;
+  }
+  .step-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--forest);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--forest);
+  }
+  h2 {
+    font-family: 'Lora', serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 24px;
+  }
+  h2 em {
+    font-style: italic;
+    color: var(--forest);
+  }
+  h3 {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 36px 0 14px;
+    letter-spacing: -0.01em;
+  }
+  p {
+    margin-bottom: 18px;
+    color: var(--ink);
+  }
+  strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  em.key {
+    font-style: italic;
+    color: var(--forest);
+    font-weight: 500;
+  }
+  code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    background: var(--forest-pale);
+    color: var(--forest);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  a { color: var(--forest); }
+
+  /* ---------- BIG IDEA ---------- */
+  .big-idea {
+    margin: 32px 0;
+    padding: 28px 32px;
+    background: var(--forest-pale);
+    border-left: 3px solid var(--forest);
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    line-height: 1.55;
+    font-style: italic;
+    color: var(--ink);
+  }
+  .big-idea strong {
+    font-style: normal;
+    color: var(--forest);
+  }
+
+  /* ---------- FORMULA ---------- */
+  .formula {
+    margin: 24px 0;
+    padding: 24px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 17px;
+    text-align: center;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .formula .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  /* ---------- INTERACTIVE ---------- */
+  .interactive {
+    margin: 36px 0;
+    padding: 28px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .interactive-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 6px;
+  }
+  .interactive-sub {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .slider-row label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    min-width: 140px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    min-width: 160px;
+    accent-color: var(--forest);
+  }
+  .slider-row .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--forest);
+    font-weight: 500;
+    min-width: 60px;
+    text-align: right;
+  }
+  .output-box {
+    margin-top: 20px;
+    padding: 18px 20px;
+    background: var(--forest-pale);
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+  .output-box .big-num {
+    font-family: 'Lora', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--forest);
+    display: block;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  /* ---------- BARS ---------- */
+  .bars {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    height: 140px;
+    margin: 20px 0 8px;
+    padding: 0 4px;
+  }
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .bar {
+    width: 100%;
+    background: var(--forest);
+    transition: height 0.4s ease, background 0.3s;
+    position: relative;
+    min-height: 2px;
+  }
+  .bar.truth {
+    background: var(--ink);
+  }
+  .bar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .bar-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+  }
+
+  /* ---------- EXAMPLE ---------- */
+  .example {
+    margin: 32px 0;
+    padding: 24px 28px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .example-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 10px;
+  }
+  .example h4 {
+    font-family: 'Lora', serif;
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  /* ---------- LIST ---------- */
+  ul.clean {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+  }
+  ul.clean li {
+    padding: 14px 0 14px 32px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  ul.clean li:last-child {
+    border-bottom: none;
+  }
+  ul.clean li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--forest);
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+  }
+
+  /* ---------- SELF CHECK ---------- */
+  .self-check {
+    margin: 36px 0;
+    padding: 28px;
+    background: var(--forest);
+    color: #f5faf4;
+    border-radius: 2px;
+  }
+  .self-check .sc-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #a8c9b0;
+    margin-bottom: 12px;
+  }
+  .self-check .sc-question {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .self-check button.reveal {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: transparent;
+    color: #f5faf4;
+    border: 1px solid #a8c9b0;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .self-check button.reveal:hover {
+    background: #f5faf4;
+    color: var(--forest);
+  }
+  .self-check .sc-answer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 16px;
+    line-height: 1.65;
+    display: none;
+  }
+  .self-check .sc-answer.show {
+    display: block;
+  }
+  .self-check .sc-answer strong {
+    color: #fff4c2;
+  }
+
+  /* ---------- TAKEAWAY ---------- */
+  .takeaway {
+    margin: 48px 0;
+    padding: 40px;
+    border-top: 2px solid var(--forest);
+    border-bottom: 2px solid var(--forest);
+    text-align: center;
+  }
+  .takeaway-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--forest);
+    margin-bottom: 16px;
+  }
+  .takeaway-text {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 540px;
+    margin: 0 auto;
+  }
+
+  /* ---------- ELEVATOR PITCH ---------- */
+  .pitch {
+    margin: 40px 0;
+    padding: 36px;
+    background: var(--ink);
+    color: #f5faf4;
+    border-radius: 2px;
+  }
+  .pitch-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #a8c9b0;
+    margin-bottom: 16px;
+  }
+  .pitch-text {
+    font-family: 'Lora', serif;
+    font-size: 19px;
+    line-height: 1.6;
+  }
+  .pitch-text em {
+    color: #a8c9b0;
+    font-style: italic;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    text-align: center;
+    padding: 40px 20px 60px;
+    border-top: 1px solid var(--rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 640px) {
+    header { padding: 60px 24px 32px; }
+    main { padding: 40px 24px; }
+    .progress-container { padding: 12px 24px; }
+    .interactive { padding: 20px; }
+    .slider-row label { min-width: 100%; }
+    .self-check { padding: 22px; }
+    .takeaway { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">A Plain-English Guide</div>
+  <h1>Understanding <em>Cross-Entropy</em></h1>
+  <p class="subtitle">By the end, you'll be able to explain what it is, why it exists, and where you'll actually meet it.</p>
+</header>
+
+<div class="progress-container">
+  <div class="progress-inner">
+    <div class="progress-label">Progress</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label"><span id="progressPct">0</span>%</div>
+  </div>
+</div>
+
+<main>
+
+<!-- =============================================== -->
+<!-- STEP 1: THE HONEST MOTIVATION                   -->
+<!-- =============================================== -->
+<section id="s1" data-step="1">
+  <div class="step-label">Step 01 · The setup</div>
+  <h2>First, what <em>problem</em> are we trying to solve?</h2>
+
+  <p>Imagine you're training a model to recognize handwritten digits. You show it a picture of a "7." Your model doesn't just say "it's a 7." It outputs a list of probabilities — one for each possible digit:</p>
+
+  <div class="example">
+    <div class="example-label">Model's prediction for a picture of "7"</div>
+    <p style="font-family:'IBM Plex Mono',monospace; font-size:14px; line-height:2;">
+      "0" → 2%<br>
+      "1" → 5%<br>
+      "2" → 3%<br>
+      ... <br>
+      <strong style="color:var(--forest);">"7" → 70%</strong><br>
+      "8" → 8%<br>
+      "9" → 4%
+    </p>
+  </div>
+
+  <p>Now you need to answer one question: <em class="key">how good was that prediction?</em></p>
+
+  <p>We know the real answer is "7." The model put 70% on "7." That seems... fine? But how do we turn "fine" into a number we can actually optimize? How do we tell the model "do more of this" or "do less of this"?</p>
+
+  <p>That's the job of a <strong>loss function</strong>. And for problems where the output is a set of probabilities, the loss function we almost always reach for is called <em class="key">cross-entropy</em>.</p>
+
+  <div class="big-idea">
+    Cross-entropy is the number that tells us <strong>how surprised</strong> a model should be, given what actually happened. Higher surprise means worse prediction.
+  </div>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 2: THE INTUITION (SURPRISE)                -->
+<!-- =============================================== -->
+<section id="s2" data-step="2">
+  <div class="step-label">Step 02 · The intuition</div>
+  <h2>Surprise is the <em>whole idea</em></h2>
+
+  <p>Here's the mental model. Forget formulas for a minute. Think about weather.</p>
+
+  <p>Suppose your weather app says there's a <strong>99% chance of sunshine</strong> tomorrow. Tomorrow comes — and it's sunny. Were you surprised? No. The app basically predicted the obvious.</p>
+
+  <p>Now suppose the app said there's a <strong>1% chance of sunshine</strong>. Tomorrow comes — still sunny. You are <em class="key">very surprised</em>. The app was confident and wrong.</p>
+
+  <p>Cross-entropy measures exactly this. When the real event happens, how much probability did the model assign to it? Lots? Low surprise. Almost none? Huge surprise.</p>
+
+  <h3>The magic of logarithms</h3>
+
+  <p>We need a mathematical way to express "surprise." The trick is to use the <strong>negative logarithm</strong> of the probability:</p>
+
+  <div class="formula">
+    <span class="label">Surprise for one event</span>
+    surprise = −log(probability)
+  </div>
+
+  <p>Why does this work? Look at the shape of <code>−log(p)</code>:</p>
+
+  <ul class="clean">
+    <li>If the model said <strong>p = 1.0</strong> (certain it would happen), surprise = <strong>0</strong>. You were right. No penalty.</li>
+    <li>If the model said <strong>p = 0.5</strong>, surprise ≈ 0.69. A small shrug.</li>
+    <li>If the model said <strong>p = 0.1</strong>, surprise ≈ 2.3. A real "wait, what?"</li>
+    <li>If the model said <strong>p = 0.001</strong>, surprise ≈ 6.9. A big "you were WAY off."</li>
+    <li>If the model said <strong>p = 0</strong>, surprise = <strong>infinity</strong>. It said "this will never happen" — and it did. Unforgivable.</li>
+  </ul>
+
+  <div class="interactive">
+    <div class="interactive-title">Play with it</div>
+    <div class="interactive-sub">Slide the probability the model gave the correct answer. Watch the surprise change.</div>
+    <div class="slider-row">
+      <label>Probability of truth</label>
+      <input type="range" id="surpriseSlider" min="0.01" max="1" step="0.01" value="0.7">
+      <div class="value" id="surpriseP">0.70</div>
+    </div>
+    <div class="output-box">
+      <span class="big-num" id="surpriseVal">0.357</span>
+      surprise = −log(<span id="surpriseDisplay">0.70</span>) <br>
+      <span id="surpriseCommentary" style="color: var(--ink-soft); font-style:italic;">A decent prediction — some surprise, but not a lot.</span>
+    </div>
+  </div>
+
+  <div class="big-idea">
+    <strong>Cross-entropy just measures the average surprise</strong> across all your predictions. Good models have low average surprise. Bad models have high average surprise.
+  </div>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 3: THE FORMULA                             -->
+<!-- =============================================== -->
+<section id="s3" data-step="3">
+  <div class="step-label">Step 03 · The formula, demystified</div>
+  <h2>Now the <em>equation</em> won't scare you</h2>
+
+  <p>You'll see cross-entropy written like this:</p>
+
+  <div class="formula">
+    <span class="label">Cross-Entropy</span>
+    H(p, q) = − Σ p(x) · log q(x)
+  </div>
+
+  <p>Scary-looking, but it says something simple. Let's translate each piece:</p>
+
+  <ul class="clean">
+    <li><code>p(x)</code> is the <strong>true</strong> distribution — what actually happened. In classification, this is usually a "one-hot" vector: 100% on the correct answer, 0% on everything else.</li>
+    <li><code>q(x)</code> is the <strong>predicted</strong> distribution — what the model guessed.</li>
+    <li><code>log q(x)</code> is the surprise if outcome <code>x</code> happens. (Negative log is surprise, remember.)</li>
+    <li><code>Σ</code> just means "sum over all possible outcomes."</li>
+    <li>The <code>p(x) ·</code> at the front is a <em>weighting</em>: weight each surprise by how likely that outcome really is.</li>
+  </ul>
+
+  <p>So in plain English:</p>
+
+  <div class="big-idea">
+    Cross-entropy = <strong>the expected surprise</strong> when reality follows <code>p</code> but the model predicts <code>q</code>.
+  </div>
+
+  <h3>The classification shortcut</h3>
+
+  <p>In classification, this formula collapses. The true distribution <code>p</code> is zero everywhere except on the correct class (where it's 1). So every term in the sum is zero — except one. What's left is:</p>
+
+  <div class="formula">
+    <span class="label">Cross-Entropy for one labeled example</span>
+    loss = −log(q<sub>correct class</sub>)
+  </div>
+
+  <p>That's it. That's the formula for the case you'll see 95% of the time. <strong>Take the probability your model assigned to the correct answer, take the log, flip the sign.</strong> Done.</p>
+
+  <div class="example">
+    <div class="example-label">Back to our digit example</div>
+    <p>The model gave 70% to the correct class "7." The cross-entropy loss is:</p>
+    <p style="font-family:'IBM Plex Mono',monospace; text-align:center; font-size:16px; padding:10px;">
+      loss = −log(0.70) ≈ <strong style="color:var(--forest);">0.357</strong>
+    </p>
+    <p>If the model had been more confident — say 95% on "7" — the loss would drop to about 0.051. If it had assigned only 10% to "7," the loss would jump to about 2.3. Bad predictions hurt a lot more than good predictions help.</p>
+  </div>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 4: TWO DISTRIBUTIONS                       -->
+<!-- =============================================== -->
+<section id="s4" data-step="4">
+  <div class="step-label">Step 04 · See it in action</div>
+  <h2>Watch cross-entropy <em>react</em></h2>
+
+  <p>Below, the black bars are the truth: the correct answer is "Cat." The green bars are what the model predicted. Slide the confidence around and watch the loss move.</p>
+
+  <div class="interactive">
+    <div class="interactive-title">Three-class classifier · Truth is "Cat"</div>
+    <div class="interactive-sub">The model spreads its probability across three classes. How much does it give the right one?</div>
+
+    <div class="slider-row">
+      <label>P(Cat) · predicted</label>
+      <input type="range" id="pCat" min="0.01" max="0.98" step="0.01" value="0.6">
+      <div class="value" id="pCatVal">0.60</div>
+    </div>
+    <div class="slider-row">
+      <label>Split between Dog / Bird</label>
+      <input type="range" id="pSplit" min="0" max="1" step="0.01" value="0.5">
+      <div class="value" id="pSplitVal">50/50</div>
+    </div>
+
+    <div class="bars" id="barsDisplay"></div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink);"></span>Truth</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--forest);"></span>Prediction</div>
+    </div>
+
+    <div class="output-box">
+      <span class="big-num" id="ceLoss">0.511</span>
+      Cross-entropy loss = −log(<span id="ceInner">0.60</span>) <br>
+      <span id="ceCommentary" style="color: var(--ink-soft); font-style:italic;">The model is leaning correct, but not very confident.</span>
+    </div>
+  </div>
+
+  <p>Notice two things. First: the <strong>only probability that matters for the loss is the one on the correct class</strong>. Moving probability around between the wrong answers doesn't change the loss at all. Second: the loss grows <em>slowly</em> near the right answer and <em>very fast</em> as you get further away. That asymmetry is exactly what we want — it punishes confident wrongness much harder than humble wrongness.</p>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 5: WHERE IT SHOWS UP                       -->
+<!-- =============================================== -->
+<section id="s5" data-step="5">
+  <div class="step-label">Step 05 · In the wild</div>
+  <h2>Where you'll <em>actually meet it</em></h2>
+
+  <p>Cross-entropy is not some obscure function. It is one of the most heavily used loss functions in machine learning. Here's where it pops up:</p>
+
+  <ul class="clean">
+    <li><strong>Classification tasks.</strong> Any time a model predicts a category — image labels, spam detection, sentiment analysis, medical diagnosis — the default loss is cross-entropy. When you see the term "softmax + cross-entropy" in a paper or PyTorch code, this is what's happening.</li>
+    <li><strong>Binary classification.</strong> When there are only two classes (yes/no, spam/ham), cross-entropy simplifies to a special case called <em class="key">binary cross-entropy</em> or <em class="key">log loss</em>. Same idea, two-class version.</li>
+    <li><strong>Language models.</strong> GPT-style models predict the next word out of tens of thousands of options. Cross-entropy is how they're trained. When you hear "perplexity" as a language model metric, that's literally <code>exp(cross-entropy)</code> — just a re-scaled version of the same number.</li>
+    <li><strong>Knowledge distillation.</strong> When a big "teacher" model trains a smaller "student" model, cross-entropy measures how well the student's probabilities match the teacher's.</li>
+    <li><strong>Generative models (some).</strong> Variational autoencoders and certain diffusion training recipes use cross-entropy as a building block when data is categorical.</li>
+    <li><strong>Reinforcement learning.</strong> Policy gradient methods often compute cross-entropy between the current policy and a target action distribution.</li>
+  </ul>
+
+  <p>The reason it's so universal: whenever your model outputs probabilities and you want to push those probabilities toward the truth, cross-entropy has the right mathematical shape to do it efficiently. Its gradients are clean, it pairs beautifully with the softmax function, and it has a deep grounding in information theory.</p>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 6: COMMON CONFUSIONS                       -->
+<!-- =============================================== -->
+<section id="s6" data-step="6">
+  <div class="step-label">Step 06 · Clearing up confusion</div>
+  <h2>Things people <em>get wrong</em></h2>
+
+  <h3>"Is cross-entropy the same as entropy?"</h3>
+  <p>Related, but not the same. <strong>Entropy</strong> measures the average surprise in a single distribution — how unpredictable it is on its own. <strong>Cross-entropy</strong> measures the average surprise when reality follows one distribution but you predict with another. If your prediction matches reality perfectly, cross-entropy equals entropy. Otherwise, cross-entropy is always larger.</p>
+
+  <h3>"Is cross-entropy the same as KL divergence?"</h3>
+  <p>They're cousins. <strong>KL divergence</strong> is the <em>extra</em> surprise from using the wrong distribution — the gap between cross-entropy and entropy. In formula form: <code>KL(p ‖ q) = H(p,q) − H(p)</code>. For classification, since the true distribution is fixed (it's the one-hot label), minimizing cross-entropy and minimizing KL divergence give the exact same answer. That's why you'll see both names used for the same training objective in different papers.</p>
+
+  <h3>"Why not just use accuracy as the loss?"</h3>
+  <p>Because accuracy is a step function — it jumps from right to wrong with no gradient. You can't do gradient descent on it. Cross-entropy is smooth: it tells the model not just <em>whether</em> it was wrong, but <em>how</em> wrong and in what direction. That smoothness is what makes learning possible.</p>
+
+  <h3>"Why the log? Couldn't we just use <code>1 − p</code>?"</h3>
+  <p>You <em>could</em>, but the log has two superpowers. First: it punishes catastrophic misses much harder than small misses — perfect for "don't be confidently wrong." Second: when you take its derivative (for gradient descent), the math simplifies beautifully with softmax. The combination of softmax + log leads to gradients that are just <code>prediction − truth</code>. Clean, stable, fast to compute.</p>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 7: TEST YOURSELF                           -->
+<!-- =============================================== -->
+<section id="s7" data-step="7">
+  <div class="step-label">Step 07 · Check yourself</div>
+  <h2>Can you <em>explain it back</em>?</h2>
+
+  <p>Don't scroll past these. If you can't answer them out loud, scroll back and re-read the relevant section.</p>
+
+  <div class="self-check">
+    <div class="sc-label">Question 1</div>
+    <div class="sc-question">A model predicts a 99% probability for the correct class. What's roughly the cross-entropy loss, and why is it small?</div>
+    <button class="reveal" onclick="toggleAnswer(this)">Show answer</button>
+    <div class="sc-answer">
+      <p>Loss ≈ <strong>−log(0.99) ≈ 0.01</strong>. It's tiny because the model assigned almost all of its probability to the right answer — very little surprise. Cross-entropy rewards confident correctness by giving near-zero loss.</p>
+    </div>
+  </div>
+
+  <div class="self-check">
+    <div class="sc-label">Question 2</div>
+    <div class="sc-question">A model predicts a 0.1% probability for the correct class. What happens to the loss, and what's the lesson?</div>
+    <button class="reveal" onclick="toggleAnswer(this)">Show answer</button>
+    <div class="sc-answer">
+      <p>Loss = <strong>−log(0.001) ≈ 6.9</strong>. That's huge. The lesson: <strong>cross-entropy punishes confident wrongness severely</strong>. A model that confidently says "definitely not a cat" when it's actually a cat gets hit hard. This is the property that makes cross-entropy such a strong training signal.</p>
+    </div>
+  </div>
+
+  <div class="self-check">
+    <div class="sc-label">Question 3</div>
+    <div class="sc-question">In a 10-class problem, a model outputs [0.1, 0.1, ..., 0.1] — uniform. The correct class is class 3. What's the loss? What does this tell you?</div>
+    <button class="reveal" onclick="toggleAnswer(this)">Show answer</button>
+    <div class="sc-answer">
+      <p>Loss = <strong>−log(0.1) ≈ 2.3</strong>. This is the loss of a model that knows nothing and just guesses uniformly. It's often used as a baseline — if your trained model has a loss close to <code>log(number of classes)</code>, it hasn't learned anything yet.</p>
+    </div>
+  </div>
+
+  <div class="self-check">
+    <div class="sc-label">Question 4</div>
+    <div class="sc-question">Does cross-entropy care how the model distributes probability among the wrong answers?</div>
+    <button class="reveal" onclick="toggleAnswer(this)">Show answer</button>
+    <div class="sc-answer">
+      <p><strong>No.</strong> In classification, the formula collapses to <code>−log(p<sub>correct</sub>)</code>. Only the probability on the correct class matters. Shuffling probability between the wrong classes changes nothing. (This is why additional techniques like label smoothing are sometimes added when you <em>do</em> want to shape the full distribution.)</p>
+    </div>
+  </div>
+
+  <div class="self-check">
+    <div class="sc-label">Question 5</div>
+    <div class="sc-question">In one sentence, what does cross-entropy measure?</div>
+    <button class="reveal" onclick="toggleAnswer(this)">Show answer</button>
+    <div class="sc-answer">
+      <p>It measures <strong>how surprised the model should be by reality, on average</strong> — with surprise defined as the negative log of the probability the model assigned to what actually happened.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================== -->
+<!-- STEP 8: THE ELEVATOR PITCH                      -->
+<!-- =============================================== -->
+<section id="s8" data-step="8">
+  <div class="step-label">Step 08 · Your confident explanation</div>
+  <h2>If someone asks, <em>here's what you say</em></h2>
+
+  <p>You've seen the intuition, the formula, the examples, the gotchas. Now package it. Here's the explanation you should be able to give someone cold:</p>
+
+  <div class="pitch">
+    <div class="pitch-label">The explanation</div>
+    <div class="pitch-text">
+      <em>"Cross-entropy is a loss function used when a model outputs probabilities — like in classification or language modeling.</em><br><br>
+      It measures how surprised the model should be by the correct answer. If the model assigned high probability to what actually happened, the loss is near zero. If it assigned tiny probability to what actually happened, the loss explodes.<br><br>
+      <em>Mathematically, for a single labeled example, it's just the negative log of the probability the model gave to the correct class. That's it. The log shape is what makes it punish confident wrongness hard — which is exactly the training signal we want."</em>
+    </div>
+  </div>
+
+  <div class="takeaway">
+    <div class="takeaway-label">The one sentence to remember</div>
+    <div class="takeaway-text">Cross-entropy is average surprise. Low surprise means the model was right. High surprise means the model was confidently wrong.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  You can explain cross-entropy now.
+</footer>
+
+<script>
+// ============ SURPRISE INTERACTIVE ============
+const surpriseSlider = document.getElementById('surpriseSlider');
+const surpriseP = document.getElementById('surpriseP');
+const surpriseVal = document.getElementById('surpriseVal');
+const surpriseDisplay = document.getElementById('surpriseDisplay');
+const surpriseCommentary = document.getElementById('surpriseCommentary');
+
+function updateSurprise() {
+  const p = parseFloat(surpriseSlider.value);
+  const s = -Math.log(p);
+  surpriseP.textContent = p.toFixed(2);
+  surpriseDisplay.textContent = p.toFixed(2);
+  surpriseVal.textContent = s.toFixed(3);
+
+  let msg;
+  if (p > 0.9) msg = "Almost no surprise — the model was confidently correct. This is what we want.";
+  else if (p > 0.6) msg = "A decent prediction — some surprise, but not a lot.";
+  else if (p > 0.3) msg = "The model hedged. Real surprise, real loss.";
+  else if (p > 0.1) msg = "The model was wrong in a meaningful way. Loss is significant.";
+  else if (p > 0.03) msg = "The model was very confidently wrong. Loss is painful.";
+  else msg = "Catastrophic miss. Loss is enormous — and approaches infinity as p → 0.";
+  surpriseCommentary.textContent = msg;
+}
+surpriseSlider.addEventListener('input', updateSurprise);
+updateSurprise();
+
+// ============ CROSS-ENTROPY BARS INTERACTIVE ============
+const pCat = document.getElementById('pCat');
+const pSplit = document.getElementById('pSplit');
+const pCatVal = document.getElementById('pCatVal');
+const pSplitVal = document.getElementById('pSplitVal');
+const barsDisplay = document.getElementById('barsDisplay');
+const ceLoss = document.getElementById('ceLoss');
+const ceInner = document.getElementById('ceInner');
+const ceCommentary = document.getElementById('ceCommentary');
+
+const classes = ['Cat', 'Dog', 'Bird'];
+const truth = [1, 0, 0];
+
+function updateBars() {
+  const cat = parseFloat(pCat.value);
+  const split = parseFloat(pSplit.value);
+  const remaining = 1 - cat;
+  const dog = remaining * split;
+  const bird = remaining * (1 - split);
+  const predicted = [cat, dog, bird];
+
+  pCatVal.textContent = cat.toFixed(2);
+  const splitLabel = `${Math.round(split * 100)}/${Math.round((1 - split) * 100)}`;
+  pSplitVal.textContent = splitLabel;
+
+  // Render bars
+  barsDisplay.innerHTML = '';
+  classes.forEach((cls, i) => {
+    const group = document.createElement('div');
+    group.className = 'bar-group';
+
+    const barsWrap = document.createElement('div');
+    barsWrap.style.display = 'flex';
+    barsWrap.style.gap = '4px';
+    barsWrap.style.alignItems = 'flex-end';
+    barsWrap.style.height = '100px';
+    barsWrap.style.width = '100%';
+    barsWrap.style.justifyContent = 'center';
+
+    const truthBar = document.createElement('div');
+    truthBar.className = 'bar truth';
+    truthBar.style.height = (truth[i] * 100) + '%';
+    truthBar.style.width = '45%';
+
+    const predBar = document.createElement('div');
+    predBar.className = 'bar';
+    predBar.style.height = (predicted[i] * 100) + '%';
+    predBar.style.width = '45%';
+
+    barsWrap.appendChild(truthBar);
+    barsWrap.appendChild(predBar);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-label';
+    lbl.textContent = cls;
+
+    const val = document.createElement('div');
+    val.className = 'bar-val';
+    val.textContent = predicted[i].toFixed(2);
+
+    group.appendChild(barsWrap);
+    group.appendChild(lbl);
+    group.appendChild(val);
+    barsDisplay.appendChild(group);
+  });
+
+  const loss = -Math.log(cat);
+  ceLoss.textContent = loss.toFixed(3);
+  ceInner.textContent = cat.toFixed(2);
+
+  let msg;
+  if (cat > 0.9) msg = "Excellent — the model is confident and correct. Loss is nearly zero.";
+  else if (cat > 0.6) msg = "The model is leaning correct, but not very confident.";
+  else if (cat > 0.34) msg = "The model thinks Cat is most likely but it's close. Loss is noticeable.";
+  else if (cat > 0.1) msg = "The model thinks Cat is less likely than one of the other options. Real mistake.";
+  else msg = "The model essentially ruled out the correct answer. Loss is large.";
+  ceCommentary.textContent = msg;
+}
+pCat.addEventListener('input', updateBars);
+pSplit.addEventListener('input', updateBars);
+updateBars();
+
+// ============ SELF-CHECK TOGGLE ============
+function toggleAnswer(btn) {
+  const answer = btn.nextElementSibling;
+  answer.classList.toggle('show');
+  btn.textContent = answer.classList.contains('show') ? 'Hide answer' : 'Show answer';
+}
+
+// ============ PROGRESS BAR ============
+const sections = document.querySelectorAll('section');
+const progressFill = document.getElementById('progressFill');
+const progressPct = document.getElementById('progressPct');
+const totalSteps = sections.length;
+
+function updateProgress() {
+  let current = 0;
+  sections.forEach((s, i) => {
+    const rect = s.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.5) current = i + 1;
+  });
+  const pct = Math.round((current / totalSteps) * 100);
+  progressFill.style.width = pct + '%';
+  progressPct.textContent = pct;
+}
+window.addEventListener('scroll', updateProgress);
+updateProgress();
+</script>
+
+</body>
+</html>

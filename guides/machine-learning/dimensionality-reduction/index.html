@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 — Dimensionality Reduction Study Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700;800&family=Crimson+Pro:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e13;
+  --surface: #14171e;
+  --surface2: #1a1e28;
+  --surface3: #222733;
+  --border: #2a3040;
+  --text: #e2e6ef;
+  --text-dim: #8a92a6;
+  --accent: #6ee7b7;
+  --accent2: #34d399;
+  --accent-dim: rgba(110, 231, 183, 0.1);
+  --warm: #fbbf24;
+  --warm-dim: rgba(251, 191, 36, 0.1);
+  --rose: #fb7185;
+  --rose-dim: rgba(251, 113, 133, 0.1);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96, 165, 250, 0.1);
+  --purple: #c084fc;
+  --purple-dim: rgba(192, 132, 252, 0.1);
+  --correct: #34d399;
+  --incorrect: #fb7185;
+  --radius: 10px;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Crimson Pro', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── Header ─── */
+.hero {
+  position: relative;
+  padding: 60px 40px 50px;
+  text-align: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(110,231,183,0.06) 0%, transparent 60%),
+              radial-gradient(ellipse at 20% 80%, rgba(96,165,250,0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.6rem;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  position: relative;
+}
+
+.hero h1 span {
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero .subtitle {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  margin-top: 8px;
+  font-weight: 300;
+}
+
+.hero .course-badge {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 5px 16px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(110,231,183,0.2);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* ─── Score Bar ─── */
+.score-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 30px;
+  background: rgba(12,14,19,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.score-bar .score-group {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.score-item .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+.score-item.correct .dot { background: var(--correct); }
+.score-item.incorrect .dot { background: var(--incorrect); }
+.score-item.total .dot { background: var(--blue); }
+
+.progress-outer {
+  flex: 1;
+  max-width: 300px;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin: 0 20px;
+  overflow: hidden;
+}
+
+.progress-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.reset-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  background: var(--surface3);
+  color: var(--text);
+}
+
+/* ─── Navigation ─── */
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.nav-tab {
+  padding: 14px 22px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ─── Sections ─── */
+.section { display: none; padding: 30px 20px 60px; max-width: 960px; margin: 0 auto; }
+.section.active { display: block; }
+
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.section-desc {
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 22px;
+  transition: border-color 0.3s;
+}
+
+.card:hover { border-color: var(--surface3); }
+
+.card-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.card-label.concept { background: var(--blue-dim); color: var(--blue); }
+.card-label.analogy { background: var(--warm-dim); color: var(--warm); }
+.card-label.quiz { background: var(--purple-dim); color: var(--purple); }
+.card-label.code { background: var(--accent-dim); color: var(--accent); }
+.card-label.comparison { background: var(--rose-dim); color: var(--rose); }
+.card-label.steps { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+.card h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+
+.card p, .card li {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+.card ul, .card ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.card li { margin-bottom: 6px; }
+
+.card strong { color: var(--accent); font-weight: 600; }
+
+/* ─── Analogy Box ─── */
+.analogy-box {
+  background: var(--warm-dim);
+  border-left: 3px solid var(--warm);
+  padding: 16px 20px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 14px 0;
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+  font-style: italic;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* ─── Code Block ─── */
+.code-block {
+  background: #0d1017;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.8;
+  color: #abb2bf;
+}
+
+.code-block .kw { color: #c678dd; }
+.code-block .fn { color: #61afef; }
+.code-block .str { color: #98c379; }
+.code-block .cm { color: #5c6370; font-style: italic; }
+.code-block .num { color: #d19a66; }
+.code-block .op { color: #56b6c2; }
+
+/* ─── Comparison Table ─── */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.84rem;
+}
+
+.comp-table th {
+  background: var(--surface2);
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.comp-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.comp-table tr:last-child td { border-bottom: none; }
+
+/* ─── Quiz ─── */
+.quiz-question {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+
+.quiz-opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.quiz-opt:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.quiz-opt .letter {
+  flex-shrink: 0;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  background: var(--surface3);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+
+.quiz-opt.selected-correct {
+  border-color: var(--correct);
+  background: rgba(52,211,153,0.08);
+}
+
+.quiz-opt.selected-correct .letter {
+  background: var(--correct);
+  color: var(--bg);
+}
+
+.quiz-opt.selected-incorrect {
+  border-color: var(--incorrect);
+  background: rgba(251,113,133,0.08);
+}
+
+.quiz-opt.selected-incorrect .letter {
+  background: var(--incorrect);
+  color: var(--bg);
+}
+
+.quiz-opt.show-correct {
+  border-color: var(--correct);
+  background: rgba(52,211,153,0.05);
+}
+
+.quiz-opt.show-correct .letter {
+  background: var(--correct);
+  color: var(--bg);
+}
+
+.quiz-opt.disabled { cursor: default; opacity: 0.7; }
+.quiz-opt.disabled:hover { border-color: var(--border); background: var(--surface2); }
+
+.quiz-explanation {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 0.86rem;
+  line-height: 1.65;
+  display: none;
+}
+
+.quiz-explanation.correct-exp {
+  display: block;
+  background: rgba(52,211,153,0.06);
+  border: 1px solid rgba(52,211,153,0.15);
+  color: var(--text);
+}
+
+.quiz-explanation.incorrect-exp {
+  display: block;
+  background: rgba(251,113,133,0.06);
+  border: 1px solid rgba(251,113,133,0.15);
+  color: var(--text);
+}
+
+/* ─── Steps list ─── */
+.steps-list {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 14px 0;
+}
+
+.steps-list li {
+  counter-increment: step;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.steps-list li:last-child { border-bottom: none; }
+
+.steps-list li::before {
+  content: counter(step);
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ─── Collapsible ─── */
+.collapsible {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+
+.collapsible-header {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.collapsible-header:hover { background: var(--surface3); }
+
+.collapsible-header .arrow {
+  transition: transform 0.3s;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.collapsible.open .collapsible-header .arrow { transform: rotate(180deg); }
+
+.collapsible-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+.collapsible.open .collapsible-body { max-height: 2000px; }
+
+.collapsible-content { padding: 4px 16px 16px; font-size: 0.86rem; line-height: 1.7; }
+
+/* ─── Tag pills ─── */
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.tag {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+}
+.tag.green { background: var(--accent-dim); color: var(--accent); }
+.tag.blue { background: var(--blue-dim); color: var(--blue); }
+.tag.rose { background: var(--rose-dim); color: var(--rose); }
+.tag.purple { background: var(--purple-dim); color: var(--purple); }
+.tag.warm { background: var(--warm-dim); color: var(--warm); }
+
+/* ─── Responsive ─── */
+@media (max-width: 700px) {
+  .hero h1 { font-size: 1.8rem; }
+  .nav-tabs { padding: 0 10px; }
+  .nav-tab { padding: 12px 14px; font-size: 0.76rem; }
+  .section { padding: 20px 14px 40px; }
+  .card { padding: 20px; }
+  .score-bar { padding: 10px 14px; }
+  .score-bar .score-group { gap: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Dimensionality Reduction <span>Mastery</span></h1>
+  <p class="subtitle">Feature Selection · Linear Techniques · Nonlinear Techniques · PCA Deep Dive</p>
+  <div class="course-badge">CS 270 · BYU · Intro to Machine Learning</div>
+</div>
+
+<div class="score-bar">
+  <div class="score-group">
+    <div class="score-item correct"><div class="dot"></div><span id="score-correct">0</span></div>
+    <div class="score-item incorrect"><div class="dot"></div><span id="score-incorrect">0</span></div>
+    <div class="score-item total"><div class="dot"></div><span id="score-total">0</span> / <span id="score-max">0</span></div>
+  </div>
+  <div class="progress-outer"><div class="progress-inner" id="progress-bar" style="width:0%"></div></div>
+  <button class="reset-btn" onclick="resetAll()">↻ Reset</button>
+</div>
+
+<div class="nav-tabs" id="nav-tabs">
+  <div class="nav-tab active" data-tab="tab-overview">Overview</div>
+  <div class="nav-tab" data-tab="tab-filter">Filter Methods</div>
+  <div class="nav-tab" data-tab="tab-wrapper">Wrapper Methods</div>
+  <div class="nav-tab" data-tab="tab-embedded">Embedded Methods</div>
+  <div class="nav-tab" data-tab="tab-linear">Linear Techniques</div>
+  <div class="nav-tab" data-tab="tab-nonlinear">Nonlinear Techniques</div>
+  <div class="nav-tab" data-tab="tab-pca-deep">PCA Deep Dive</div>
+  <div class="nav-tab" data-tab="tab-final">Final Review</div>
+</div>
+
+<!-- ═══════════════════ TAB 1: OVERVIEW ═══════════════════ -->
+<div class="section active" id="tab-overview">
+  <h2 class="section-title">Why Reduce Dimensions?</h2>
+  <p class="section-desc">Dimensionality reduction removes redundant or irrelevant features, fighting the curse of dimensionality, speeding up training, and improving generalization.</p>
+
+  <div class="card">
+    <div class="card-label analogy">Analogy</div>
+    <h3>The Packed Suitcase</h3>
+    <div class="analogy-box">
+      Imagine packing for a trip. You could throw in everything you own, but your suitcase would be enormous, hard to carry, and you'd waste time digging for what you need. Dimensionality reduction is like packing only the essentials — you keep what matters and leave behind what's redundant or useless. <strong>Feature selection</strong> is choosing which items to pack. <strong>Feature extraction</strong> is rolling all your clothes into compact cubes — new representations that capture the same information in less space.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label comparison">Comparison</div>
+    <h3>Feature Selection vs. Feature Extraction</h3>
+    <table class="comp-table">
+      <thead>
+        <tr><th>Aspect</th><th>Feature Selection</th><th>Feature Extraction</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>What it does</strong></td><td>Picks a subset of original features</td><td>Creates new features by transforming/combining originals</td></tr>
+        <tr><td><strong>Interpretability</strong></td><td>High — original features retained</td><td>Lower — new features may lack direct meaning</td></tr>
+        <tr><td><strong>Examples</strong></td><td>Filter, Wrapper, Embedded</td><td>PCA, ICA, FA, t-SNE, Isomap, MDS</td></tr>
+        <tr><td><strong>Information loss</strong></td><td>Discards entire features</td><td>Compresses info; may lose some detail</td></tr>
+        <tr><td><strong>Use when</strong></td><td>You need interpretable models, suspect irrelevant features</td><td>Features are correlated, need visualization, or want latent structure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label comparison">Comparison</div>
+    <h3>The Three Feature Selection Families</h3>
+    <table class="comp-table">
+      <thead>
+        <tr><th>Type</th><th>How it works</th><th>Speed</th><th>Accuracy</th><th>Interaction with model?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Filter</strong></td><td>Scores features via statistics independent of any model</td><td>Fast</td><td>Lower</td><td>No</td></tr>
+        <tr><td><strong>Wrapper</strong></td><td>Evaluates subsets by training a model on each</td><td>Slow</td><td>Higher</td><td>Yes — uses model as black box</td></tr>
+        <tr><td><strong>Embedded</strong></td><td>Feature selection built into model training</td><td>Medium</td><td>Highest</td><td>Yes — integrated</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q1: You have 10,000 features and need to quickly narrow down to the most relevant before trying any model. Which approach is best?</div>
+    <div class="quiz-options" data-correct="0" data-qid="ov1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Filter-based feature selection</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Wrapper-based (e.g., RFE)</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Embedded (e.g., Lasso)</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>PCA</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="ov1">Filter methods are model-agnostic and computationally cheap — ideal for an initial pass on very high-dimensional data. Wrappers would be prohibitively expensive at 10k features. PCA is extraction, not selection.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q2: Which statement is TRUE about feature extraction?</div>
+    <div class="quiz-options" data-correct="2" data-qid="ov2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>It always preserves the original feature names for interpretability</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>It can only be performed using supervised methods</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>It creates new features that are combinations or transformations of the originals</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>It is always faster than feature selection</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="ov2">Feature extraction (PCA, ICA, etc.) creates brand-new features by combining originals. These new features often lack clear names, making them less interpretable. Methods like PCA are unsupervised, and computation cost varies.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 2: FILTER METHODS ═══════════════════ -->
+<div class="section" id="tab-filter">
+  <h2 class="section-title">Filter-Based Feature Selection</h2>
+  <p class="section-desc">Filter methods score each feature independently using statistical tests — no model is trained. They're fast but ignore feature interactions.</p>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Choosing the Right Statistical Test</h3>
+    <p>The test you use depends on the <strong>type of feature</strong> (continuous vs. categorical) and the <strong>type of target</strong>:</p>
+    <table class="comp-table">
+      <thead><tr><th>Feature ↓ / Target →</th><th>Continuous Target</th><th>Categorical Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Continuous feature</strong></td><td>Pearson correlation / F-regression (ANOVA)</td><td>ANOVA F-test / Mutual Information</td></tr>
+        <tr><td><strong>Categorical feature</strong></td><td>ANOVA F-test (feature groups → target)</td><td>Chi-squared (χ²) / Mutual Information</td></tr>
+      </tbody>
+    </table>
+    <div class="tag-row">
+      <span class="tag green">f_classif</span>
+      <span class="tag green">f_regression</span>
+      <span class="tag blue">chi2</span>
+      <span class="tag purple">mutual_info_classif</span>
+      <span class="tag purple">mutual_info_regression</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label analogy">Analogy</div>
+    <h3>Speed Dating for Features</h3>
+    <div class="analogy-box">
+      Filter methods are like speed dating: you evaluate each candidate (feature) one at a time against a simple criterion (statistical score). You don't see how candidates interact as a group — you're just screening individually. Fast, but you might miss that two mediocre features together are excellent predictors.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Key Statistical Tests Explained</h3>
+
+    <div class="collapsible">
+      <div class="collapsible-header"><span>χ² (Chi-Squared) Test</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Tests whether a <strong>categorical feature</strong> is independent of a <strong>categorical target</strong>. High χ² ⇒ the feature and target are dependent ⇒ feature is likely useful. Requires non-negative feature values. Used via <code>sklearn.feature_selection.chi2</code>.
+      </div></div>
+    </div>
+
+    <div class="collapsible">
+      <div class="collapsible-header"><span>ANOVA F-Test (f_classif / f_regression)</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Compares the <strong>variance between groups</strong> to the <strong>variance within groups</strong>. A high F-statistic means the feature separates target classes well. Assumes linear relationship and normality. <code>f_classif</code> for classification; <code>f_regression</code> for regression targets.
+      </div></div>
+    </div>
+
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Mutual Information</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Measures how much knowing the feature reduces uncertainty about the target. Captures <strong>nonlinear</strong> relationships (unlike Pearson/ANOVA). MI = 0 means independent; higher = more dependent. <code>mutual_info_classif</code> or <code>mutual_info_regression</code>.
+      </div></div>
+    </div>
+
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Pearson Correlation</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Measures <strong>linear</strong> correlation between a continuous feature and continuous target. Range: −1 to +1. Sensitive to outliers. Does NOT capture nonlinear relationships. Often used before <code>f_regression</code>.
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Filter Selection with scikit-learn</h3>
+    <div class="code-block">
+<span class="kw">from</span> sklearn.feature_selection <span class="kw">import</span> SelectKBest, f_classif, chi2, mutual_info_classif
+<br><br>
+<span class="cm"># Select top 10 features using ANOVA F-test (classification)</span><br>
+selector = <span class="fn">SelectKBest</span>(score_func=f_classif, k=<span class="num">10</span>)<br>
+X_new = selector.<span class="fn">fit_transform</span>(X, y)<br>
+selected_mask = selector.<span class="fn">get_support</span>()  <span class="cm"># Boolean mask of selected features</span><br>
+scores = selector.scores_  <span class="cm"># F-statistics for each feature</span><br><br>
+<span class="cm"># Chi-squared (for non-negative categorical features)</span><br>
+selector_chi = <span class="fn">SelectKBest</span>(score_func=chi2, k=<span class="num">10</span>)<br>
+X_chi = selector_chi.<span class="fn">fit_transform</span>(X, y)<br><br>
+<span class="cm"># Mutual information (captures nonlinear)</span><br>
+selector_mi = <span class="fn">SelectKBest</span>(score_func=mutual_info_classif, k=<span class="num">10</span>)<br>
+X_mi = selector_mi.<span class="fn">fit_transform</span>(X, y)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q3: You have categorical features and a categorical target. Which test is most appropriate for filter-based selection?</div>
+    <div class="quiz-options" data-correct="1" data-qid="f1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Pearson correlation</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Chi-squared test</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>f_regression</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Recursive Feature Elimination</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="f1">Chi-squared tests for independence between two categorical variables — perfect for categorical features with a categorical target. Pearson requires continuous data. f_regression is for continuous targets. RFE is a wrapper method, not a filter.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q4: What is the key limitation of filter methods?</div>
+    <div class="quiz-options" data-correct="2" data-qid="f2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>They are too slow for large datasets</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>They require a specific model to function</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>They evaluate features independently and ignore feature interactions</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>They can only work with continuous features</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="f2">Filter methods score features one at a time. Two individually weak features that together form a strong predictor would be missed. This is the core tradeoff: speed for interaction-awareness.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q5: Mutual information is preferred over Pearson correlation when:</div>
+    <div class="quiz-options" data-correct="1" data-qid="f3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>The relationship between feature and target is perfectly linear</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>The relationship may be nonlinear or complex</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>You need faster computation</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The features are all categorical</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="f3">Mutual information captures any kind of statistical dependency (linear or not), while Pearson only captures linear correlations. MI is more expensive to compute, so if you know the relationship is linear, Pearson is fine. MI works for both continuous and categorical features.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 3: WRAPPER METHODS ═══════════════════ -->
+<div class="section" id="tab-wrapper">
+  <h2 class="section-title">Wrapper Methods: RFE & Sequential Selection</h2>
+  <p class="section-desc">Wrapper methods use a model's performance to evaluate feature subsets. More accurate than filters, but computationally expensive.</p>
+
+  <div class="card">
+    <div class="card-label steps">Steps</div>
+    <h3>Recursive Feature Elimination (RFE)</h3>
+    <ol class="steps-list">
+      <li>Train a model on all features.</li>
+      <li>Rank features by importance (e.g., coefficients, feature importances).</li>
+      <li>Remove the least important feature(s).</li>
+      <li>Retrain the model on the remaining features.</li>
+      <li>Repeat steps 2–4 until the desired number of features is reached.</li>
+    </ol>
+    <div class="analogy-box">Think of RFE like a reality show elimination: every round, the weakest performer gets voted off. The model is the panel of judges, retrained after each cut.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label steps">Steps</div>
+    <h3>Forward Sequential Feature Selection (SFS)</h3>
+    <ol class="steps-list">
+      <li>Start with an <strong>empty</strong> feature set.</li>
+      <li>For each remaining feature, tentatively add it and evaluate model performance (e.g., via cross-validation).</li>
+      <li>Permanently add the feature that gives the <strong>best performance improvement</strong>.</li>
+      <li>Repeat until you reach the desired number of features or performance stops improving.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label steps">Steps</div>
+    <h3>Backward Sequential Feature Selection</h3>
+    <ol class="steps-list">
+      <li>Start with <strong>all</strong> features included.</li>
+      <li>For each included feature, tentatively remove it and evaluate model performance.</li>
+      <li>Permanently remove the feature whose removal causes the <strong>least performance drop</strong> (or greatest improvement).</li>
+      <li>Repeat until you reach the desired number of features.</li>
+    </ol>
+    <div class="analogy-box">Forward SFS builds a team one player at a time, always adding the best available. Backward SFS starts with the full roster and cuts the least valuable player each round.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Wrapper Methods in scikit-learn</h3>
+    <div class="code-block">
+<span class="kw">from</span> sklearn.feature_selection <span class="kw">import</span> RFE, SequentialFeatureSelector<br>
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier<br><br>
+
+<span class="cm"># ── Recursive Feature Elimination ──</span><br>
+model = <span class="fn">RandomForestClassifier</span>(n_estimators=<span class="num">100</span>)<br>
+rfe = <span class="fn">RFE</span>(estimator=model, n_features_to_select=<span class="num">5</span>, step=<span class="num">1</span>)<br>
+X_rfe = rfe.<span class="fn">fit_transform</span>(X, y)<br>
+print(rfe.support_)   <span class="cm"># Boolean mask</span><br>
+print(rfe.ranking_)   <span class="cm"># Feature ranking (1 = selected)</span><br><br>
+
+<span class="cm"># ── Forward Sequential Selection ──</span><br>
+sfs_fwd = <span class="fn">SequentialFeatureSelector</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;model, n_features_to_select=<span class="num">5</span>, direction=<span class="str">'forward'</span>, cv=<span class="num">5</span><br>
+)<br>
+X_fwd = sfs_fwd.<span class="fn">fit_transform</span>(X, y)<br><br>
+
+<span class="cm"># ── Backward Sequential Selection ──</span><br>
+sfs_bwd = <span class="fn">SequentialFeatureSelector</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;model, n_features_to_select=<span class="num">5</span>, direction=<span class="str">'backward'</span>, cv=<span class="num">5</span><br>
+)<br>
+X_bwd = sfs_bwd.<span class="fn">fit_transform</span>(X, y)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q6: In RFE, what happens after the least important feature is removed?</div>
+    <div class="quiz-options" data-correct="0" data-qid="w1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>The model is retrained on the remaining features</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>All features are re-scored using a statistical test</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>The removed feature is replaced by a PCA component</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The process terminates immediately</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="w1">RFE retrains the model after each elimination round. Importances shift once a feature is gone, so retraining is essential for accurate re-ranking. This continues until the target number of features is reached.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q7: Forward selection starts with ____ and backward selection starts with ____.</div>
+    <div class="quiz-options" data-correct="1" data-qid="w2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>All features; an empty set</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>An empty set; all features</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>A random subset; all features</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Half the features; the other half</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="w2">Forward selection builds up from nothing, adding the best feature each round. Backward selection prunes from the full set, removing the least useful feature each round.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q8: Why are wrapper methods more computationally expensive than filter methods?</div>
+    <div class="quiz-options" data-correct="2" data-qid="w3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>They use more complex statistical tests</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>They require feature extraction before selection</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>They repeatedly train and evaluate a model for many feature subsets</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>They need to normalize all features first</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="w3">Each candidate subset requires training a full model (often with cross-validation). For d features, forward selection evaluates roughly O(d²) models. This is far more expensive than computing a simple statistic per feature.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 4: EMBEDDED METHODS ═══════════════════ -->
+<div class="section" id="tab-embedded">
+  <h2 class="section-title">Embedded Methods</h2>
+  <p class="section-desc">Embedded methods perform feature selection as part of model training — they get the accuracy benefits of wrappers without the full computational overhead.</p>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Why Embedded Methods Win</h3>
+    <table class="comp-table">
+      <thead><tr><th>Advantage</th><th>Over Filters</th><th>Over Wrappers</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Feature interactions</strong></td><td>Captures them (filters don't)</td><td>Same benefit</td></tr>
+        <tr><td><strong>Computational cost</strong></td><td>Comparable</td><td>Much cheaper — single training pass</td></tr>
+        <tr><td><strong>Overfitting risk</strong></td><td>Similar</td><td>Lower — no exhaustive subset search</td></tr>
+        <tr><td><strong>Model-specificity</strong></td><td>Feature selection is tuned to the model that will actually be used</td><td>Same benefit</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Common Embedded Methods</h3>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Lasso (L1 Regularization)</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Adds |w| penalty to the loss function. Drives irrelevant feature weights to <strong>exactly zero</strong>, performing automatic feature selection. The strength of selection is controlled by the regularization parameter α.
+      </div></div>
+    </div>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Ridge (L2 Regularization)</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Adds w² penalty. <strong>Shrinks</strong> coefficients toward zero but doesn't set them exactly to zero — no true feature elimination. Useful when all features contribute somewhat.
+      </div></div>
+    </div>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Elastic Net</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Combines L1 and L2 penalties. Gets sparsity from L1 while handling correlated features better than pure Lasso. Controlled by α (total regularization) and l1_ratio (mix between L1 and L2).
+      </div></div>
+    </div>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>Tree-Based Feature Importance</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Random Forests and Gradient Boosted Trees compute feature importances during training (e.g., mean decrease in impurity). Use <code>SelectFromModel</code> to keep only features above a threshold. No extra training required.
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Embedded Methods in scikit-learn</h3>
+    <div class="code-block">
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> Lasso, LogisticRegression<br>
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier<br>
+<span class="kw">from</span> sklearn.feature_selection <span class="kw">import</span> SelectFromModel<br><br>
+
+<span class="cm"># ── L1 / Lasso (sets coefficients to 0) ──</span><br>
+lasso = <span class="fn">Lasso</span>(alpha=<span class="num">0.01</span>)<br>
+lasso.<span class="fn">fit</span>(X, y)<br>
+selected = X.columns[lasso.coef_ != <span class="num">0</span>]<br><br>
+
+<span class="cm"># ── Logistic Regression with L1 penalty ──</span><br>
+lr = <span class="fn">LogisticRegression</span>(penalty=<span class="str">'l1'</span>, solver=<span class="str">'saga'</span>, C=<span class="num">0.1</span>)<br>
+selector = <span class="fn">SelectFromModel</span>(lr)<br>
+X_embedded = selector.<span class="fn">fit_transform</span>(X, y)<br><br>
+
+<span class="cm"># ── Tree-based importance ──</span><br>
+rf = <span class="fn">RandomForestClassifier</span>(n_estimators=<span class="num">200</span>)<br>
+selector_tree = <span class="fn">SelectFromModel</span>(rf, threshold=<span class="str">'median'</span>)<br>
+X_tree = selector_tree.<span class="fn">fit_transform</span>(X, y)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q9: Which regularization technique can set feature coefficients to exactly zero?</div>
+    <div class="quiz-options" data-correct="0" data-qid="e1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>L1 (Lasso)</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>L2 (Ridge)</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Both L1 and L2</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Neither — you need a separate feature selector</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="e1">L1 regularization (Lasso) produces sparse solutions — it literally zeroes out coefficients of irrelevant features. L2 (Ridge) shrinks them toward zero but never exactly to zero.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q10: What is the main advantage of embedded methods over wrapper methods?</div>
+    <div class="quiz-options" data-correct="2" data-qid="e2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>They always select fewer features</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>They don't require any labeled data</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>They integrate selection into training, avoiding repeated model fitting</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>They use statistical tests instead of model predictions</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="e2">Embedded methods select features during a single training process. Wrappers must train the model many times for different subsets. This makes embedded methods significantly more efficient while still capturing feature interactions and model-specific relevance.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q11: You suspect strong correlations between many features. Which embedded approach handles this best?</div>
+    <div class="quiz-options" data-correct="2" data-qid="e3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Pure L1 (Lasso)</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Pure L2 (Ridge)</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Elastic Net (L1 + L2)</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Decision tree importance</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="e3">Lasso tends to arbitrarily pick one feature from a correlated group and zero out the others. Elastic Net's L2 component encourages grouped selection — correlated features are kept or dropped together, giving more stable results.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 5: LINEAR TECHNIQUES ═══════════════════ -->
+<div class="section" id="tab-linear">
+  <h2 class="section-title">Linear Feature Extraction</h2>
+  <p class="section-desc">PCA, ICA, and Factor Analysis create new features by linearly combining the originals. Each has different assumptions and goals.</p>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>PCA — Principal Component Analysis</h3>
+    <div class="tag-row">
+      <span class="tag green">Unsupervised</span>
+      <span class="tag blue">Variance-maximizing</span>
+      <span class="tag purple">Orthogonal components</span>
+    </div>
+    <p><strong>Goal:</strong> Find orthogonal axes (principal components) that capture the most variance in the data.</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Eigenvalue</strong> — Amount of variance explained by a component</li>
+      <li><strong>Eigenvector</strong> — Direction of a principal component</li>
+      <li><strong>Loadings</strong> — Correlations between original features and components</li>
+      <li><strong>Explained variance ratio</strong> — Proportion of total variance captured by each component</li>
+      <li><strong>Scree plot</strong> — Plot of eigenvalues to decide how many components to keep</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps:</strong></p>
+    <ol class="steps-list">
+      <li><strong>Standardize</strong> the data (mean=0, std=1) — PCA is sensitive to scale.</li>
+      <li>Compute the <strong>covariance matrix</strong> of the standardized data.</li>
+      <li>Compute the <strong>eigenvalues and eigenvectors</strong> of the covariance matrix.</li>
+      <li><strong>Sort</strong> eigenvectors by decreasing eigenvalue.</li>
+      <li><strong>Select top k eigenvectors</strong> — these are your principal components.</li>
+      <li><strong>Project</strong> data onto these k components: X_new = X × W_k</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>ICA — Independent Component Analysis</h3>
+    <div class="tag-row">
+      <span class="tag green">Unsupervised</span>
+      <span class="tag rose">Independence-maximizing</span>
+      <span class="tag warm">Non-Gaussian sources</span>
+    </div>
+    <p><strong>Goal:</strong> Separate a multivariate signal into <strong>statistically independent</strong> (not just uncorrelated) source signals.</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Mixing matrix</strong> — How source signals were mixed to produce observations</li>
+      <li><strong>Unmixing matrix</strong> — Learned inverse to recover independent sources</li>
+      <li><strong>Non-Gaussianity</strong> — Measured via kurtosis or negentropy; ICA maximizes this</li>
+      <li><strong>Cocktail party problem</strong> — Classic analogy: separating individual speakers from mixed audio</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps (FastICA):</strong></p>
+    <ol class="steps-list">
+      <li><strong>Center</strong> the data (subtract mean).</li>
+      <li><strong>Whiten</strong> the data (decorrelate and equalize variance) — often via PCA.</li>
+      <li><strong>Initialize</strong> a random unmixing vector.</li>
+      <li>Iteratively update the vector to <strong>maximize non-Gaussianity</strong> (e.g., via negentropy approximation).</li>
+      <li><strong>Decorrelate</strong> the vector from previously found components (deflation or symmetric approach).</li>
+      <li>Repeat for each desired independent component.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Factor Analysis (FA)</h3>
+    <div class="tag-row">
+      <span class="tag green">Unsupervised</span>
+      <span class="tag blue">Latent variable model</span>
+      <span class="tag purple">Assumes noise</span>
+    </div>
+    <p><strong>Goal:</strong> Model observed variables as linear combinations of <strong>latent factors</strong> plus feature-specific noise.</p>
+    <p><strong>Model:</strong> X = μ + L·F + ε &nbsp; where L = loadings, F = factors, ε = noise</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Factor loadings</strong> — How much each observed variable relates to each factor</li>
+      <li><strong>Communality</strong> — Proportion of a variable's variance explained by the factors (1 − unique variance)</li>
+      <li><strong>Uniqueness</strong> — Variance specific to each variable (noise)</li>
+      <li><strong>Factor rotation</strong> — Varimax, Promax — make loadings easier to interpret</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps:</strong></p>
+    <ol class="steps-list">
+      <li><strong>Estimate</strong> the correlation/covariance matrix.</li>
+      <li><strong>Extract initial factors</strong> (via maximum likelihood or principal axis factoring).</li>
+      <li><strong>Determine</strong> the number of factors (eigenvalues > 1, scree plot, parallel analysis).</li>
+      <li><strong>Rotate</strong> factors for interpretability (e.g., Varimax for orthogonal, Promax for oblique).</li>
+      <li><strong>Interpret</strong> rotated factor loadings — which variables load onto which factors.</li>
+      <li><strong>Compute</strong> factor scores for each observation.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label comparison">Comparison</div>
+    <h3>PCA vs. ICA vs. Factor Analysis</h3>
+    <table class="comp-table">
+      <thead><tr><th>Aspect</th><th>PCA</th><th>ICA</th><th>Factor Analysis</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Objective</strong></td><td>Max variance</td><td>Max independence</td><td>Model latent factors + noise</td></tr>
+        <tr><td><strong>Components</strong></td><td>Orthogonal (uncorrelated)</td><td>Statistically independent</td><td>Can be correlated (oblique rotation)</td></tr>
+        <tr><td><strong>Noise model</strong></td><td>None</td><td>None</td><td>Feature-specific noise (ε)</td></tr>
+        <tr><td><strong>Ordering</strong></td><td>Ordered by variance</td><td>No natural order</td><td>No natural order</td></tr>
+        <tr><td><strong>Assumes Gaussian data?</strong></td><td>Works best with Gaussian</td><td>Requires non-Gaussian sources</td><td>Assumes Gaussian factors</td></tr>
+        <tr><td><strong>Best for</strong></td><td>Compression, denoising, visualization</td><td>Signal separation (e.g., EEG, audio)</td><td>Understanding latent constructs (psychology, surveys)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Linear Techniques in scikit-learn</h3>
+    <div class="code-block">
+<span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA, FastICA, FactorAnalysis<br>
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler<br><br>
+
+<span class="cm"># Always standardize first for PCA</span><br>
+scaler = <span class="fn">StandardScaler</span>()<br>
+X_scaled = scaler.<span class="fn">fit_transform</span>(X)<br><br>
+
+<span class="cm"># ── PCA ──</span><br>
+pca = <span class="fn">PCA</span>(n_components=<span class="num">5</span>)  <span class="cm"># or 0.95 for 95% variance</span><br>
+X_pca = pca.<span class="fn">fit_transform</span>(X_scaled)<br>
+print(pca.explained_variance_ratio_)  <span class="cm"># Variance per component</span><br>
+print(pca.components_)  <span class="cm"># Eigenvectors (loadings)</span><br><br>
+
+<span class="cm"># ── ICA ──</span><br>
+ica = <span class="fn">FastICA</span>(n_components=<span class="num">5</span>, random_state=<span class="num">42</span>)<br>
+X_ica = ica.<span class="fn">fit_transform</span>(X_scaled)<br>
+mixing = ica.mixing_  <span class="cm"># Estimated mixing matrix</span><br><br>
+
+<span class="cm"># ── Factor Analysis ──</span><br>
+fa = <span class="fn">FactorAnalysis</span>(n_components=<span class="num">5</span>, rotation=<span class="str">'varimax'</span>)<br>
+X_fa = fa.<span class="fn">fit_transform</span>(X_scaled)<br>
+print(fa.components_)  <span class="cm"># Factor loadings</span><br>
+print(fa.noise_variance_)  <span class="cm"># Per-feature noise</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q12: ICA is most appropriate when:</div>
+    <div class="quiz-options" data-correct="2" data-qid="l1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>You want to maximize explained variance</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Your data sources are Gaussian</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>You believe the data is a mixture of independent non-Gaussian signals</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>You need to model per-feature noise</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="l1">ICA assumes the observed data is a linear mixture of statistically independent non-Gaussian sources (the cocktail party problem). If sources are Gaussian, ICA cannot separate them because the joint Gaussian distribution is rotationally symmetric.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q13: What distinguishes Factor Analysis from PCA?</div>
+    <div class="quiz-options" data-correct="3" data-qid="l2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>FA components are always orthogonal, PCA's are not</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>PCA models latent variables while FA does not</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>FA requires non-Gaussian data</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>FA explicitly models per-feature noise; PCA does not</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="l2">The key distinction: FA models X = L·F + ε, where ε is feature-specific noise. PCA treats all variance the same — it doesn't separate shared variance from noise. FA also allows correlated factors (with oblique rotation), while PCA components are always orthogonal.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q14: PCA components are ordered by ____; ICA components are ____.</div>
+    <div class="quiz-options" data-correct="1" data-qid="l3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Independence; ordered by variance</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Decreasing variance; not naturally ordered</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Statistical significance; decreasing variance</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Communality; uniqueness</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="l3">PCA eigenvalues give a natural ordering (PC1 captures the most variance, then PC2, etc.). ICA components are all equally "independent" — there's no ranking criterion, so order is arbitrary.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q15: In Factor Analysis, "communality" refers to:</div>
+    <div class="quiz-options" data-correct="0" data-qid="l4">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>The proportion of a variable's variance explained by the common factors</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>The total variance of the dataset</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>The noise specific to each variable</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The number of factors extracted</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="l4">Communality = the portion of a variable's variance accounted for by the extracted factors. Uniqueness = 1 − communality = the leftover noise specific to that variable. High communality means the factors explain that variable well.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 6: NONLINEAR TECHNIQUES ═══════════════════ -->
+<div class="section" id="tab-nonlinear">
+  <h2 class="section-title">Nonlinear Feature Extraction</h2>
+  <p class="section-desc">When data lies on a curved manifold, linear methods fail. MDS, Isomap, and t-SNE capture nonlinear structure.</p>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>MDS — Multidimensional Scaling</h3>
+    <div class="tag-row">
+      <span class="tag blue">Distance-preserving</span>
+      <span class="tag green">Unsupervised</span>
+    </div>
+    <p><strong>Goal:</strong> Find a low-dimensional configuration that preserves pairwise <strong>distances</strong> (or dissimilarities) between points as well as possible.</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Stress</strong> — Objective function measuring mismatch between high-D and low-D distances</li>
+      <li><strong>Dissimilarity matrix</strong> — Input matrix of pairwise distances</li>
+      <li><strong>Metric vs. Non-metric MDS</strong> — Metric preserves actual distances; non-metric preserves only rank order</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps (metric MDS):</strong></p>
+    <ol class="steps-list">
+      <li>Compute the <strong>pairwise distance matrix</strong> in the original space.</li>
+      <li><strong>Initialize</strong> points in the low-dimensional space (randomly or via PCA).</li>
+      <li>Compute distances in the low-D space.</li>
+      <li>Compute <strong>stress</strong> — the mismatch between high-D and low-D distances.</li>
+      <li><strong>Optimize</strong> point positions to minimize stress (gradient descent or SMACOF).</li>
+      <li>Repeat until convergence.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Isomap</h3>
+    <div class="tag-row">
+      <span class="tag rose">Geodesic distances</span>
+      <span class="tag blue">Graph-based</span>
+      <span class="tag green">Unsupervised</span>
+    </div>
+    <p><strong>Goal:</strong> Preserve <strong>geodesic</strong> (along-the-manifold) distances, not straight-line Euclidean distances.</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Geodesic distance</strong> — Shortest path along the manifold surface (like walking on a hill vs. tunneling through it)</li>
+      <li><strong>k-nearest neighbor graph</strong> — Connects each point to its k closest neighbors</li>
+      <li><strong>Shortest path</strong> — Dijkstra's or Floyd-Warshall on the graph approximates geodesic distances</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps:</strong></p>
+    <ol class="steps-list">
+      <li>Construct a <strong>k-nearest neighbor graph</strong> — edges weighted by Euclidean distance.</li>
+      <li>Compute <strong>shortest path distances</strong> between all pairs using Dijkstra's algorithm. These approximate geodesic distances.</li>
+      <li>Apply <strong>classical MDS</strong> to the geodesic distance matrix to obtain the low-D embedding.</li>
+    </ol>
+    <div class="analogy-box">Imagine two points on opposite sides of a Swiss roll. Euclidean distance says they're close (straight through the roll). Geodesic distance follows the surface — much longer and more faithful to the true structure. Isomap uses graph shortest paths to approximate this.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>t-SNE (t-Distributed Stochastic Neighbor Embedding)</h3>
+    <div class="tag-row">
+      <span class="tag purple">Probabilistic</span>
+      <span class="tag warm">Local structure</span>
+      <span class="tag green">Unsupervised</span>
+    </div>
+    <p><strong>Goal:</strong> Preserve <strong>local neighborhood structure</strong> — points that are close in high-D should be close in low-D. Great for visualization.</p>
+    <p><strong>Key terminology:</strong></p>
+    <ul>
+      <li><strong>Perplexity</strong> — Balances local vs. global structure (~5–50 typical). Roughly "effective number of neighbors"</li>
+      <li><strong>KL divergence</strong> — Objective: minimize the gap between high-D and low-D probability distributions</li>
+      <li><strong>Student's t-distribution</strong> — Used in low-D to allow dissimilar points to spread far apart (heavier tails than Gaussian)</li>
+      <li><strong>Crowding problem</strong> — In low-D, you can't maintain all distances; the t-distribution helps alleviate this</li>
+    </ul>
+    <p style="margin-top:12px"><strong>Algorithm steps:</strong></p>
+    <ol class="steps-list">
+      <li>Compute pairwise <strong>conditional probabilities</strong> in high-D using a Gaussian kernel (controlled by perplexity).</li>
+      <li>Symmetrize: p_ij = (p_j|i + p_i|j) / 2n.</li>
+      <li>Initialize low-D points (randomly or via PCA).</li>
+      <li>Compute pairwise probabilities in low-D using a <strong>Student's t-distribution</strong> with 1 degree of freedom.</li>
+      <li>Minimize <strong>KL divergence</strong> between the two distributions via gradient descent.</li>
+      <li>Iterate until convergence (using early exaggeration and momentum).</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-label comparison">Comparison</div>
+    <h3>MDS vs. Isomap vs. t-SNE</h3>
+    <table class="comp-table">
+      <thead><tr><th>Aspect</th><th>MDS</th><th>Isomap</th><th>t-SNE</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Preserves</strong></td><td>Pairwise distances</td><td>Geodesic distances</td><td>Local neighborhood probabilities</td></tr>
+        <tr><td><strong>Global structure</strong></td><td>Good</td><td>Good</td><td>Poor (clusters are meaningful, gaps between clusters are not)</td></tr>
+        <tr><td><strong>Nonlinear manifolds</strong></td><td>Handles some (non-metric)</td><td>Excellent (Swiss roll, etc.)</td><td>Excellent for clusters</td></tr>
+        <tr><td><strong>Scalability</strong></td><td>O(n²) to O(n³)</td><td>O(n²·log n) — shortest paths</td><td>O(n²) naïve; O(n·log n) with Barnes-Hut</td></tr>
+        <tr><td><strong>Deterministic?</strong></td><td>Classical MDS: Yes</td><td>Yes</td><td>No — depends on initialization</td></tr>
+        <tr><td><strong>New data points</strong></td><td>Must re-run</td><td>Must re-run (or use kernel Isomap)</td><td>Must re-run</td></tr>
+        <tr><td><strong>Best for</strong></td><td>Visualizing distance data, psychometrics</td><td>Manifold learning (Swiss roll)</td><td>Visualizing high-D clusters (images, NLP)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Nonlinear Techniques in scikit-learn</h3>
+    <div class="code-block">
+<span class="kw">from</span> sklearn.manifold <span class="kw">import</span> MDS, Isomap, TSNE<br>
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler<br><br>
+
+X_scaled = <span class="fn">StandardScaler</span>().<span class="fn">fit_transform</span>(X)<br><br>
+
+<span class="cm"># ── MDS ──</span><br>
+mds = <span class="fn">MDS</span>(n_components=<span class="num">2</span>, random_state=<span class="num">42</span>, normalized_stress=<span class="str">'auto'</span>)<br>
+X_mds = mds.<span class="fn">fit_transform</span>(X_scaled)<br>
+print(mds.stress_)  <span class="cm"># Final stress value</span><br><br>
+
+<span class="cm"># ── Isomap ──</span><br>
+iso = <span class="fn">Isomap</span>(n_components=<span class="num">2</span>, n_neighbors=<span class="num">10</span>)<br>
+X_iso = iso.<span class="fn">fit_transform</span>(X_scaled)<br>
+print(iso.reconstruction_error())  <span class="cm"># Reconstruction error</span><br><br>
+
+<span class="cm"># ── t-SNE ──</span><br>
+tsne = <span class="fn">TSNE</span>(n_components=<span class="num">2</span>, perplexity=<span class="num">30</span>, random_state=<span class="num">42</span>)<br>
+X_tsne = tsne.<span class="fn">fit_transform</span>(X_scaled)<br>
+<span class="cm"># Note: t-SNE has no .transform() — cannot project new data</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q16: Your data lies on a Swiss-roll manifold. Which technique best unrolls it?</div>
+    <div class="quiz-options" data-correct="1" data-qid="n1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>PCA</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Isomap</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>t-SNE</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Factor Analysis</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="n1">Isomap uses geodesic distances (shortest path along the manifold), which correctly measures "unrolled" distance on the Swiss roll. PCA would project linearly and smash the roll flat. t-SNE preserves local neighborhoods but distorts global manifold structure.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q17: In t-SNE, the perplexity parameter roughly controls:</div>
+    <div class="quiz-options" data-correct="2" data-qid="n2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>The number of output dimensions</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>The learning rate of gradient descent</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>The effective number of neighbors considered for each point</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The number of principal components used for initialization</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="n2">Perplexity ≈ effective number of neighbors. Low perplexity → very local structure (tiny clusters). High perplexity → more global structure. Typical range: 5–50. It controls the bandwidth of the Gaussian kernel in the high-D probability computation.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q18: Which statement about t-SNE is FALSE?</div>
+    <div class="quiz-options" data-correct="3" data-qid="n3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>It uses KL divergence as its objective function</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>The low-dimensional similarities use a Student's t-distribution</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>It is non-deterministic — different runs can yield different results</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Distances between well-separated clusters in the plot are meaningful</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="n3">t-SNE preserves LOCAL structure (nearby points stay nearby), but distances between clusters in the visualization are NOT reliable. Clusters may appear equally spaced even if their true distances differ greatly. Never interpret inter-cluster gaps as meaningful distance.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q19: Isomap extends classical MDS by replacing Euclidean distances with:</div>
+    <div class="quiz-options" data-correct="0" data-qid="n4">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Graph-based geodesic distances (shortest paths through a k-NN graph)</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Cosine similarities</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>KL divergence-based probabilities</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Mahalanobis distances</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="n4">Isomap's key insight: build a k-NN graph, compute shortest paths (Dijkstra/Floyd-Warshall), and feed these geodesic approximations into classical MDS. This captures the manifold's curved geometry rather than cutting straight through it.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 7: PCA DEEP DIVE ═══════════════════ -->
+<div class="section" id="tab-pca-deep">
+  <h2 class="section-title">PCA Deep Dive</h2>
+  <p class="section-desc">Performing PCA end-to-end: choosing components, interpreting loadings, and comparing PCA-based models to original-feature models.</p>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>How to Select the Number of Components</h3>
+    <p>Three common strategies:</p>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>1. Cumulative Explained Variance Threshold</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Keep components until you reach a threshold (e.g., 90% or 95% of total variance). In sklearn: <code>PCA(n_components=0.95)</code> automatically selects the right number. This is the most common approach for practical ML.
+      </div></div>
+    </div>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>2. Scree Plot / Elbow Method</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Plot eigenvalues (or explained variance) vs. component number. Look for the "elbow" — the point where adding more components yields diminishing returns. Keep components before the elbow.
+      </div></div>
+    </div>
+    <div class="collapsible">
+      <div class="collapsible-header"><span>3. Kaiser Criterion (eigenvalue > 1)</span><span class="arrow">▼</span></div>
+      <div class="collapsible-body"><div class="collapsible-content">
+        Keep only components whose eigenvalue exceeds 1 (on standardized data). Rationale: a component should explain at least as much variance as a single original feature. Simple but can over- or under-extract.
+      </div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Correlation Matrix: Features vs. Components</h3>
+    <p>The <strong>loading matrix</strong> shows how each original feature correlates with each principal component:</p>
+    <ul>
+      <li><strong>High positive loading</strong> (+0.7 to +1.0) → feature strongly contributes to the component in the positive direction</li>
+      <li><strong>High negative loading</strong> (−0.7 to −1.0) → feature contributes strongly in the opposite direction</li>
+      <li><strong>Near zero</strong> → feature has little relationship with that component</li>
+    </ul>
+    <p style="margin-top:10px"><strong>How to compute it:</strong> loadings = eigenvectors × √eigenvalues. In sklearn: <code>loadings = pca.components_.T * np.sqrt(pca.explained_variance_)</code></p>
+    <div class="analogy-box">Think of each PC as a "theme" that summarizes a group of features. The correlation matrix tells you which features belong to which theme and how strongly. PC1 might be the "size" theme if height, weight, and BMI all load heavily on it.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label concept">Concept</div>
+    <h3>Original Features vs. PCA Components as Model Inputs</h3>
+    <p>A common experiment: train a model on all original features, then train the same model on PCA-reduced features. Compare:</p>
+    <table class="comp-table">
+      <thead><tr><th>Aspect</th><th>Original Features</th><th>PCA Components</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dimensionality</strong></td><td>May be very high (d features)</td><td>Much lower (k components, k ≪ d)</td></tr>
+        <tr><td><strong>Multicollinearity</strong></td><td>May be present</td><td>Eliminated — PCs are orthogonal</td></tr>
+        <tr><td><strong>Training speed</strong></td><td>Slower with many features</td><td>Faster with fewer components</td></tr>
+        <tr><td><strong>Overfitting risk</strong></td><td>Higher with many features, few samples</td><td>Lower — fewer inputs reduce model complexity</td></tr>
+        <tr><td><strong>Interpretability</strong></td><td>Feature names are meaningful</td><td>"PC1", "PC2" — harder to explain</td></tr>
+        <tr><td><strong>Performance</strong></td><td>May be better if all features are relevant</td><td>Often comparable; sometimes better if originals were noisy/correlated</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-label code">Code</div>
+    <h3>Full PCA Pipeline & Model Comparison</h3>
+    <div class="code-block">
+<span class="kw">import</span> numpy <span class="kw">as</span> np<br>
+<span class="kw">from</span> sklearn.decomposition <span class="kw">import</span> PCA<br>
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler<br>
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression<br>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> cross_val_score<br><br>
+
+<span class="cm"># Step 1: Standardize</span><br>
+scaler = <span class="fn">StandardScaler</span>()<br>
+X_scaled = scaler.<span class="fn">fit_transform</span>(X)<br><br>
+
+<span class="cm"># Step 2: PCA with 95% variance threshold</span><br>
+pca = <span class="fn">PCA</span>(n_components=<span class="num">0.95</span>)<br>
+X_pca = pca.<span class="fn">fit_transform</span>(X_scaled)<br>
+print(f<span class="str">"Components kept: {pca.n_components_}"</span>)<br>
+print(f<span class="str">"Total variance: {sum(pca.explained_variance_ratio_):.2%}"</span>)<br><br>
+
+<span class="cm"># Step 3: Loadings (feature-component correlations)</span><br>
+loadings = pca.components_.T * np.<span class="fn">sqrt</span>(pca.explained_variance_)<br>
+<span class="cm"># loadings[i, j] = correlation of feature i with PC j</span><br><br>
+
+<span class="cm"># Step 4: Compare model performance</span><br>
+model = <span class="fn">LogisticRegression</span>(max_iter=<span class="num">1000</span>)<br><br>
+
+scores_orig = <span class="fn">cross_val_score</span>(model, X_scaled, y, cv=<span class="num">5</span>)<br>
+scores_pca  = <span class="fn">cross_val_score</span>(model, X_pca, y, cv=<span class="num">5</span>)<br><br>
+
+print(f<span class="str">"Original:  {scores_orig.mean():.4f} ± {scores_orig.std():.4f}"</span>)<br>
+print(f<span class="str">"PCA-based: {scores_pca.mean():.4f} ± {scores_pca.std():.4f}"</span>)
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q20: You set PCA(n_components=0.95). What does this do?</div>
+    <div class="quiz-options" data-correct="1" data-qid="p1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Keeps exactly 95 components</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Keeps the minimum number of components needed to explain 95% of total variance</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Drops 95% of the features</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Sets a regularization strength of 0.95</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="p1">When n_components is a float between 0 and 1, scikit-learn's PCA interprets it as a cumulative explained variance threshold. It automatically selects the fewest components that together explain at least that fraction of total variance.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q21: Why must you standardize data before PCA?</div>
+    <div class="quiz-options" data-correct="2" data-qid="p2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>PCA requires positive values</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>The eigenvalue decomposition only works on normalized matrices</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Features with larger scales would dominate the variance and thus the principal components</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Standardization makes the data Gaussian, which PCA requires</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="p2">PCA maximizes variance. If one feature is measured in millions and another in fractions, the high-scale feature would dominate PC1 regardless of its importance. Standardizing (mean=0, std=1) puts all features on equal footing. PCA does not require Gaussian data.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q22: In the loading matrix, feature X has loadings [0.85, -0.02, 0.10] on PC1, PC2, PC3. What can you conclude?</div>
+    <div class="quiz-options" data-correct="0" data-qid="p3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Feature X is strongly associated with PC1 and weakly with PC2 and PC3</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Feature X is equally important across all three components</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Feature X should be removed since it only loads on one component</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Feature X is independent of the data</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="p3">A loading of 0.85 on PC1 means feature X is highly correlated with PC1 — it's a major contributor to the "theme" that PC1 represents. Near-zero loadings on PC2/PC3 mean it contributes little to those components. This is normal and useful information.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q23: A logistic regression trained on PCA components outperforms one trained on all original features. The most likely reason is:</div>
+    <div class="quiz-options" data-correct="1" data-qid="p4">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>PCA creates better features from scratch</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>PCA removed noise and multicollinearity, reducing overfitting</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>PCA is a supervised method that optimizes for the target</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Logistic regression cannot work with more than 10 features</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="p4">PCA is unsupervised — it doesn't see the target. But by removing low-variance (noisy) directions and multicollinearity, it provides cleaner inputs. With fewer, orthogonal features, the model generalizes better, especially when d is large relative to n.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q24: The Kaiser criterion recommends keeping components with eigenvalues:</div>
+    <div class="quiz-options" data-correct="2" data-qid="p5">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Greater than 0</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Greater than the mean eigenvalue</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Greater than 1 (on standardized data)</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>In the top 50th percentile</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="p5">On standardized data, each original feature contributes a variance of 1. A component with eigenvalue > 1 explains more variance than any single original feature, making it "worth keeping." This is the Kaiser criterion. Note: on standardized data, the mean eigenvalue IS 1, so B and C are related but C is the standard formulation.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TAB 8: FINAL REVIEW ═══════════════════ -->
+<div class="section" id="tab-final">
+  <h2 class="section-title">Final Review — Comprehensive MCQs</h2>
+  <p class="section-desc">Professor-style questions that cross topics and test deeper understanding.</p>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q25: You're building a medical diagnosis model where doctors need to understand WHY the model made a prediction. Which approach is best?</div>
+    <div class="quiz-options" data-correct="0" data-qid="r1">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Feature selection (e.g., Lasso) — keeps original interpretable features</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>PCA — creates compact components</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>t-SNE — excellent visualization</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>ICA — separates independent signals</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r1">Interpretability is paramount in medicine. Feature selection retains original feature names (e.g., "blood pressure", "age") so doctors can explain decisions. PCA/ICA/t-SNE create abstract components that lack direct medical meaning.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q26: You want to visualize 50,000 document embeddings (300D) to find topical clusters. Best technique?</div>
+    <div class="quiz-options" data-correct="2" data-qid="r2">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>PCA down to 2D</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Isomap</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>t-SNE (possibly after PCA to ~50D first)</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Forward feature selection</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r2">t-SNE excels at revealing cluster structure in high-D data for visualization. A common pipeline: PCA to ~50D first (speed + denoising), then t-SNE to 2D. Isomap would be O(n²) — too slow for 50k points. PCA alone often fails to reveal cluster structure in 2D.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q27: Which of these is NOT an advantage of Elastic Net over pure Lasso?</div>
+    <div class="quiz-options" data-correct="3" data-qid="r3">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Better handling of correlated features (grouping effect)</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>More stable feature selection</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Can select more features than observations (when n < p)</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>It does not require any hyperparameter tuning</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r3">Elastic Net has TWO hyperparameters (α and l1_ratio) — more tuning than Lasso (just α). Its advantages are the grouping effect (selecting correlated features together), stability, and working when p > n. Pure Lasso can select at most n features when p > n.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q28: After running PCA, you find that PC1 explains 80% of variance and PC2 explains 15%. When you check loadings, PC1 has high loadings on "height", "weight", and "shoe_size". PC1 likely represents:</div>
+    <div class="quiz-options" data-correct="1" data-qid="r4">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>A noise component that should be discarded</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>A latent "body size" factor capturing shared variance across size-related features</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>An artifact of not standardizing the data</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The target variable leaking into the features</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r4">When correlated features (all related to body size) load heavily on the same PC, that component captures their shared latent construct — "body size." This is exactly what PCA is designed to find: the main directions of variation in the data.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q29: You run t-SNE on a dataset and see 5 clear clusters. Your colleague argues that Cluster A is "much farther" from Cluster B than from Cluster C based on the plot. Is this valid?</div>
+    <div class="quiz-options" data-correct="1" data-qid="r5">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Yes — t-SNE preserves all pairwise distances</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>No — t-SNE only preserves local structure; inter-cluster distances are unreliable</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Yes — the t-distribution ensures global distances are accurate</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>It depends on the perplexity setting</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r5">t-SNE's KL divergence objective strongly preserves local neighborhoods (which points are NEAR each other) but does not preserve global structure. The distances between clusters in a t-SNE plot are essentially meaningless — you cannot conclude one cluster is "farther" than another.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q30: Which technique produces components that are statistically INDEPENDENT (not just uncorrelated)?</div>
+    <div class="quiz-options" data-correct="1" data-qid="r6">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>PCA</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>ICA</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Factor Analysis</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>MDS</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r6">PCA produces uncorrelated components (zero linear correlation), but ICA goes further — it finds components that are statistically independent (no relationship of any order). This is a stronger condition. Independence ⊃ uncorrelatedness.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q31: You have 20 features and want to select the best 5 using a Random Forest. You want to account for feature interactions but training is cheap. Best approach?</div>
+    <div class="quiz-options" data-correct="2" data-qid="r7">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Chi-squared filter</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Mutual information filter</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>RFE with the Random Forest</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>PCA keeping 5 components</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r7">With only 20 features and cheap training, RFE is practical and will capture interactions (Random Forest natively models them). Filters evaluate features independently. PCA is extraction, not selection — you'd lose original feature names. RFE + RF is the sweet spot here.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q32: A researcher applies Factor Analysis and finds that a variable has communality = 0.15. This means:</div>
+    <div class="quiz-options" data-correct="2" data-qid="r8">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>The variable is the most important in the dataset</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>85% of the variable's variance is explained by the factors</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>Only 15% of the variable's variance is explained by the factors — it's mostly noise/unique</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>The variable loads equally on all factors</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r8">Communality of 0.15 means the extracted factors explain only 15% of that variable's variance. The remaining 85% is "uniqueness" — specific to that variable or noise. This variable may not fit well with the factor model and could be a candidate for removal.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q33: SelectKBest with f_classif and SelectKBest with mutual_info_classif: when would they disagree most?</div>
+    <div class="quiz-options" data-correct="3" data-qid="r9">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>When all features are perfectly correlated with the target</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>When the dataset has very few samples</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>When all relationships are linear</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>When features have strong nonlinear relationships with the target</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r9">f_classif (ANOVA F-test) only detects linear separability between classes. Mutual information captures any dependency, including nonlinear ones. If a feature has a strong U-shaped or circular relationship with the target, MI would rank it high while f_classif might rank it low.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label quiz">Quiz</div>
+    <div class="quiz-question">Q34: You need to reduce dimensionality of a dataset for a downstream classifier. You can afford 5 minutes of compute. Features: 500, Samples: 10,000. Rank these approaches from fastest to slowest:</div>
+    <div class="quiz-options" data-correct="0" data-qid="r10">
+      <div class="quiz-opt" data-idx="0"><span class="letter">A</span><span>Filter → PCA → Embedded → Wrapper</span></div>
+      <div class="quiz-opt" data-idx="1"><span class="letter">B</span><span>Wrapper → Embedded → PCA → Filter</span></div>
+      <div class="quiz-opt" data-idx="2"><span class="letter">C</span><span>PCA → Filter → Wrapper → Embedded</span></div>
+      <div class="quiz-opt" data-idx="3"><span class="letter">D</span><span>Embedded → Filter → PCA → Wrapper</span></div>
+    </div>
+    <div class="quiz-explanation" data-qid="r10">Filter methods just compute statistics — O(n·d). PCA is a single eigendecomposition — O(d²·n). Embedded methods train one model — O depends on model but one pass. Wrappers train many models — O(d² × model training). From fastest to slowest: Filter → PCA → Embedded → Wrapper.</div>
+  </div>
+</div>
+
+<script>
+// ─── State ───
+let correct = 0, incorrect = 0, answered = 0;
+const answeredQs = new Set();
+
+function countQuizzes() {
+  return document.querySelectorAll('.quiz-options').length;
+}
+
+function updateScore() {
+  document.getElementById('score-correct').textContent = correct;
+  document.getElementById('score-incorrect').textContent = incorrect;
+  document.getElementById('score-total').textContent = answered;
+  document.getElementById('score-max').textContent = countQuizzes();
+  const pct = countQuizzes() > 0 ? (answered / countQuizzes()) * 100 : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+// ─── Tab Navigation ───
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// ─── Quiz Logic ───
+document.querySelectorAll('.quiz-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    const container = opt.closest('.quiz-options');
+    const qid = container.dataset.qid;
+    if (answeredQs.has(qid)) return;
+    answeredQs.add(qid);
+    answered++;
+
+    const correctIdx = parseInt(container.dataset.correct);
+    const selectedIdx = parseInt(opt.dataset.idx);
+    const expEl = document.querySelector(`.quiz-explanation[data-qid="${qid}"]`);
+
+    container.querySelectorAll('.quiz-opt').forEach(o => o.classList.add('disabled'));
+
+    if (selectedIdx === correctIdx) {
+      opt.classList.add('selected-correct');
+      correct++;
+      if (expEl) expEl.classList.add('correct-exp');
+    } else {
+      opt.classList.add('selected-incorrect');
+      container.querySelector(`.quiz-opt[data-idx="${correctIdx}"]`).classList.add('show-correct');
+      incorrect++;
+      if (expEl) expEl.classList.add('incorrect-exp');
+    }
+    updateScore();
+  });
+});
+
+// ─── Collapsibles ───
+document.querySelectorAll('.collapsible-header').forEach(header => {
+  header.addEventListener('click', () => {
+    header.closest('.collapsible').classList.toggle('open');
+  });
+});
+
+// ─── Reset ───
+function resetAll() {
+  correct = 0; incorrect = 0; answered = 0;
+  answeredQs.clear();
+  document.querySelectorAll('.quiz-opt').forEach(o => {
+    o.classList.remove('selected-correct', 'selected-incorrect', 'show-correct', 'disabled');
+  });
+  document.querySelectorAll('.quiz-explanation').forEach(e => {
+    e.classList.remove('correct-exp', 'incorrect-exp');
+  });
+  updateScore();
+}
+
+// Init
+updateScore();
+</script>
+</body>
+</html>

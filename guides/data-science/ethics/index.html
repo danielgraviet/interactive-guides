@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 180 – Data Science Ethics Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1a2e;
+  --paper: #f5f0e8;
+  --accent: #c0392b;
+  --accent2: #2c3e6b;
+  --accent3: #1a6b4a;
+  --muted: #8a8578;
+  --card: #fffdf7;
+  --border: #d4cfc4;
+  --correct: #1a6b4a;
+  --wrong: #c0392b;
+  --highlight: #fef3cd;
+  --shadow: rgba(26,26,46,0.08);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'IBM Plex Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.7;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+.topbar {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .85rem;
+  box-shadow: 0 2px 20px rgba(0,0,0,.2);
+}
+.topbar .logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem;
+  letter-spacing: .02em;
+}
+.topbar .logo span { color: var(--accent); }
+.progress-wrap {
+  display: flex; align-items: center; gap: .75rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .75rem;
+  color: #aaa;
+}
+.progress-bar-bg {
+  width: 140px; height: 6px;
+  background: rgba(255,255,255,.12);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width .5s ease;
+}
+
+/* ── SIDEBAR NAV ── */
+.sidebar {
+  position: fixed; top: 56px; left: 0; bottom: 0;
+  width: 280px; background: var(--card);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; z-index: 90;
+  padding: 1.5rem 0;
+  transition: transform .3s ease;
+}
+.sidebar.hidden { transform: translateX(-100%); }
+.sidebar-toggle {
+  position: fixed; top: 68px; left: 12px; z-index: 95;
+  background: var(--ink); color: var(--paper);
+  border: none; border-radius: 6px;
+  width: 36px; height: 36px; cursor: pointer;
+  font-size: 1.1rem;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.nav-section {
+  padding: .25rem 1.25rem;
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 1rem;
+}
+.nav-section:first-child { margin-top: 0; }
+.nav-item {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .5rem 1.25rem;
+  font-size: .82rem;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all .15s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(0,0,0,.04); }
+.nav-item.active {
+  background: rgba(192,57,43,.06);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.nav-check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem;
+  flex-shrink: 0;
+  transition: all .3s;
+}
+.nav-check.done {
+  background: var(--correct);
+  border-color: var(--correct);
+  color: #fff;
+}
+
+/* ── MAIN ── */
+.main {
+  margin-left: 280px;
+  margin-top: 56px;
+  min-height: calc(100vh - 56px);
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 5rem 3rem 4rem;
+  text-align: center;
+  background: linear-gradient(170deg, var(--ink) 0%, #2c3e6b 100%);
+  color: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    90deg, transparent, transparent 60px,
+    rgba(255,255,255,.02) 60px, rgba(255,255,255,.02) 61px
+  );
+}
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2.8rem;
+  margin-bottom: .5rem;
+  position: relative;
+}
+.hero .subtitle {
+  font-size: 1.05rem;
+  font-weight: 300;
+  opacity: .8;
+  max-width: 540px;
+  margin: 0 auto 2rem;
+  position: relative;
+}
+.hero .tag {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .75rem;
+  background: rgba(255,255,255,.1);
+  padding: .35rem 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.15);
+  position: relative;
+}
+.start-btn {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: .85rem 2.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  position: relative;
+}
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(192,57,43,.35);
+}
+
+/* ── SECTIONS ── */
+.section {
+  padding: 3.5rem 3rem;
+  max-width: 780px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--border);
+}
+.section:last-child { border-bottom: none; }
+
+.section-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  margin-bottom: .5rem;
+}
+.section h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.75rem;
+  margin-bottom: .25rem;
+  color: var(--ink);
+}
+.section .lo {
+  font-size: .8rem;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.section p { margin-bottom: 1rem; }
+
+.callout {
+  background: var(--highlight);
+  border-left: 4px solid #d4a017;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+  border-radius: 0 8px 8px 0;
+  font-size: .92rem;
+}
+.callout strong { color: #8a6d0b; }
+
+.example-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+}
+.example-box .label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent2);
+  margin-bottom: .5rem;
+  font-weight: 600;
+}
+
+.term {
+  font-weight: 600;
+  color: var(--accent2);
+}
+
+.def-card {
+  display: inline-block;
+  background: var(--accent2);
+  color: #fff;
+  padding: .75rem 1.25rem;
+  border-radius: 8px;
+  margin: .75rem 0;
+  font-size: .95rem;
+}
+.def-card .def-word {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem;
+  margin-bottom: .2rem;
+}
+
+/* ── QUIZ ── */
+.quiz-block {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+.quiz-block .q-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+.quiz-block .q-text {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+.q-options { display: flex; flex-direction: column; gap: .5rem; }
+.q-opt {
+  padding: .7rem 1rem;
+  background: var(--paper);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: all .15s;
+  display: flex; align-items: flex-start; gap: .6rem;
+}
+.q-opt:hover:not(.disabled) {
+  border-color: var(--accent2);
+  background: rgba(44,62,107,.04);
+}
+.q-opt .letter {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .75rem;
+  font-weight: 600;
+  background: var(--border);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.q-opt.correct {
+  border-color: var(--correct);
+  background: rgba(26,107,74,.08);
+}
+.q-opt.correct .letter { background: var(--correct); color: #fff; }
+.q-opt.wrong {
+  border-color: var(--wrong);
+  background: rgba(192,57,43,.06);
+}
+.q-opt.wrong .letter { background: var(--wrong); color: #fff; }
+.q-opt.disabled { cursor: default; opacity: .7; }
+.q-opt.disabled.correct { opacity: 1; }
+
+.q-feedback {
+  margin-top: .75rem;
+  padding: .75rem 1rem;
+  border-radius: 8px;
+  font-size: .88rem;
+  display: none;
+}
+.q-feedback.show { display: block; }
+.q-feedback.right {
+  background: rgba(26,107,74,.1);
+  color: var(--correct);
+}
+.q-feedback.wrong-fb {
+  background: rgba(192,57,43,.08);
+  color: var(--wrong);
+}
+
+/* ── GRAPH CRITIQUE ── */
+.misleading-graph {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin: 1.25rem 0;
+  text-align: center;
+}
+.misleading-graph svg { max-width: 100%; }
+.reveal-btn {
+  margin-top: .75rem;
+  padding: .5rem 1.25rem;
+  background: var(--accent2);
+  color: #fff;
+  border: none; border-radius: 6px;
+  font-size: .85rem; cursor: pointer;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 500;
+  transition: background .15s;
+}
+.reveal-btn:hover { background: #1e2d4f; }
+.reveal-text {
+  display: none;
+  margin-top: .75rem;
+  text-align: left;
+  font-size: .88rem;
+  padding: .75rem;
+  background: rgba(44,62,107,.06);
+  border-radius: 6px;
+}
+
+/* ── FLASHCARD ── */
+.flashcard-deck {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  margin: 1.25rem 0;
+}
+.flashcard {
+  flex: 1; min-width: 200px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+  position: relative;
+  min-height: 120px;
+}
+.flashcard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px var(--shadow);
+}
+.flashcard .fc-front {
+  font-weight: 600;
+  font-size: .95rem;
+}
+.flashcard .fc-back {
+  display: none;
+  font-size: .88rem;
+  color: var(--muted);
+  margin-top: .5rem;
+  padding-top: .5rem;
+  border-top: 1px dashed var(--border);
+}
+.flashcard.flipped .fc-back { display: block; }
+.flashcard .fc-hint {
+  position: absolute;
+  bottom: .5rem; right: .75rem;
+  font-size: .65rem;
+  color: var(--muted);
+  font-style: italic;
+}
+.flashcard.flipped .fc-hint { display: none; }
+
+/* ── FINAL EXAM ── */
+.final-score {
+  text-align: center;
+  padding: 2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+  display: none;
+}
+.final-score .big-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 3.5rem;
+  color: var(--accent);
+}
+.final-score .big-label {
+  font-size: .85rem;
+  color: var(--muted);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.show { transform: translateX(0); }
+  .sidebar-toggle { display: flex; }
+  .main { margin-left: 0; }
+  .hero { padding: 4rem 1.5rem 3rem; }
+  .hero h1 { font-size: 2rem; }
+  .section { padding: 2.5rem 1.5rem; }
+}
+@media (max-width: 480px) {
+  .hero h1 { font-size: 1.6rem; }
+  .flashcard-deck { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">CS 180 <span>Ethics Tutor</span></div>
+  <div class="progress-wrap">
+    <span id="progressLabel">0 / 13</span>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<!-- SIDEBAR TOGGLE -->
+<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="nav-section">Foundations</div>
+  <a class="nav-item" data-target="s1"><span class="nav-check" id="nc1"></span>Why Ethics Matter</a>
+  <a class="nav-item" data-target="s2"><span class="nav-check" id="nc2"></span>Anonymizing Data</a>
+  <a class="nav-item" data-target="s3"><span class="nav-check" id="nc3"></span>Algorithmic Bias</a>
+  <a class="nav-item" data-target="s4"><span class="nav-check" id="nc4"></span>Consent in Data Science</a>
+  <a class="nav-item" data-target="s5"><span class="nav-check" id="nc5"></span>Environmental Impact</a>
+  <div class="nav-section">Statistics & Visualization</div>
+  <a class="nav-item" data-target="s6"><span class="nav-check" id="nc6"></span>Misuses of Statistics</a>
+  <a class="nav-item" data-target="s7"><span class="nav-check" id="nc7"></span>Misleading Graphs</a>
+  <div class="nav-section">Privacy & Security</div>
+  <a class="nav-item" data-target="s8"><span class="nav-check" id="nc8"></span>Confidentiality</a>
+  <a class="nav-item" data-target="s9"><span class="nav-check" id="nc9"></span>Protective Precautions</a>
+  <a class="nav-item" data-target="s10"><span class="nav-check" id="nc10"></span>Privacy Tradeoffs</a>
+  <div class="nav-section">Machine Learning Ethics</div>
+  <a class="nav-item" data-target="s11"><span class="nav-check" id="nc11"></span>Ethical ML Principles</a>
+  <a class="nav-item" data-target="s12"><span class="nav-check" id="nc12"></span>Black Box Models</a>
+  <a class="nav-item" data-target="s13"><span class="nav-check" id="nc13"></span>ML Ethical Concerns</a>
+  <div class="nav-section">Assessment</div>
+  <a class="nav-item" data-target="final">📝 Final Review Quiz</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- HERO -->
+<div class="hero" id="hero">
+  <div class="tag">BYU · CS 180 · Intro to Data Science</div>
+  <h1>Ethics in Data Science</h1>
+  <p class="subtitle">An interactive tutor covering privacy, bias, consent, misleading statistics, machine learning ethics, and more.</p>
+  <button class="start-btn" onclick="document.getElementById('s1').scrollIntoView({behavior:'smooth'})">Begin Learning →</button>
+</div>
+
+<!-- ═══════════ SECTION 1 ═══════════ -->
+<div class="section" id="s1">
+  <div class="section-num">Module 01</div>
+  <h2>Why Ethics Matter in Data Science</h2>
+  <div class="lo">LO → Explain why ethics are important in data science.</div>
+
+  <p>Data scientists wield enormous power. The models you build and the data you handle can affect hiring decisions, loan approvals, criminal sentencing, healthcare access, and more. Ethics are the guardrails that ensure this power is used responsibly.</p>
+
+  <div class="callout">
+    <strong>Key Idea:</strong> Unlike physical engineering (bridges, buildings), the consequences of unethical data science can be invisible—people may never know an algorithm denied them an opportunity.
+  </div>
+
+  <p>Ethics in data science matter because of <span class="term">scale</span> (one model can affect millions), <span class="term">opacity</span> (decisions are often hidden inside code), and <span class="term">permanence</span> (data and models persist long after they're created).</p>
+
+  <div class="example-box">
+    <div class="label">Real-World Case</div>
+    <p>In 2018, Amazon scrapped an internal AI recruiting tool after discovering it systematically penalized résumés that contained the word "women's" (e.g., "women's chess club"). The model had learned historical hiring bias from a decade of predominantly male applicant data.</p>
+  </div>
+
+  <p>Data scientists have a <span class="term">duty of care</span> to consider not just whether their model is accurate, but whether it is fair, transparent, and aligned with human values.</p>
+
+  <div class="quiz-block" data-section="1">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">Why is the "scale" of data science an ethical concern?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Large datasets are expensive to store.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>A single model can affect millions of people simultaneously.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Bigger models always produce more accurate results.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Scaling up reduces the need for ethical review.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 2 ═══════════ -->
+<div class="section" id="s2">
+  <div class="section-num">Module 02</div>
+  <h2>Anonymizing Datasets</h2>
+  <div class="lo">LO → Define ways to protect privacy by anonymizing datasets.</div>
+
+  <p>Anonymization is the process of transforming data so that individuals cannot be identified. This is a cornerstone of ethical data handling.</p>
+
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔀 Data Masking</div>
+      <div class="fc-back">Replacing sensitive values with fictional but realistic substitutes (e.g., replacing real names with fake ones).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">📊 Aggregation</div>
+      <div class="fc-back">Reporting data in groups or summaries rather than individual records (e.g., average salary by department instead of per person).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🎲 K-Anonymity</div>
+      <div class="fc-back">Ensuring each record is indistinguishable from at least k−1 other records on quasi-identifiers (like age, zip code, gender).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">📉 Generalization</div>
+      <div class="fc-back">Reducing precision of data (e.g., replacing exact age "27" with a range "25–30", or full zip code with first 3 digits).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔊 Differential Privacy</div>
+      <div class="fc-back">Adding calibrated random noise to query results so that no single individual's data significantly affects the output. Used by the U.S. Census Bureau and Apple.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">✂️ Data Suppression</div>
+      <div class="fc-back">Removing certain fields or records entirely when they could identify individuals (e.g., removing names, SSNs, or rare conditions from a health dataset).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Watch out:</strong> Simply removing names is often not enough. Research has shown that 87% of the U.S. population can be uniquely identified by just zip code, birth date, and sex (Sweeney, 2000).
+  </div>
+
+  <div class="quiz-block" data-section="2">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">Which technique adds random noise to data to protect individual privacy while preserving overall statistical accuracy?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>K-Anonymity</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Data Masking</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Differential Privacy</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Aggregation</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 3 ═══════════ -->
+<div class="section" id="s3">
+  <div class="section-num">Module 03</div>
+  <h2>Algorithmic Bias</h2>
+  <div class="lo">LO → Recognize cases of algorithmic bias.</div>
+
+  <p>Algorithmic bias occurs when a computer system produces results that are systematically unfair to certain groups of people. This is not always intentional—it often emerges from biased training data, flawed feature selection, or unexamined assumptions.</p>
+
+  <p><strong>Common sources of bias:</strong></p>
+  <div class="example-box">
+    <div class="label">Sources of Algorithmic Bias</div>
+    <p><span class="term">Historical bias</span> — Training data reflects past discrimination (e.g., hiring data from eras with fewer women in tech).</p>
+    <p><span class="term">Representation bias</span> — Some groups are underrepresented in training data (e.g., medical imaging datasets with few non-white patients).</p>
+    <p><span class="term">Measurement bias</span> — The way data is collected systematically distorts outcomes (e.g., using arrest records as a proxy for crime rates).</p>
+    <p><span class="term">Aggregation bias</span> — Assuming one model fits all populations when subgroups behave differently.</p>
+  </div>
+
+  <div class="example-box">
+    <div class="label">Case Studies to Know</div>
+    <p>🏥 <strong>Healthcare algorithm:</strong> A widely used health system allocated care based on healthcare spending. Because Black patients historically had less access to care (and thus lower spending), the algorithm assigned them lower risk scores—even when they were sicker.</p>
+    <p>⚖️ <strong>COMPAS recidivism tool:</strong> A criminal sentencing tool was found to produce higher false-positive rates for Black defendants than white defendants when predicting re-offense risk.</p>
+    <p>📷 <strong>Facial recognition:</strong> Commercial systems showed significantly higher error rates for darker-skinned women compared to lighter-skinned men.</p>
+  </div>
+
+  <div class="quiz-block" data-section="3">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A loan approval model trained on historical data from a bank that rarely approved loans for a specific ethnic group is most likely exhibiting which type of bias?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="true"><span class="letter">A</span><span>Historical bias</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Aggregation bias</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Measurement bias</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Confirmation bias</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 4 ═══════════ -->
+<div class="section" id="s4">
+  <div class="section-num">Module 04</div>
+  <h2>Consent in Data Science</h2>
+  <div class="lo">LO → Recognize issues of consent in data science.</div>
+
+  <p><span class="term">Informed consent</span> means that individuals knowingly and voluntarily agree to the collection and use of their data, with a clear understanding of what data is collected, how it will be used, and what risks are involved.</p>
+
+  <div class="callout">
+    <strong>The Consent Problem:</strong> Most "consent" today happens through lengthy Terms of Service agreements that almost nobody reads. A 2017 Deloitte survey found that 91% of people accept ToS without reading them.
+  </div>
+
+  <p><strong>Common consent issues in data science:</strong></p>
+  <div class="example-box">
+    <div class="label">Red Flags</div>
+    <p>🔄 <strong>Secondary use:</strong> Data collected for one purpose is repurposed for another without new consent (e.g., fitness tracker data sold to insurance companies).</p>
+    <p>🕸️ <strong>Web scraping:</strong> Collecting publicly posted data and using it in ways the poster never intended (e.g., scraping social media photos to train facial recognition).</p>
+    <p>👶 <strong>Vulnerable populations:</strong> Children, elderly people, or those with limited digital literacy may not fully understand what they are consenting to.</p>
+    <p>🔗 <strong>Data linkage:</strong> Combining datasets can reveal information about individuals who never consented to that combined analysis.</p>
+  </div>
+
+  <div class="quiz-block" data-section="4">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A social media company uses profile photos uploaded by users (for social networking) to train a facial recognition product they sell to law enforcement. Which consent issue does this represent?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>The users gave valid consent through the Terms of Service.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Secondary use — data collected for one purpose used for a different purpose.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>This is acceptable because the photos were publicly posted.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Data linkage violation.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 5 ═══════════ -->
+<div class="section" id="s5">
+  <div class="section-num">Module 05</div>
+  <h2>Environmental Impact of Big Data</h2>
+  <div class="lo">LO → Recognize environmental impacts of big data.</div>
+
+  <p>The computational infrastructure behind data science—data centers, GPU clusters, network equipment—has a significant and growing environmental footprint.</p>
+
+  <div class="example-box">
+    <div class="label">Key Environmental Concerns</div>
+    <p>⚡ <strong>Energy consumption:</strong> Training a single large language model can consume as much energy as five cars over their entire lifetimes (Strubell et al., 2019). Data centers account for roughly 1–2% of global electricity use.</p>
+    <p>💧 <strong>Water usage:</strong> Data centers use massive amounts of water for cooling. A single large data center can use millions of gallons of water per day.</p>
+    <p>🗑️ <strong>E-waste:</strong> Rapid hardware turnover (GPUs, servers) contributes to electronic waste as equipment is replaced every 3–5 years.</p>
+    <p>🌍 <strong>Carbon footprint:</strong> The carbon cost depends on where the data center is located and the regional energy mix (coal vs. renewables).</p>
+  </div>
+
+  <div class="callout">
+    <strong>Ethical question:</strong> Is the societal benefit of a given model or analysis worth its environmental cost? Data scientists should consider whether a simpler, less resource-intensive approach could achieve similar results.
+  </div>
+
+  <div class="quiz-block" data-section="5">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">Which of the following is NOT a recognized environmental concern related to big data?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>High energy consumption of data centers</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Water usage for cooling infrastructure</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Deforestation to build server farms</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Electronic waste from hardware turnover</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 6 ═══════════ -->
+<div class="section" id="s6">
+  <div class="section-num">Module 06</div>
+  <h2>Common Misuses of Statistics</h2>
+  <div class="lo">LO → Summarize common misuses of statistics.</div>
+
+  <p>Statistics can be a powerful tool for truth—or for deception. Understanding common misuses helps you both avoid mistakes and spot manipulation.</p>
+
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔗 Confusing Correlation with Causation</div>
+      <div class="fc-back">Just because two variables move together doesn't mean one causes the other. Ice cream sales and drowning rates both rise in summer—but ice cream doesn't cause drowning.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🍒 Cherry-Picking Data</div>
+      <div class="fc-back">Selectively choosing data points or time ranges that support a predetermined conclusion while ignoring contradictory evidence.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">📐 Misleading Averages</div>
+      <div class="fc-back">Using mean vs. median strategically. A CEO earning $10M and 9 workers earning $50K each yields a "mean salary" of ~$1M—a wildly misleading summary.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔍 P-Hacking</div>
+      <div class="fc-back">Running many statistical tests and only reporting the ones that show significant results, dramatically increasing the chance of false positives.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">👥 Sampling Bias</div>
+      <div class="fc-back">Drawing conclusions from a non-representative sample (e.g., surveying only college students about "all adults" or using opt-in online polls).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🪄 Simpson's Paradox</div>
+      <div class="fc-back">A trend that appears in subgroups of data reverses when the groups are combined. Ignoring this can lead to completely wrong conclusions.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+
+  <div class="quiz-block" data-section="6">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A researcher runs 20 statistical tests and only publishes the one test that shows p < 0.05. This is an example of:</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Simpson's Paradox</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>P-Hacking</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Cherry-picking time ranges</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Sampling bias</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 7 ═══════════ -->
+<div class="section" id="s7">
+  <div class="section-num">Module 07</div>
+  <h2>Critiquing Misleading Graphs</h2>
+  <div class="lo">LO → Critique misleading graphs.</div>
+
+  <p>Graphs are powerful because people trust visual information. That trust can be exploited through techniques that distort perception without technically "lying."</p>
+
+  <p><strong>Common tricks to watch for:</strong></p>
+  <div class="example-box">
+    <div class="label">Misleading Techniques</div>
+    <p>📏 <strong>Truncated Y-axis:</strong> Starting the y-axis at a value other than zero exaggerates differences between bars or data points.</p>
+    <p>↔️ <strong>Inconsistent scales:</strong> Using different scales on dual axes or between compared charts to distort comparisons.</p>
+    <p>🗺️ <strong>Manipulated aspect ratio:</strong> Stretching or compressing a chart to make trends appear steeper or flatter.</p>
+    <p>🎨 <strong>3D effects:</strong> Adding unnecessary 3D rendering that makes it hard to accurately read values.</p>
+    <p>📊 <strong>Area/volume tricks:</strong> Doubling the radius of a circle to show "2×" actually increases the area by 4×.</p>
+  </div>
+
+  <!-- Interactive misleading graph example -->
+  <div class="misleading-graph">
+    <p style="font-weight:600; margin-bottom:.75rem; font-size:.9rem;">Can you spot what's misleading?</p>
+    <svg viewBox="0 0 420 220" style="max-width:420px;">
+      <text x="210" y="18" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a2e" font-family="IBM Plex Sans">Company Revenue by Quarter</text>
+      <!-- Y axis labels (truncated!) -->
+      <text x="55" y="52" text-anchor="end" font-size="10" fill="#8a8578" font-family="IBM Plex Mono">$4.5M</text>
+      <text x="55" y="95" text-anchor="end" font-size="10" fill="#8a8578" font-family="IBM Plex Mono">$4.3M</text>
+      <text x="55" y="138" text-anchor="end" font-size="10" fill="#8a8578" font-family="IBM Plex Mono">$4.1M</text>
+      <text x="55" y="181" text-anchor="end" font-size="10" fill="#8a8578" font-family="IBM Plex Mono">$3.9M</text>
+      <!-- Grid lines -->
+      <line x1="65" y1="48" x2="390" y2="48" stroke="#e0dcd4" stroke-width="1"/>
+      <line x1="65" y1="91" x2="390" y2="91" stroke="#e0dcd4" stroke-width="1"/>
+      <line x1="65" y1="134" x2="390" y2="134" stroke="#e0dcd4" stroke-width="1"/>
+      <line x1="65" y1="177" x2="390" y2="177" stroke="#e0dcd4" stroke-width="1"/>
+      <!-- Bars — values: Q1=4.0, Q2=4.1, Q3=4.3, Q4=4.5 — but chart makes it look like Q4 is 4× Q1 -->
+      <rect x="90" y="155" width="55" height="42" rx="3" fill="#c0392b"/>
+      <rect x="170" y="134" width="55" height="63" rx="3" fill="#c0392b"/>
+      <rect x="250" y="91" width="55" height="106" rx="3" fill="#c0392b"/>
+      <rect x="330" y="48" width="55" height="149" rx="3" fill="#2c3e6b"/>
+      <!-- X labels -->
+      <text x="117" y="208" text-anchor="middle" font-size="11" fill="#1a1a2e" font-family="IBM Plex Sans">Q1</text>
+      <text x="197" y="208" text-anchor="middle" font-size="11" fill="#1a1a2e" font-family="IBM Plex Sans">Q2</text>
+      <text x="277" y="208" text-anchor="middle" font-size="11" fill="#1a1a2e" font-family="IBM Plex Sans">Q3</text>
+      <text x="357" y="208" text-anchor="middle" font-size="11" fill="#1a1a2e" font-family="IBM Plex Sans">Q4</text>
+    </svg>
+    <button class="reveal-btn" onclick="this.nextElementSibling.style.display='block'; this.style.display='none';">Reveal the Problem →</button>
+    <div class="reveal-text">
+      <strong>Truncated Y-axis!</strong> The y-axis starts at $3.9M instead of $0. The actual revenue increased from $4.0M to $4.5M — a modest 12.5% growth. But by zooming in on just the $3.9M–$4.5M range, the chart makes Q4's bar appear roughly 3.5× taller than Q1's, dramatically exaggerating the growth and making it look like revenue nearly quadrupled.
+    </div>
+  </div>
+
+  <div class="quiz-block" data-section="7">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A pie chart uses 3D perspective, making the front slice appear much larger than an equally-sized back slice. Which misleading technique is at play?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Truncated Y-axis</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>3D effects distorting visual proportions</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Cherry-picked time range</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Inconsistent scales between axes</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 8 ═══════════ -->
+<div class="section" id="s8">
+  <div class="section-num">Module 08</div>
+  <h2>Confidentiality</h2>
+  <div class="lo">LO → Define confidential.</div>
+
+  <div class="def-card">
+    <div class="def-word">Confidential</div>
+    Information that is intended to be kept secret and is shared only with authorized individuals. Confidentiality is the obligation to protect this information from unauthorized access or disclosure.
+  </div>
+
+  <p>In data science, confidentiality applies to many types of information: personal health records (protected by HIPAA), financial data, trade secrets, proprietary algorithms, and personally identifiable information (PII).</p>
+
+  <p><span class="term">Confidentiality ≠ Privacy.</span> Privacy is the individual's right to control their own information. Confidentiality is the obligation placed on those who receive that information to protect it. You can have privacy without a confidentiality agreement, and you can have a confidentiality agreement even when the information isn't "private" in the traditional sense.</p>
+
+  <div class="example-box">
+    <div class="label">Types of Confidential Data</div>
+    <p>🏥 <strong>Protected Health Information (PHI):</strong> Medical records, diagnoses, treatment plans</p>
+    <p>💳 <strong>Financial PII:</strong> Credit card numbers, bank accounts, credit scores</p>
+    <p>🏢 <strong>Proprietary business data:</strong> Trade secrets, unreleased product info, internal analytics</p>
+    <p>🔐 <strong>Credentials:</strong> Passwords, API keys, encryption keys</p>
+  </div>
+
+  <div class="quiz-block" data-section="8">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">What is the key difference between privacy and confidentiality?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>They mean the same thing.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Privacy applies to businesses; confidentiality applies to individuals.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Privacy is the individual's right to control their data; confidentiality is the obligation to protect data you've been entrusted with.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Confidentiality only applies to government data.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 9 ═══════════ -->
+<div class="section" id="s9">
+  <div class="section-num">Module 09</div>
+  <h2>Protective Precautions</h2>
+  <div class="lo">LO → Identify precautions that protect individuals and organizations.</div>
+
+  <p>Protecting data requires a layered approach spanning technical controls, organizational policies, and individual practices.</p>
+
+  <div class="example-box">
+    <div class="label">Technical Precautions</div>
+    <p>🔒 <strong>Encryption:</strong> Encrypting data at rest and in transit so intercepted data is unreadable.</p>
+    <p>🔑 <strong>Access controls:</strong> Role-based access ensures people only see data they need for their job (principle of least privilege).</p>
+    <p>📋 <strong>Audit logs:</strong> Recording who accessed what data and when, enabling accountability.</p>
+    <p>🛡️ <strong>Firewalls & network security:</strong> Preventing unauthorized external access to data stores.</p>
+  </div>
+
+  <div class="example-box">
+    <div class="label">Organizational Precautions</div>
+    <p>📜 <strong>Data governance policies:</strong> Formal rules about data collection, storage, retention, and deletion.</p>
+    <p>🎓 <strong>Ethics training:</strong> Ensuring all team members understand their responsibilities.</p>
+    <p>🧪 <strong>Ethics review boards (IRBs):</strong> Independent review of data projects involving human subjects.</p>
+    <p>📅 <strong>Data retention limits:</strong> Deleting data after its intended use period ends rather than hoarding it indefinitely.</p>
+  </div>
+
+  <div class="example-box">
+    <div class="label">Individual Precautions</div>
+    <p>🔐 <strong>Strong passwords & MFA:</strong> Multi-factor authentication for sensitive systems.</p>
+    <p>📵 <strong>Clean desk policy:</strong> Not leaving sensitive data visible on screens or in physical form.</p>
+    <p>🚫 <strong>Avoiding data on personal devices:</strong> Keeping organizational data off personal laptops and phones.</p>
+  </div>
+
+  <div class="quiz-block" data-section="9">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">The "principle of least privilege" means:</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Only the most senior employees should handle data.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>People should only have access to the minimum data necessary for their role.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Data should be stored with minimal encryption to improve speed.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Organizations should collect as little data as possible.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 10 ═══════════ -->
+<div class="section" id="s10">
+  <div class="section-num">Module 10</div>
+  <h2>Data Privacy Tradeoffs</h2>
+  <div class="lo">LO → Discuss data privacy tradeoffs.</div>
+
+  <p>Privacy is rarely absolute. In practice, data science involves navigating tensions between competing values. Understanding these tradeoffs is more useful than demanding absolute privacy or unlimited data access.</p>
+
+  <div class="example-box">
+    <div class="label">Common Tradeoffs</div>
+    <p>🔬 <strong>Privacy vs. Research Utility:</strong> More anonymization protects individuals but may reduce the usefulness of data for medical research, public health, and scientific discovery.</p>
+    <p>🛡️ <strong>Privacy vs. Security:</strong> Surveillance systems can improve public safety but at the cost of personal freedom and privacy (e.g., facial recognition in public spaces).</p>
+    <p>📱 <strong>Privacy vs. Convenience:</strong> Personalized recommendations (Netflix, Spotify, Maps) require sharing behavioral data. More privacy means less personalization.</p>
+    <p>💰 <strong>Privacy vs. Free Services:</strong> Many "free" platforms (social media, email, search) are funded by advertising based on user data. Strict privacy limits could change this business model.</p>
+    <p>🏥 <strong>Privacy vs. Public Health:</strong> Contact tracing during pandemics requires location data sharing. Too much privacy protection can hamper disease control.</p>
+  </div>
+
+  <div class="callout">
+    <strong>Key Insight:</strong> The goal is not to eliminate tradeoffs but to make them <em>explicit</em> and <em>informed</em>. Users should understand what they're giving up, and organizations should minimize data collection to only what's necessary (data minimization principle).
+  </div>
+
+  <div class="quiz-block" data-section="10">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A hospital wants to share patient data with researchers to study rare diseases. What principle should guide the amount of data shared?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Share everything — research is more important than privacy.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Share nothing — patient privacy is absolute.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Data minimization — share only the minimum data necessary for the research purpose.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Let the researchers decide how much they need.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 11 ═══════════ -->
+<div class="section" id="s11">
+  <div class="section-num">Module 11</div>
+  <h2>Principles of Ethical Machine Learning</h2>
+  <div class="lo">LO → List principles of ethical machine learning.</div>
+
+  <p>As ML systems take on increasingly consequential roles, the data science community has developed a set of core principles to guide ethical development:</p>
+
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">⚖️ Fairness</div>
+      <div class="fc-back">ML systems should treat all individuals and groups equitably. Test for and mitigate bias across demographic groups. No group should be systematically disadvantaged.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔍 Transparency</div>
+      <div class="fc-back">Stakeholders should be able to understand how and why a model makes decisions. Document data sources, model architecture, training processes, and known limitations.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">📋 Accountability</div>
+      <div class="fc-back">Clear lines of responsibility must exist. When an ML system causes harm, there should be identifiable people or organizations responsible for remediation.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+  <div class="flashcard-deck">
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🔐 Privacy</div>
+      <div class="fc-back">Respect user data rights. Collect only necessary data, protect it rigorously, give users control over their information, and comply with regulations (GDPR, CCPA).</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🛡️ Safety & Reliability</div>
+      <div class="fc-back">ML systems should perform reliably under expected conditions and fail gracefully. Rigorous testing, monitoring, and the ability to override or shut down systems is essential.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="fc-front">🧑‍🤝‍🧑 Human Oversight</div>
+      <div class="fc-back">Humans should remain in the loop for high-stakes decisions. ML should augment human judgment, not replace it entirely, especially in domains like healthcare, criminal justice, and hiring.</div>
+      <span class="fc-hint">tap to flip</span>
+    </div>
+  </div>
+
+  <div class="quiz-block" data-section="11">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">Which ethical ML principle requires that when an AI system causes harm, there are identifiable parties responsible for fixing it?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Fairness</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Transparency</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Accountability</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Privacy</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 12 ═══════════ -->
+<div class="section" id="s12">
+  <div class="section-num">Module 12</div>
+  <h2>Black Box Models</h2>
+  <div class="lo">LO → Define black box model.</div>
+
+  <div class="def-card">
+    <div class="def-word">Black Box Model</div>
+    A machine learning model whose internal logic and decision-making process is too complex or opaque for humans to understand. You can see the inputs and outputs, but not how or why it reached its conclusion.
+  </div>
+
+  <p><strong>Examples of black box models:</strong> deep neural networks, large ensemble methods, and large language models. These can have millions or billions of parameters, making it impossible to trace the exact reasoning behind any single prediction.</p>
+
+  <p><strong>Why black boxes are an ethical concern:</strong></p>
+  <div class="example-box">
+    <div class="label">The Problem</div>
+    <p>If you can't explain <em>why</em> a model denied someone a loan, flagged someone as a security threat, or recommended a medical treatment, you can't verify whether the decision was fair, catch errors, or enable meaningful appeal.</p>
+  </div>
+
+  <p><strong>Approaches to address this:</strong></p>
+  <div class="example-box">
+    <div class="label">Solutions</div>
+    <p>🔎 <strong>Explainability tools (XAI):</strong> Techniques like LIME and SHAP that approximate explanations for individual predictions.</p>
+    <p>📐 <strong>Interpretable alternatives:</strong> Using simpler models (decision trees, logistic regression) where possible, especially in high-stakes domains.</p>
+    <p>📋 <strong>"Right to explanation":</strong> The EU's GDPR gives individuals the right to meaningful information about the logic of automated decisions that significantly affect them.</p>
+  </div>
+
+  <div class="quiz-block" data-section="12">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">Which of the following best describes a "black box" model?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>A model that only works on encrypted data.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>A model that has never been tested.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>A model whose internal decision process is too complex or opaque for humans to interpret.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>A model stored in a secure, offline location.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SECTION 13 ═══════════ -->
+<div class="section" id="s13">
+  <div class="section-num">Module 13</div>
+  <h2>Ethical Concerns in ML Applications</h2>
+  <div class="lo">LO → Identify ethical concerns in machine learning applications.</div>
+
+  <p>Machine learning is being deployed in increasingly sensitive domains. Each application raises distinct ethical questions.</p>
+
+  <div class="example-box">
+    <div class="label">High-Stakes ML Applications & Their Concerns</div>
+    <p>⚖️ <strong>Criminal justice (predictive policing, sentencing):</strong> Risk of reinforcing racial biases, lack of transparency, and questionable accuracy affecting people's liberty.</p>
+    <p>🏥 <strong>Healthcare (diagnosis, treatment recommendations):</strong> Liability for incorrect diagnoses, bias in training data (underrepresentation of minorities), and patient consent for AI-assisted decisions.</p>
+    <p>🏦 <strong>Financial services (credit scoring, fraud detection):</strong> Potential for discriminatory lending, use of proxy variables that correlate with protected characteristics.</p>
+    <p>📹 <strong>Surveillance (facial recognition, behavior prediction):</strong> Mass surveillance concerns, chilling effects on free speech and assembly, disproportionate impact on marginalized communities.</p>
+    <p>🤖 <strong>Autonomous systems (self-driving cars, drones):</strong> Moral decisions in unavoidable accidents, liability questions, and safety assurance.</p>
+    <p>💼 <strong>Hiring & HR (résumé screening, performance prediction):</strong> Bias against certain demographics, lack of transparency in rejection decisions, reduced human judgment in important life decisions.</p>
+  </div>
+
+  <div class="callout">
+    <strong>Recurring themes:</strong> Across all these domains, the core ethical concerns often come back to fairness, transparency, accountability, consent, and human oversight—the same principles from Module 11.
+  </div>
+
+  <div class="quiz-block" data-section="13">
+    <div class="q-label">Check Your Understanding</div>
+    <div class="q-text">A hospital deploys an ML model to prioritize patients for follow-up care. The model was trained mostly on data from patients at affluent hospitals. What is the most likely ethical concern?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>The model uses too much energy.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Representation bias — underserved populations may receive worse care recommendations.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Patients can't appeal the model's decisions.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>The model is too transparent.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+</div>
+
+<!-- ═══════════ FINAL REVIEW ═══════════ -->
+<div class="section" id="final" style="padding-bottom:5rem;">
+  <div class="section-num">Final Assessment</div>
+  <h2>Review Quiz — All Modules</h2>
+  <div class="lo">Test yourself across all 13 learning objectives.</div>
+
+  <div class="quiz-block" data-section="f1">
+    <div class="q-label">Question 1 of 6</div>
+    <div class="q-text">Replacing exact ages with age ranges (e.g., "25–30") in a dataset is an example of which anonymization technique?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Differential Privacy</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Generalization</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Data Masking</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>K-Anonymity</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-block" data-section="f2">
+    <div class="q-label">Question 2 of 6</div>
+    <div class="q-text">Which of the following is an example of confusing correlation with causation?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Running 20 tests and only reporting the significant result</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Concluding that ice cream causes drowning because both increase in summer</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Using a non-representative sample for a survey</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Starting a bar chart's y-axis at a non-zero value</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-block" data-section="f3">
+    <div class="q-label">Question 3 of 6</div>
+    <div class="q-text">LIME and SHAP are tools designed to address which ethical concern?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Data anonymization</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Environmental impact</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Explaining black box model decisions</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Informed consent</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-block" data-section="f4">
+    <div class="q-label">Question 4 of 6</div>
+    <div class="q-text">Under the GDPR, the "right to explanation" requires that:</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>All models must be open-source.</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Individuals can request meaningful information about automated decisions that significantly affect them.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Companies must publish their training data.</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Black box models are illegal in Europe.</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-block" data-section="f5">
+    <div class="q-label">Question 5 of 6</div>
+    <div class="q-text">Which tradeoff best describes the tension between contact tracing during pandemics and individual rights?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Privacy vs. Convenience</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">B</span><span>Privacy vs. Public Health</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">C</span><span>Privacy vs. Free Services</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Privacy vs. Research Utility</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="quiz-block" data-section="f6">
+    <div class="q-label">Question 6 of 6</div>
+    <div class="q-text">An ML system that is expected to "fail gracefully" and maintain reliable performance under expected conditions satisfies which ethical ML principle?</div>
+    <div class="q-options">
+      <div class="q-opt" data-correct="false"><span class="letter">A</span><span>Fairness</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">B</span><span>Transparency</span></div>
+      <div class="q-opt" data-correct="true"><span class="letter">C</span><span>Safety & Reliability</span></div>
+      <div class="q-opt" data-correct="false"><span class="letter">D</span><span>Human Oversight</span></div>
+    </div>
+    <div class="q-feedback"></div>
+  </div>
+
+  <div class="final-score" id="finalScore">
+    <div class="big-num" id="finalNum">—</div>
+    <div class="big-label">out of 6 correct</div>
+    <p style="margin-top:1rem; color: var(--muted); font-size:.9rem;" id="finalMsg"></p>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── QUIZ LOGIC ──
+const explanations = {
+  1: {right: "Correct! Scale is an ethical concern because a single deployed model can impact millions of people at once, magnifying both benefits and harms.", wrong: "Not quite. Think about what happens when one algorithm is used to make decisions for an entire population."},
+  2: {right: "Correct! Differential privacy adds carefully calibrated noise to data or query results to protect individuals while maintaining overall statistical properties.", wrong: "Not quite. Differential privacy is specifically the technique that involves adding statistical noise."},
+  3: {right: "Correct! When training data reflects past discriminatory patterns, the model learns and perpetuates that discrimination — this is historical bias.", wrong: "Not quite. When the bias comes from the training data reflecting past discrimination, that's historical bias."},
+  4: {right: "Correct! This is a classic secondary use problem — data given for social networking is repurposed for surveillance without new, specific consent.", wrong: "Not quite. The users uploaded photos for social networking, not for training facial recognition for law enforcement — that's a different purpose."},
+  5: {right: "Correct! While data centers do take up land, widespread deforestation is not a recognized primary environmental concern of big data infrastructure.", wrong: "Not quite. Energy use, water consumption, and e-waste are all well-documented environmental impacts of big data."},
+  6: {right: "Correct! P-hacking (also called data dredging) is running many tests and only reporting the significant ones, inflating the false positive rate.", wrong: "Not quite. Running many tests and selectively reporting only the significant result is called p-hacking."},
+  7: {right: "Correct! 3D effects on charts distort the visual proportions, making front-facing sections appear larger than they actually are.", wrong: "Not quite. 3D perspective effects make chart elements appear different sizes than their actual data values."},
+  8: {right: "Correct! Privacy is an individual's right; confidentiality is the duty of whoever holds the data to keep it protected.", wrong: "Not quite. The key distinction: privacy belongs to the individual, confidentiality is the obligation of the data holder."},
+  9: {right: "Correct! The principle of least privilege means granting the minimum level of access necessary for someone to perform their duties.", wrong: "Not quite. Least privilege is about limiting access to only what's needed for someone's specific role."},
+  10: {right: "Correct! Data minimization means sharing only the minimum necessary data — balancing the research benefit with privacy protection.", wrong: "Not quite. The best approach balances privacy and utility by sharing only the minimum data necessary."},
+  11: {right: "Correct! Accountability means having clear lines of responsibility so that when something goes wrong, someone is responsible for fixing it.", wrong: "Not quite. The principle that requires identifiable responsible parties when harm occurs is accountability."},
+  12: {right: "Correct! A black box model is one where the internal decision-making process is too complex or opaque for humans to understand or interpret.", wrong: "Not quite. 'Black box' refers to the opacity of the model's internal reasoning — you can see inputs and outputs but not the logic in between."},
+  13: {right: "Correct! Training mostly on data from affluent hospitals means the model may not generalize well to underserved populations — a representation bias.", wrong: "Not quite. When training data doesn't represent all populations, the model's recommendations may fail for underrepresented groups."},
+  f1: {right: "Correct! Generalization reduces the precision of data values (exact → ranges) to make individuals harder to identify.", wrong: "Not quite. Converting exact values to broader categories (like age ranges) is the generalization technique."},
+  f2: {right: "Correct! Both variables are driven by a third factor (summer/warm weather), not by each other.", wrong: "Not quite. When two things correlate because of a shared cause (warm weather), assuming one causes the other is the classic correlation ≠ causation error."},
+  f3: {right: "Correct! LIME and SHAP are explainability tools that help interpret individual predictions from complex black box models.", wrong: "Not quite. LIME and SHAP are specifically designed to explain how black box models reach individual predictions."},
+  f4: {right: "Correct! The GDPR's right to explanation gives individuals the right to understand the logic behind automated decisions that significantly affect them.", wrong: "Not quite. The GDPR doesn't ban black boxes but gives people the right to understand automated decisions affecting them."},
+  f5: {right: "Correct! Contact tracing requires sharing location/health data, creating a tension between individual privacy and public health needs.", wrong: "Not quite. Pandemic contact tracing directly pits privacy (location data) against public health (stopping disease spread)."},
+  f6: {right: "Correct! Safety & Reliability means the system performs as expected and handles edge cases gracefully.", wrong: "Not quite. Reliable performance and graceful failure fall under the safety & reliability principle."},
+};
+
+let completed = new Set();
+const totalSections = 13;
+
+document.querySelectorAll('.q-opt').forEach(opt => {
+  opt.addEventListener('click', function() {
+    const quiz = this.closest('.quiz-block');
+    if (quiz.classList.contains('answered')) return;
+    quiz.classList.add('answered');
+
+    const section = quiz.dataset.section;
+    const isCorrect = this.dataset.correct === 'true';
+    const feedback = quiz.querySelector('.q-feedback');
+    const exp = explanations[section];
+
+    // Disable all options
+    quiz.querySelectorAll('.q-opt').forEach(o => o.classList.add('disabled'));
+
+    // Mark correct answer
+    quiz.querySelectorAll('.q-opt').forEach(o => {
+      if (o.dataset.correct === 'true') o.classList.add('correct');
+    });
+
+    if (isCorrect) {
+      feedback.className = 'q-feedback show right';
+      feedback.textContent = exp.right;
+    } else {
+      this.classList.add('wrong');
+      feedback.className = 'q-feedback show wrong-fb';
+      feedback.textContent = exp.wrong;
+    }
+
+    // Mark section complete if it's a module quiz (not final)
+    const secNum = parseInt(section);
+    if (!isNaN(secNum) && secNum >= 1 && secNum <= 13) {
+      completed.add(secNum);
+      const check = document.getElementById('nc' + secNum);
+      if (check) {
+        check.classList.add('done');
+        check.textContent = '✓';
+      }
+      updateProgress();
+    }
+
+    // Check if final quiz is done
+    checkFinal();
+  });
+});
+
+function updateProgress() {
+  const pct = (completed.size / totalSections) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = completed.size + ' / ' + totalSections;
+}
+
+function checkFinal() {
+  const finalQuizzes = document.querySelectorAll('#final .quiz-block');
+  let answered = 0, correct = 0;
+  finalQuizzes.forEach(q => {
+    if (q.classList.contains('answered')) {
+      answered++;
+      const selected = q.querySelector('.q-opt.correct:not(.wrong)');
+      // Check if correct answer was the one clicked
+      const wrongSelected = q.querySelector('.q-opt.wrong');
+      if (!wrongSelected) correct++;
+    }
+  });
+  if (answered === finalQuizzes.length) {
+    const scoreEl = document.getElementById('finalScore');
+    scoreEl.style.display = 'block';
+    document.getElementById('finalNum').textContent = correct;
+    const msg = document.getElementById('finalMsg');
+    if (correct === 6) msg.textContent = "Perfect score! You've mastered the ethics of data science. 🎉";
+    else if (correct >= 4) msg.textContent = "Great job! Review the modules for any topics you missed.";
+    else msg.textContent = "Keep studying — re-read the modules above and try the section quizzes again.";
+  }
+}
+
+// ── SIDEBAR NAV ──
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const target = this.dataset.target;
+    if (target) {
+      document.getElementById(target).scrollIntoView({behavior: 'smooth'});
+      // Close sidebar on mobile
+      if (window.innerWidth <= 860) {
+        document.getElementById('sidebar').classList.remove('show');
+      }
+    }
+  });
+});
+
+// Sidebar toggle
+document.getElementById('sidebarToggle').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.toggle('show');
+});
+
+// Active nav on scroll
+const sections = document.querySelectorAll('.section');
+const navItems = document.querySelectorAll('.nav-item');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navItems.forEach(n => n.classList.remove('active'));
+      const active = document.querySelector(`.nav-item[data-target="${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, {threshold: 0.2, rootMargin: '-56px 0px 0px 0px'});
+
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

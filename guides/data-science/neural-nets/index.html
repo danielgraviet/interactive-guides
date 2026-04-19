@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 180 — Neural Networks Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0c0f14;--surface:#141820;--surface2:#1a1f2b;--surface3:#222838;
+  --border:#2a3040;--text:#e2e6ef;--text2:#9aa0b4;--text3:#6a7088;
+  --accent:#60a5fa;--accent2:#818cf8;--accent3:#a78bfa;
+  --green:#34d399;--red:#f87171;--orange:#fbbf24;--pink:#f472b6;
+  --grad:linear-gradient(135deg,#60a5fa,#818cf8,#a78bfa);
+  --neuron-active:#60a5fa;--neuron-dim:#2a3040;
+  --radius:12px;--radius-sm:8px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:16px;line-height:1.7;min-height:100vh}
+h1,h2,h3{font-family:'DM Serif Display',serif;font-weight:400;line-height:1.3}
+code,.code{font-family:'JetBrains Mono',monospace;font-size:0.88em}
+
+/* Layout */
+.app{display:flex;min-height:100vh}
+.sidebar{width:300px;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transition:transform .3s ease}
+.sidebar-header{padding:24px 20px;border-bottom:1px solid var(--border)}
+.sidebar-header h2{font-size:1.2rem;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-header p{font-size:.78rem;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.nav-list{padding:12px 0}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 20px;cursor:pointer;transition:all .2s;font-size:.9rem;color:var(--text2);border-left:3px solid transparent}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--accent);border-left-color:var(--accent)}
+.nav-item.completed{color:var(--green)}
+.nav-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:600;background:var(--surface3);color:var(--text3);flex-shrink:0;transition:all .2s}
+.nav-item.active .nav-num{background:var(--accent);color:var(--bg)}
+.nav-item.completed .nav-num{background:var(--green);color:var(--bg)}
+.progress-bar{margin:16px 20px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--grad);border-radius:2px;transition:width .4s ease}
+
+.main{margin-left:300px;flex:1;min-height:100vh}
+.section{display:none;padding:48px 56px 80px;max-width:860px;animation:fadeUp .4s ease}
+.section.active{display:block}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin:24px 0}
+.card.highlight{border-color:var(--accent);background:rgba(96,165,250,.06)}
+.card.analogy{border-color:var(--orange);background:rgba(251,191,36,.04)}
+.card.warning{border-color:var(--red);background:rgba(248,113,113,.04)}
+.card-label{font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.card-label.blue{color:var(--accent)}
+.card-label.orange{color:var(--orange)}
+.card-label.green{color:var(--green)}
+.card-label.pink{color:var(--pink)}
+.card-label.red{color:var(--red)}
+
+/* Section headers */
+.section-tag{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.section h1{font-size:2rem;margin-bottom:8px}
+.section-sub{color:var(--text2);font-size:1rem;margin-bottom:32px}
+
+/* Code blocks */
+.code-block{background:#0d1017;border:1px solid var(--border);border-radius:var(--radius-sm);padding:20px;overflow-x:auto;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.8;color:#c8d0e0;white-space:pre-wrap}
+.code-block .kw{color:#c792ea}.code-block .fn{color:#82aaff}.code-block .str{color:#c3e88d}
+.code-block .cm{color:#546e7a;font-style:italic}.code-block .num{color:#f78c6c}.code-block .op{color:#89ddff}
+
+/* Interactive components */
+.quiz-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin:28px 0}
+.quiz-question{font-size:1.05rem;font-weight:500;margin-bottom:18px}
+.quiz-options{display:flex;flex-direction:column;gap:10px}
+.quiz-opt{padding:14px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;font-size:.92rem}
+.quiz-opt:hover{border-color:var(--accent);background:rgba(96,165,250,.06)}
+.quiz-opt.selected{border-color:var(--accent);background:rgba(96,165,250,.1)}
+.quiz-opt.correct{border-color:var(--green);background:rgba(52,211,153,.1);color:var(--green)}
+.quiz-opt.wrong{border-color:var(--red);background:rgba(248,113,113,.08);color:var(--red)}
+.quiz-opt.disabled{pointer-events:none}
+.quiz-feedback{margin-top:16px;padding:14px 18px;border-radius:var(--radius-sm);font-size:.9rem;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--green)}
+.quiz-feedback.wrong{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);color:var(--red)}
+
+/* Interactive calc */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.calc-input-group label{display:block;font-size:.78rem;color:var(--text2);margin-bottom:4px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px}
+.calc-input{width:100%;padding:10px 14px;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.9rem;outline:none;transition:border .2s}
+.calc-input:focus{border-color:var(--accent)}
+.calc-result{padding:18px;background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);border-radius:var(--radius-sm);margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:.9rem}
+
+/* Buttons */
+.btn{padding:10px 22px;border-radius:var(--radius-sm);font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'Source Sans 3',sans-serif}
+.btn-primary{background:var(--accent);color:var(--bg)}
+.btn-primary:hover{background:#7bb8fc;transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-nav{display:flex;gap:12px;margin-top:40px;justify-content:space-between}
+.btn-complete{background:var(--green);color:var(--bg)}
+.btn-complete:hover{background:#5ee9b5}
+
+/* Diagram - Neural Net SVG */
+.nn-diagram{display:flex;justify-content:center;margin:24px 0}
+.nn-diagram svg text{fill:var(--text2);font-family:'JetBrains Mono',monospace;font-size:11px}
+.nn-diagram svg .node{transition:fill .3s}
+
+/* Activation chart */
+.act-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.act-tab{padding:8px 16px;border-radius:20px;font-size:.82rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .2s;font-family:'JetBrains Mono',monospace}
+.act-tab.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.act-tab:hover{border-color:var(--accent)}
+.act-display{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;min-height:220px}
+
+/* Table */
+.comp-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.88rem}
+.comp-table th{text-align:left;padding:12px 16px;border-bottom:2px solid var(--border);color:var(--accent);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:.78rem;text-transform:uppercase;letter-spacing:1px}
+.comp-table td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text2)}
+.comp-table tr:hover td{color:var(--text);background:rgba(96,165,250,.02)}
+
+/* Slider */
+.slider-group{margin:20px 0}
+.slider-group label{display:block;font-size:.82rem;color:var(--text2);margin-bottom:8px}
+input[type="range"]{-webkit-appearance:none;width:100%;height:6px;background:var(--surface3);border-radius:3px;outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer}
+.slider-val{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:600}
+
+/* Toggle */
+.toggle-section{margin:16px 0}
+.toggle-header{padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:500;transition:all .2s}
+.toggle-header:hover{border-color:var(--accent)}
+.toggle-header .arrow{transition:transform .2s;color:var(--text3)}
+.toggle-header.open .arrow{transform:rotate(90deg)}
+.toggle-body{display:none;padding:18px;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);background:var(--surface)}
+.toggle-body.open{display:block}
+
+/* Mobile */
+.menu-btn{display:none;position:fixed;top:16px;left:16px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;cursor:pointer;color:var(--text)}
+@media(max-width:800px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .section{padding:32px 20px 60px}
+  .menu-btn{display:block}
+  .calc-grid{grid-template-columns:1fr}
+}
+
+/* Inline highlight */
+em.hl{font-style:normal;color:var(--accent);font-weight:500}
+em.gr{font-style:normal;color:var(--green)}
+em.or{font-style:normal;color:var(--orange)}
+
+/* Checklist */
+.checklist{list-style:none;padding:0}
+.checklist li{padding:8px 0;display:flex;gap:10px;align-items:flex-start;color:var(--text2);font-size:.92rem}
+.checklist li::before{content:"▹";color:var(--accent);font-weight:bold;flex-shrink:0;margin-top:1px}
+
+/* step vis */
+.step-vis{display:flex;gap:2px;align-items:center;margin:16px 0;flex-wrap:wrap}
+.step-vis .step-node{padding:10px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.82rem;text-align:center}
+.step-vis .step-arrow{color:var(--text3);font-size:1.2rem;padding:0 4px}
+</style>
+</head>
+<body>
+
+<button class="menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰ Topics</button>
+
+<div class="app">
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>Neural Networks</h2>
+    <p>CS 180 — Intro to Data Science</p>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="nav-list" id="navList"></div>
+</nav>
+
+<main class="main" id="mainContent">
+<!-- ===================== SECTION 0: Welcome ===================== -->
+<div class="section active" data-section="0">
+  <div class="section-tag">Welcome</div>
+  <h1>Your Neural Networks Study Guide</h1>
+  <p class="section-sub">12 interactive lessons covering everything you need for CS 180.</p>
+
+  <div class="card highlight">
+    <div class="card-label blue">How This Works</div>
+    <p>Each topic has <em class="hl">explanations with analogies</em>, <em class="gr">interactive examples</em>, and <em class="or">quiz questions</em> to test yourself. Mark each topic complete as you go — the sidebar tracks your progress.</p>
+  </div>
+
+  <p style="margin-top:20px;color:var(--text2)">Click a topic in the sidebar, or start from the top:</p>
+  <div class="btn-nav">
+    <span></span>
+    <button class="btn btn-primary" onclick="goTo(1)">Start Learning →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 1: Define Neural Network ===================== -->
+<div class="section" data-section="1">
+  <div class="section-tag">Topic 1 of 12</div>
+  <h1>What is a Neural Network?</h1>
+  <p class="section-sub">A computational model inspired by the brain.</p>
+
+  <p>A <em class="hl">neural network</em> is a machine learning model made up of layers of interconnected nodes (called <em class="hl">neurons</em>) that learn patterns from data. Each connection has a <em class="hl">weight</em>, and each neuron applies a function to its inputs to produce an output.</p>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Assembly Line</div>
+    <p>Think of a neural network like a factory assembly line. Raw materials (your data) go in one end. Each station (layer) does a specific transformation — cutting, shaping, painting. The final station produces the finished product (prediction). The factory gets better over time by adjusting how each station works (updating weights).</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label green">Key Definition</div>
+    <p><strong>Neural network:</strong> A computational model consisting of layers of artificial neurons connected by weighted edges, which learns to map inputs to outputs by adjusting its weights during training.</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q1">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What distinguishes a neural network from a simple linear regression?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" data-val="a" onclick="checkQuiz('q1','b',this)">It always uses gradient descent</div>
+      <div class="quiz-opt" data-val="b" onclick="checkQuiz('q1','b',this)">It has hidden layers with nonlinear activation functions</div>
+      <div class="quiz-opt" data-val="c" onclick="checkQuiz('q1','b',this)">It requires more data</div>
+      <div class="quiz-opt" data-val="d" onclick="checkQuiz('q1','b',this)">It can only solve classification problems</div>
+    </div>
+    <div class="quiz-feedback" id="q1-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(1)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(2)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 2: Components ===================== -->
+<div class="section" data-section="2">
+  <div class="section-tag">Topic 2 of 12</div>
+  <h1>Components of a Neural Network</h1>
+  <p class="section-sub">Neurons, weights, biases, layers, and activation functions.</p>
+
+  <div class="nn-diagram">
+    <svg viewBox="0 0 520 300" width="520" height="300" xmlns="http://www.w3.org/2000/svg">
+      <!-- Input layer -->
+      <text x="60" y="22" text-anchor="middle" fill="#60a5fa">Input</text>
+      <circle cx="60" cy="70" r="22" fill="#1a1f2b" stroke="#60a5fa" stroke-width="2" class="node"/>
+      <text x="60" y="74" text-anchor="middle" fill="#60a5fa" font-size="10">x₁</text>
+      <circle cx="60" cy="150" r="22" fill="#1a1f2b" stroke="#60a5fa" stroke-width="2" class="node"/>
+      <text x="60" y="154" text-anchor="middle" fill="#60a5fa" font-size="10">x₂</text>
+      <circle cx="60" cy="230" r="22" fill="#1a1f2b" stroke="#60a5fa" stroke-width="2" class="node"/>
+      <text x="60" y="234" text-anchor="middle" fill="#60a5fa" font-size="10">x₃</text>
+      <!-- Hidden layer -->
+      <text x="260" y="22" text-anchor="middle" fill="#a78bfa">Hidden</text>
+      <circle cx="260" cy="60" r="22" fill="#1a1f2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="260" y="64" text-anchor="middle" fill="#a78bfa" font-size="10">h₁</text>
+      <circle cx="260" cy="130" r="22" fill="#1a1f2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="260" y="134" text-anchor="middle" fill="#a78bfa" font-size="10">h₂</text>
+      <circle cx="260" cy="200" r="22" fill="#1a1f2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="260" y="204" text-anchor="middle" fill="#a78bfa" font-size="10">h₃</text>
+      <circle cx="260" cy="270" r="22" fill="#1a1f2b" stroke="#a78bfa" stroke-width="2"/>
+      <text x="260" y="274" text-anchor="middle" fill="#a78bfa" font-size="10">h₄</text>
+      <!-- Output -->
+      <text x="460" y="22" text-anchor="middle" fill="#34d399">Output</text>
+      <circle cx="460" cy="150" r="22" fill="#1a1f2b" stroke="#34d399" stroke-width="2"/>
+      <text x="460" y="154" text-anchor="middle" fill="#34d399" font-size="10">ŷ</text>
+      <!-- Connections: input → hidden -->
+      <g stroke="#2a3040" stroke-width="1" opacity="0.5">
+        <line x1="82" y1="70" x2="238" y2="60"/><line x1="82" y1="70" x2="238" y2="130"/>
+        <line x1="82" y1="70" x2="238" y2="200"/><line x1="82" y1="70" x2="238" y2="270"/>
+        <line x1="82" y1="150" x2="238" y2="60"/><line x1="82" y1="150" x2="238" y2="130"/>
+        <line x1="82" y1="150" x2="238" y2="200"/><line x1="82" y1="150" x2="238" y2="270"/>
+        <line x1="82" y1="230" x2="238" y2="60"/><line x1="82" y1="230" x2="238" y2="130"/>
+        <line x1="82" y1="230" x2="238" y2="200"/><line x1="82" y1="230" x2="238" y2="270"/>
+      </g>
+      <!-- Connections: hidden → output -->
+      <g stroke="#2a3040" stroke-width="1" opacity="0.5">
+        <line x1="282" y1="60" x2="438" y2="150"/><line x1="282" y1="130" x2="438" y2="150"/>
+        <line x1="282" y1="200" x2="438" y2="150"/><line x1="282" y1="270" x2="438" y2="150"/>
+      </g>
+      <!-- Labels -->
+      <text x="160" y="285" text-anchor="middle" fill="#546e7a" font-size="9">weights (w)</text>
+      <text x="370" y="285" text-anchor="middle" fill="#546e7a" font-size="9">weights (w)</text>
+    </svg>
+  </div>
+
+  <div class="card">
+    <div class="card-label blue">The Five Core Components</div>
+    <p><strong>1. Neurons (Nodes):</strong> The basic units. Each receives inputs, applies a weighted sum + bias, then an activation function.</p>
+    <p style="margin-top:8px"><strong>2. Weights:</strong> Numbers on each connection that control how much influence one neuron has on the next. These are what the network <em class="hl">learns</em>.</p>
+    <p style="margin-top:8px"><strong>3. Biases:</strong> An extra parameter added to the weighted sum, allowing the neuron to shift its activation. Like a y-intercept.</p>
+    <p style="margin-top:8px"><strong>4. Layers:</strong> Input layer (receives raw data), hidden layer(s) (process data), output layer (produces predictions).</p>
+    <p style="margin-top:8px"><strong>5. Activation functions:</strong> Applied at each neuron to introduce nonlinearity (covered in Topic 3).</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Group Project Voting</div>
+    <p>Each neuron is like a team member giving an opinion. <em class="hl">Weights</em> are how much you trust each person's opinion. <em class="hl">Bias</em> is your own default leaning before hearing anyone. The <em class="hl">activation function</em> is your final rule for making a decision (like "if total score > threshold, I vote yes").</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q2">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">Which component allows a neuron to activate even when all inputs are zero?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q2','b',this)">Weights</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2','b',this)">Bias</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2','b',this)">Activation function</div>
+      <div class="quiz-opt" onclick="checkQuiz('q2','b',this)">Hidden layer</div>
+    </div>
+    <div class="quiz-feedback" id="q2-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(2)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 3: Activation Functions ===================== -->
+<div class="section" data-section="3">
+  <div class="section-tag">Topic 3 of 12</div>
+  <h1>Activation Functions</h1>
+  <p class="section-sub">The nonlinearity that gives neural networks their power.</p>
+
+  <p>Without activation functions, a neural network would just be stacked linear transformations — equivalent to a single linear model. Activation functions introduce <em class="hl">nonlinearity</em>, letting the network learn complex patterns.</p>
+
+  <div class="act-tabs" id="actTabs">
+    <button class="act-tab active" onclick="showAct('sigmoid', this)">Sigmoid</button>
+    <button class="act-tab" onclick="showAct('tanh', this)">Tanh</button>
+    <button class="act-tab" onclick="showAct('relu', this)">ReLU</button>
+    <button class="act-tab" onclick="showAct('softmax', this)">Softmax</button>
+  </div>
+  <div class="act-display" id="actDisplay"></div>
+
+  <table class="comp-table" style="margin-top:24px">
+    <thead><tr><th>Function</th><th>Range</th><th>Pros</th><th>Cons</th></tr></thead>
+    <tbody>
+      <tr><td><code>Sigmoid</code></td><td>(0, 1)</td><td>Good for probability output</td><td>Vanishing gradients, slow</td></tr>
+      <tr><td><code>Tanh</code></td><td>(−1, 1)</td><td>Zero-centered</td><td>Still has vanishing gradients</td></tr>
+      <tr><td><code>ReLU</code></td><td>[0, ∞)</td><td>Fast, avoids vanishing grad</td><td>Dead neurons (output=0 forever)</td></tr>
+      <tr><td><code>Softmax</code></td><td>(0, 1) sums to 1</td><td>Multi-class probabilities</td><td>Only for output layer</td></tr>
+    </tbody>
+  </table>
+
+  <div class="quiz-box" data-quiz="q3">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">Which activation function is most commonly used in hidden layers of modern networks?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q3','c',this)">Sigmoid</div>
+      <div class="quiz-opt" onclick="checkQuiz('q3','c',this)">Tanh</div>
+      <div class="quiz-opt" onclick="checkQuiz('q3','c',this)">ReLU</div>
+      <div class="quiz-opt" onclick="checkQuiz('q3','c',this)">Softmax</div>
+    </div>
+    <div class="quiz-feedback" id="q3-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(3)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 4: Calculate Predictions ===================== -->
+<div class="section" data-section="4">
+  <div class="section-tag">Topic 4 of 12</div>
+  <h1>Calculating Predictions</h1>
+  <p class="section-sub">Walk through a forward pass with one hidden layer, step by step.</p>
+
+  <p>For a network with inputs <code>x</code>, one hidden layer, and an output, prediction works in two steps:</p>
+  <div class="card">
+    <div class="card-label blue">Step 1 — Hidden Layer</div>
+    <p>For each hidden neuron <em>j</em>:</p>
+    <p style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--accent)">h_j = activation( Σ(w_ij × x_i) + b_j )</p>
+  </div>
+  <div class="card">
+    <div class="card-label blue">Step 2 — Output Layer</div>
+    <p>For each output neuron <em>k</em>:</p>
+    <p style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--green)">ŷ_k = activation( Σ(w_jk × h_j) + b_k )</p>
+  </div>
+
+  <div class="card highlight">
+    <div class="card-label green">Interactive Calculator</div>
+    <p style="margin-bottom:12px">Try it yourself! A tiny network: 2 inputs → 1 hidden neuron (ReLU) → 1 output (identity).</p>
+    <div class="calc-grid">
+      <div class="calc-input-group">
+        <label>x₁</label>
+        <input type="number" class="calc-input" id="cx1" value="1.0" step="0.1" oninput="calcNN()">
+      </div>
+      <div class="calc-input-group">
+        <label>x₂</label>
+        <input type="number" class="calc-input" id="cx2" value="0.5" step="0.1" oninput="calcNN()">
+      </div>
+      <div class="calc-input-group">
+        <label>w₁ (input→hidden)</label>
+        <input type="number" class="calc-input" id="cw1" value="0.8" step="0.1" oninput="calcNN()">
+      </div>
+      <div class="calc-input-group">
+        <label>w₂ (input→hidden)</label>
+        <input type="number" class="calc-input" id="cw2" value="-0.3" step="0.1" oninput="calcNN()">
+      </div>
+      <div class="calc-input-group">
+        <label>bias (hidden)</label>
+        <input type="number" class="calc-input" id="cb1" value="0.1" step="0.1" oninput="calcNN()">
+      </div>
+      <div class="calc-input-group">
+        <label>w₃ (hidden→output)</label>
+        <input type="number" class="calc-input" id="cw3" value="1.2" step="0.1" oninput="calcNN()">
+      </div>
+    </div>
+    <div class="calc-result" id="calcResult"></div>
+  </div>
+
+  <div class="quiz-box" data-quiz="q4">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">If the weighted sum before ReLU is −2.5, what does ReLU output?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q4','a',this)">0</div>
+      <div class="quiz-opt" onclick="checkQuiz('q4','a',this)">−2.5</div>
+      <div class="quiz-opt" onclick="checkQuiz('q4','a',this)">2.5</div>
+      <div class="quiz-opt" onclick="checkQuiz('q4','a',this)">1</div>
+    </div>
+    <div class="quiz-feedback" id="q4-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(4)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(5)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 5: MLP ===================== -->
+<div class="section" data-section="5">
+  <div class="section-tag">Topic 5 of 12</div>
+  <h1>Multilayer Perceptron (MLP)</h1>
+  <p class="section-sub">The classic fully-connected neural network architecture.</p>
+
+  <div class="card">
+    <div class="card-label green">Key Definition</div>
+    <p>A <strong>multilayer perceptron (MLP)</strong> is a neural network with at least one hidden layer, where every neuron in one layer is connected to every neuron in the next layer (<em class="hl">fully connected</em>). It uses nonlinear activation functions and is trained via backpropagation.</p>
+  </div>
+
+  <div class="step-vis">
+    <div class="step-node">Input Layer<br><span style="font-size:.75rem;color:var(--text3)">Features</span></div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--accent2)">Hidden Layer 1<br><span style="font-size:.75rem;color:var(--text3)">+ReLU</span></div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--accent3)">Hidden Layer 2<br><span style="font-size:.75rem;color:var(--text3)">+ReLU</span></div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--green)">Output Layer<br><span style="font-size:.75rem;color:var(--text3)">Prediction</span></div>
+  </div>
+
+  <p style="margin-top:16px">An MLP is essentially a "vanilla" neural network. In scikit-learn, it's implemented as <code>MLPClassifier</code> and <code>MLPRegressor</code>.</p>
+
+  <div class="card analogy">
+    <div class="card-label orange">How is an MLP different from a single perceptron?</div>
+    <p>A single perceptron is one neuron — it can only learn linear boundaries (like a straight line). An MLP stacks layers of perceptrons with nonlinear activations, so it can learn curved, complex decision boundaries. It's the difference between drawing with a ruler vs. freehand.</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q5">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What does "fully connected" mean in the context of an MLP?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q5','c',this)">All layers have the same number of neurons</div>
+      <div class="quiz-opt" onclick="checkQuiz('q5','c',this)">All neurons share the same weights</div>
+      <div class="quiz-opt" onclick="checkQuiz('q5','c',this)">Every neuron in one layer connects to every neuron in the next</div>
+      <div class="quiz-opt" onclick="checkQuiz('q5','c',this)">The network has no missing data</div>
+    </div>
+    <div class="quiz-feedback" id="q5-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(5)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(6)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 6: Image Classification ===================== -->
+<div class="section" data-section="6">
+  <div class="section-tag">Topic 6 of 12</div>
+  <h1>Why NNs for Image Classification?</h1>
+  <p class="section-sub">How neural networks see pictures.</p>
+
+  <p>Images are just grids of pixel values. A 28×28 grayscale image = 784 numbers. Neural networks excel at image classification because:</p>
+
+  <div class="card">
+    <div class="card-label blue">Three Reasons</div>
+    <p><strong>1. Automatic feature extraction:</strong> Traditional ML requires you to manually define features (edges, colors). Neural networks <em class="hl">learn</em> which features matter directly from the pixel data.</p>
+    <p style="margin-top:10px"><strong>2. Hierarchical representations:</strong> Early layers learn simple patterns (edges, corners). Deeper layers combine those into complex features (eyes, wheels, letters).</p>
+    <p style="margin-top:10px"><strong>3. Nonlinear decision boundaries:</strong> Images have complex, nonlinear relationships between pixels and labels. NNs handle this naturally.</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Learning to Read</div>
+    <p>When you learned to read, you first recognized lines and curves, then assembled them into letters, then words, then sentences. A neural network does the same thing — each layer builds more abstract features from the previous layer's output.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label green">Example: MNIST</div>
+    <p>The classic MNIST dataset has 70,000 images of handwritten digits (0–9). Each image is 28×28 pixels. An MLP flattens this to a 784-element vector input and learns to classify it into one of 10 classes. Even a simple MLP achieves ~97% accuracy.</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q6">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What is the primary advantage of neural networks over traditional ML for images?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q6','b',this)">They run faster on CPUs</div>
+      <div class="quiz-opt" onclick="checkQuiz('q6','b',this)">They automatically learn relevant features from raw pixels</div>
+      <div class="quiz-opt" onclick="checkQuiz('q6','b',this)">They require less training data</div>
+      <div class="quiz-opt" onclick="checkQuiz('q6','b',this)">They don't need labeled data</div>
+    </div>
+    <div class="quiz-feedback" id="q6-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(6)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(7)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 7: Implement MLP in sklearn ===================== -->
+<div class="section" data-section="7">
+  <div class="section-tag">Topic 7 of 12</div>
+  <h1>Implementing an MLP in scikit-learn</h1>
+  <p class="section-sub">From import to prediction in ~10 lines.</p>
+
+  <div class="code-block"><span class="kw">from</span> sklearn.neural_network <span class="kw">import</span> MLPClassifier
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_digits
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+
+<span class="cm"># Load data</span>
+X, y <span class="op">=</span> load_digits(return_X_y<span class="op">=</span><span class="kw">True</span>)
+X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(
+    X, y, test_size<span class="op">=</span><span class="num">0.2</span>, random_state<span class="op">=</span><span class="num">42</span>
+)
+
+<span class="cm"># IMPORTANT: Scale your features!</span>
+scaler <span class="op">=</span> StandardScaler()
+X_train <span class="op">=</span> scaler.fit_transform(X_train)
+X_test <span class="op">=</span> scaler.transform(X_test)
+
+<span class="cm"># Create and train MLP</span>
+mlp <span class="op">=</span> MLPClassifier(
+    hidden_layer_sizes<span class="op">=</span>(<span class="num">128</span>, <span class="num">64</span>),   <span class="cm"># 2 hidden layers: 128 and 64 neurons</span>
+    activation<span class="op">=</span><span class="str">'relu'</span>,              <span class="cm"># ReLU activation</span>
+    solver<span class="op">=</span><span class="str">'adam'</span>,                 <span class="cm"># Optimizer</span>
+    max_iter<span class="op">=</span><span class="num">200</span>,                 <span class="cm"># Max training epochs</span>
+    random_state<span class="op">=</span><span class="num">42</span>
+)
+mlp.<span class="fn">fit</span>(X_train, y_train)
+
+<span class="cm"># Evaluate</span>
+<span class="fn">print</span>(f<span class="str">"Accuracy: {mlp.score(X_test, y_test):.3f}"</span>)
+</div>
+
+  <div class="card warning">
+    <div class="card-label red">Common Mistake</div>
+    <p>Forgetting to <strong>scale your features</strong>. Neural networks are very sensitive to feature scales. Always use <code>StandardScaler</code> or <code>MinMaxScaler</code> before training. Without scaling, training may fail to converge or take far longer.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label blue">Key Parameters</div>
+    <p><code>hidden_layer_sizes=(128, 64)</code> → two hidden layers with 128 and 64 neurons</p>
+    <p><code>activation='relu'</code> → activation function for hidden layers</p>
+    <p><code>solver='adam'</code> → optimization algorithm (adam is the default and usually best)</p>
+    <p><code>max_iter=200</code> → maximum number of training epochs</p>
+    <p><code>learning_rate_init=0.001</code> → initial learning rate (default)</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q7">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What does <code>hidden_layer_sizes=(100, 50, 25)</code> create?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q7','b',this)">A network with 175 total neurons in one layer</div>
+      <div class="quiz-opt" onclick="checkQuiz('q7','b',this)">3 hidden layers with 100, 50, and 25 neurons respectively</div>
+      <div class="quiz-opt" onclick="checkQuiz('q7','b',this)">A network that trains for 100, then 50, then 25 epochs</div>
+      <div class="quiz-opt" onclick="checkQuiz('q7','b',this)">3 output classes</div>
+    </div>
+    <div class="quiz-feedback" id="q7-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(7)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(8)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 8: Forward Prop & Backprop ===================== -->
+<div class="section" data-section="8">
+  <div class="section-tag">Topic 8 of 12</div>
+  <h1>Forward & Backpropagation</h1>
+  <p class="section-sub">How a neural network learns: predict, then correct.</p>
+
+  <div class="card highlight">
+    <div class="card-label blue">Forward Propagation</div>
+    <p>Data flows <em class="hl">forward</em> through the network: input → hidden layers → output. Each neuron computes its weighted sum + bias, applies the activation function, and passes the result to the next layer. The final output is the network's <em class="hl">prediction</em>.</p>
+  </div>
+
+  <div class="step-vis">
+    <div class="step-node">Input x</div>
+    <div class="step-arrow">→</div>
+    <div class="step-node">Weighted Sum</div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--accent)">Activation</div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--green)">Output ŷ</div>
+    <div class="step-arrow">→</div>
+    <div class="step-node" style="border-color:var(--red)">Loss</div>
+  </div>
+
+  <div class="card" style="margin-top:24px;border-color:var(--pink)">
+    <div class="card-label pink">Backpropagation</div>
+    <p>After the forward pass, we compute the <em class="hl">loss</em> (error between prediction and truth). Backpropagation sends this error <strong>backward</strong> through the network using the <em class="hl">chain rule of calculus</em>, computing gradients for each weight. These gradients tell us how to adjust each weight to reduce the error.</p>
+    <p style="margin-top:10px">Then, an optimizer (like SGD or Adam) uses these gradients to <strong>update the weights</strong>.</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Grading a Group Essay</div>
+    <p><em class="hl">Forward pass</em> = the group writes the essay (each person contributes a section). <em class="or">Loss</em> = the teacher grades it and says "you got a C." <em class="hl">Backpropagation</em> = figuring out which sections caused the bad grade and telling each person specifically how to improve. <em class="gr">Weight update</em> = each person revises their section.</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q8">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What mathematical tool does backpropagation rely on to compute gradients?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q8','c',this)">Matrix multiplication</div>
+      <div class="quiz-opt" onclick="checkQuiz('q8','c',this)">Bayes' theorem</div>
+      <div class="quiz-opt" onclick="checkQuiz('q8','c',this)">The chain rule of calculus</div>
+      <div class="quiz-opt" onclick="checkQuiz('q8','c',this)">Eigenvalue decomposition</div>
+    </div>
+    <div class="quiz-feedback" id="q8-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(8)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(9)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 9: Batch Size & Epoch ===================== -->
+<div class="section" data-section="9">
+  <div class="section-tag">Topic 9 of 12</div>
+  <h1>Batch Size & Epoch</h1>
+  <p class="section-sub">How training data is fed through the network.</p>
+
+  <div class="card">
+    <div class="card-label green">Key Definitions</div>
+    <p><strong>Epoch:</strong> One complete pass through the <em class="hl">entire</em> training dataset. If you have 1,000 samples, one epoch means the network has seen all 1,000.</p>
+    <p style="margin-top:12px"><strong>Batch size:</strong> The number of training samples processed <em class="hl">before updating weights</em>. Instead of updating after every single sample, we average the gradients over a batch.</p>
+    <p style="margin-top:12px"><strong>Iteration:</strong> One weight update. If you have 1,000 samples and batch size = 100, then 1 epoch = 10 iterations.</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Studying Flashcards</div>
+    <p><em class="hl">Epoch</em> = going through your entire deck of flashcards once. <em class="hl">Batch size</em> = how many cards you look at before pausing to reflect and adjust your understanding. <em class="hl">Iteration</em> = each pause to reflect. A smaller batch (looking at fewer cards before reflecting) means more frequent updates but noisier learning.</p>
+  </div>
+
+  <div class="card highlight">
+    <div class="card-label blue">Interactive Example</div>
+    <p>You have <strong id="sampleCount">1000</strong> training samples.</p>
+    <div class="slider-group">
+      <label>Batch Size: <span class="slider-val" id="batchVal">200</span></label>
+      <input type="range" min="1" max="500" value="200" step="1" oninput="updateBatch(this.value)">
+    </div>
+    <div class="calc-result" id="batchResult"></div>
+  </div>
+
+  <table class="comp-table" style="margin-top:20px">
+    <thead><tr><th>Batch Type</th><th>Size</th><th>Pros</th><th>Cons</th></tr></thead>
+    <tbody>
+      <tr><td>Stochastic (SGD)</td><td>1</td><td>Frequent updates, can escape local minima</td><td>Very noisy, slow</td></tr>
+      <tr><td>Mini-batch</td><td>32–256</td><td>Good balance of speed and stability</td><td>Need to tune</td></tr>
+      <tr><td>Full batch</td><td>All data</td><td>Stable gradients</td><td>Slow, memory-heavy, can get stuck</td></tr>
+    </tbody>
+  </table>
+
+  <div class="quiz-box" data-quiz="q9">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">With 10,000 samples and batch size of 250, how many iterations per epoch?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q9','b',this)">250</div>
+      <div class="quiz-opt" onclick="checkQuiz('q9','b',this)">40</div>
+      <div class="quiz-opt" onclick="checkQuiz('q9','b',this)">10,000</div>
+      <div class="quiz-opt" onclick="checkQuiz('q9','b',this)">25</div>
+    </div>
+    <div class="quiz-feedback" id="q9-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(9)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(10)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 10: Learning Rate ===================== -->
+<div class="section" data-section="10">
+  <div class="section-tag">Topic 10 of 12</div>
+  <h1>The Learning Rate</h1>
+  <p class="section-sub">The single most important hyperparameter.</p>
+
+  <p>The <em class="hl">learning rate (α)</em> controls how much the weights change with each update:</p>
+  <p style="font-family:'JetBrains Mono',monospace;margin:12px 0;color:var(--accent)">new_weight = old_weight − α × gradient</p>
+
+  <div class="card highlight">
+    <div class="card-label blue">Interactive — Learning Rate Visualizer</div>
+    <p style="margin-bottom:12px">See how the learning rate affects convergence. The ball is trying to reach the bottom of the curve (minimum loss).</p>
+    <div class="slider-group">
+      <label>Learning Rate: <span class="slider-val" id="lrVal">0.10</span></label>
+      <input type="range" min="1" max="100" value="10" step="1" oninput="updateLR(this.value)" id="lrSlider">
+    </div>
+    <canvas id="lrCanvas" width="700" height="240" style="width:100%;border-radius:8px;background:#0d1017;margin-top:8px"></canvas>
+    <div style="display:flex;gap:12px;margin-top:12px">
+      <button class="btn btn-primary" onclick="animateLR()">▶ Animate</button>
+      <button class="btn btn-outline" onclick="resetLR()">Reset</button>
+    </div>
+    <div class="calc-result" id="lrFeedback" style="margin-top:12px"></div>
+  </div>
+
+  <table class="comp-table">
+    <thead><tr><th>Rate</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td>Too small (0.0001)</td><td>Very slow convergence; may get stuck; wastes compute</td></tr>
+      <tr><td>Good (0.001–0.01)</td><td>Steady convergence to a good minimum</td></tr>
+      <tr><td>Too large (1.0+)</td><td>Overshoots the minimum; loss oscillates or diverges</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Walking Downhill Blindfolded</div>
+    <p>Imagine you're on a hilly landscape, blindfolded, trying to reach the lowest valley. The gradient tells you which direction is downhill. The learning rate is your <em class="hl">step size</em>. Too small and you'll get there eventually but it'll take forever. Too big and you keep stepping over the valley and ending up on the other side.</p>
+  </div>
+
+  <div class="quiz-box" data-quiz="q10">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">If your training loss is oscillating wildly and not decreasing, what's the most likely fix?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q10','a',this)">Decrease the learning rate</div>
+      <div class="quiz-opt" onclick="checkQuiz('q10','a',this)">Increase the learning rate</div>
+      <div class="quiz-opt" onclick="checkQuiz('q10','a',this)">Add more hidden layers</div>
+      <div class="quiz-opt" onclick="checkQuiz('q10','a',this)">Remove the activation functions</div>
+    </div>
+    <div class="quiz-feedback" id="q10-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(10)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(11)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 11: Training MLP in sklearn ===================== -->
+<div class="section" data-section="11">
+  <div class="section-tag">Topic 11 of 12</div>
+  <h1>Training an MLP in scikit-learn</h1>
+  <p class="section-sub">The full workflow with monitoring and evaluation.</p>
+
+  <div class="code-block"><span class="kw">from</span> sklearn.neural_network <span class="kw">import</span> MLPClassifier
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># 1. Prepare data</span>
+X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(
+    X, y, test_size<span class="op">=</span><span class="num">0.2</span>, random_state<span class="op">=</span><span class="num">42</span>
+)
+scaler <span class="op">=</span> StandardScaler()
+X_train <span class="op">=</span> scaler.fit_transform(X_train)
+X_test <span class="op">=</span> scaler.transform(X_test)
+
+<span class="cm"># 2. Create model with early stopping</span>
+mlp <span class="op">=</span> MLPClassifier(
+    hidden_layer_sizes<span class="op">=</span>(<span class="num">128</span>, <span class="num">64</span>),
+    activation<span class="op">=</span><span class="str">'relu'</span>,
+    solver<span class="op">=</span><span class="str">'adam'</span>,
+    learning_rate_init<span class="op">=</span><span class="num">0.001</span>,
+    max_iter<span class="op">=</span><span class="num">300</span>,
+    early_stopping<span class="op">=</span><span class="kw">True</span>,         <span class="cm"># Stop if validation score stops improving</span>
+    validation_fraction<span class="op">=</span><span class="num">0.1</span>,   <span class="cm"># 10% of training data for validation</span>
+    random_state<span class="op">=</span><span class="num">42</span>,
+    verbose<span class="op">=</span><span class="kw">True</span>                <span class="cm"># Print loss each epoch</span>
+)
+
+<span class="cm"># 3. Train</span>
+mlp.<span class="fn">fit</span>(X_train, y_train)
+
+<span class="cm"># 4. Evaluate</span>
+<span class="fn">print</span>(classification_report(y_test, mlp.<span class="fn">predict</span>(X_test)))
+
+<span class="cm"># 5. Check training curve</span>
+<span class="fn">print</span>(f<span class="str">"Training loss: {mlp.loss_curve_[-1]:.4f}"</span>)
+<span class="fn">print</span>(f<span class="str">"Epochs trained: {mlp.n_iter_}"</span>)
+</div>
+
+  <div class="card">
+    <div class="card-label blue">Useful Attributes After Training</div>
+    <p><code>mlp.loss_curve_</code> — list of loss values per epoch (great for plotting)</p>
+    <p><code>mlp.n_iter_</code> — actual number of epochs run</p>
+    <p><code>mlp.coefs_</code> — list of weight matrices per layer</p>
+    <p><code>mlp.intercepts_</code> — list of bias vectors per layer</p>
+  </div>
+
+  <div class="toggle-section">
+    <div class="toggle-header" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+      <span>For regression instead of classification?</span><span class="arrow">▸</span>
+    </div>
+    <div class="toggle-body">
+      <p>Use <code>MLPRegressor</code> with the same parameters. The only difference is the loss function (MSE instead of cross-entropy) and the output layer (identity activation instead of softmax).</p>
+    </div>
+  </div>
+
+  <div class="quiz-box" data-quiz="q11">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">What does <code>early_stopping=True</code> do?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q11','c',this)">Stops training after the first epoch</div>
+      <div class="quiz-opt" onclick="checkQuiz('q11','c',this)">Stops training if the loss reaches exactly 0</div>
+      <div class="quiz-opt" onclick="checkQuiz('q11','c',this)">Stops training when the validation score stops improving</div>
+      <div class="quiz-opt" onclick="checkQuiz('q11','c',this)">Stops training if any weight becomes negative</div>
+    </div>
+    <div class="quiz-feedback" id="q11-fb"></div>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(11)">✓ Mark Complete</button>
+    <button class="btn btn-primary" onclick="goTo(12)">Next →</button>
+  </div>
+</div>
+
+<!-- ===================== SECTION 12: Improving Training ===================== -->
+<div class="section" data-section="12">
+  <div class="section-tag">Topic 12 of 12</div>
+  <h1>Improving Training Performance</h1>
+  <p class="section-sub">Techniques to get better results from your neural network.</p>
+
+  <div class="card">
+    <div class="card-label green">The Toolkit</div>
+    <p><strong>1. Feature scaling</strong> — Always normalize/standardize inputs. Neural networks are sensitive to feature magnitude.</p>
+    <p style="margin-top:8px"><strong>2. Learning rate tuning</strong> — Start with 0.001 (Adam default). If loss oscillates, decrease it. If it's too slow, increase it.</p>
+    <p style="margin-top:8px"><strong>3. Architecture search</strong> — Try different numbers of layers and neurons. Start simple, then add complexity.</p>
+    <p style="margin-top:8px"><strong>4. Early stopping</strong> — Monitor validation loss and stop when it stops improving. Prevents overfitting.</p>
+    <p style="margin-top:8px"><strong>5. Regularization (alpha)</strong> — L2 penalty on weights. In sklearn: <code>alpha=0.0001</code> (default). Increase to reduce overfitting.</p>
+    <p style="margin-top:8px"><strong>6. Different solvers</strong> — <code>'adam'</code> is usually best for large datasets. <code>'lbfgs'</code> can work well for small datasets.</p>
+    <p style="margin-top:8px"><strong>7. More data</strong> — Neural networks are data-hungry. More training data almost always helps.</p>
+    <p style="margin-top:8px"><strong>8. Batch size tuning</strong> — Smaller batches can help generalization; larger batches train faster.</p>
+  </div>
+
+  <div class="card analogy">
+    <div class="card-label orange">Analogy — Coaching an Athlete</div>
+    <p><em class="hl">Feature scaling</em> = making sure all drills use the same measurement units. <em class="hl">Learning rate</em> = how aggressively you push corrections. <em class="hl">Early stopping</em> = knowing when to rest instead of overtraining. <em class="hl">Regularization</em> = keeping form simple rather than developing weird habits. <em class="hl">More data</em> = more practice reps.</p>
+  </div>
+
+  <div class="card highlight">
+    <div class="card-label blue">Diagnosing Problems</div>
+    <table class="comp-table" style="margin:12px 0 0">
+      <thead><tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>Loss not decreasing</td><td>LR too small or bad architecture</td><td>Increase LR, add neurons</td></tr>
+        <tr><td>Loss oscillating</td><td>LR too large</td><td>Decrease LR</td></tr>
+        <tr><td>Train acc high, test acc low</td><td>Overfitting</td><td>Early stopping, regularization, more data</td></tr>
+        <tr><td>Both train & test acc low</td><td>Underfitting</td><td>Bigger network, more epochs, less regularization</td></tr>
+        <tr><td>Training extremely slow</td><td>Features not scaled</td><td>StandardScaler!</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="quiz-box" data-quiz="q12">
+    <div class="card-label pink">Check Yourself</div>
+    <div class="quiz-question">Your model has 99% training accuracy but 60% test accuracy. What's happening and what should you try first?</div>
+    <div class="quiz-options">
+      <div class="quiz-opt" onclick="checkQuiz('q12','b',this)">Underfitting — add more layers</div>
+      <div class="quiz-opt" onclick="checkQuiz('q12','b',this)">Overfitting — use early stopping or increase regularization</div>
+      <div class="quiz-opt" onclick="checkQuiz('q12','b',this)">Learning rate too high — decrease it</div>
+      <div class="quiz-opt" onclick="checkQuiz('q12','b',this)">Features not scaled — add StandardScaler</div>
+    </div>
+    <div class="quiz-feedback" id="q12-fb"></div>
+  </div>
+
+  <div class="card" style="margin-top:32px;border-color:var(--green);text-align:center">
+    <h3 style="color:var(--green);margin-bottom:8px">🎉 You've covered all 12 topics!</h3>
+    <p style="color:var(--text2)">Go back through any topic you want to review. Your progress is saved in the sidebar.</p>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn btn-complete" onclick="markComplete(12)">✓ Mark Complete</button>
+    <button class="btn btn-outline" onclick="goTo(0)">← Back to Overview</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ========== TOPICS ==========
+const topics = [
+  "Welcome",
+  "Define Neural Network",
+  "Components of a NN",
+  "Activation Functions",
+  "Calculate Predictions",
+  "Multilayer Perceptron",
+  "NNs for Image Classification",
+  "Implement MLP in sklearn",
+  "Forward & Backpropagation",
+  "Batch Size & Epoch",
+  "Learning Rate",
+  "Training an MLP in sklearn",
+  "Improving Training"
+];
+
+const completed = new Set();
+let currentSection = 0;
+
+// Build nav
+function buildNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+  topics.forEach((t, i) => {
+    const item = document.createElement('div');
+    item.className = 'nav-item' + (i === currentSection ? ' active' : '') + (completed.has(i) ? ' completed' : '');
+    item.innerHTML = `<div class="nav-num">${i === 0 ? '★' : i}</div><span>${t}</span>`;
+    item.onclick = () => goTo(i);
+    nav.appendChild(item);
+  });
+}
+
+function goTo(idx) {
+  currentSection = idx;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.section[data-section="${idx}"]`).classList.add('active');
+  buildNav();
+  document.querySelector('.sidebar').classList.remove('open');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  if (idx === 4) calcNN();
+  if (idx === 9) updateBatch(200);
+  if (idx === 10) resetLR();
+}
+
+function markComplete(idx) {
+  completed.add(idx);
+  buildNav();
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = (completed.size / 12) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ========== QUIZZES ==========
+const quizFeedback = {
+  q1: {correct: "Correct! Hidden layers with nonlinear activations let NNs learn complex, nonlinear patterns that linear regression can't.", wrong: "Not quite. The key difference is hidden layers with nonlinear activation functions, which let NNs learn complex patterns."},
+  q2: {correct: "Correct! The bias term means the neuron can produce a nonzero output even with all-zero inputs.", wrong: "Not quite. The bias is added to the weighted sum, so even if all x values are 0, the bias can still activate the neuron."},
+  q3: {correct: "Correct! ReLU is the default choice for hidden layers — it's fast, simple, and avoids the vanishing gradient problem.", wrong: "Not quite. ReLU is the go-to activation for hidden layers in modern networks due to speed and gradient properties."},
+  q4: {correct: "Correct! ReLU(x) = max(0, x). Since −2.5 < 0, the output is 0.", wrong: "Remember: ReLU(x) = max(0, x). Any negative input becomes 0."},
+  q5: {correct: "Correct! Fully connected means every neuron in layer n connects to every neuron in layer n+1.", wrong: "\"Fully connected\" means every neuron connects to every neuron in the adjacent layer — no connections are skipped."},
+  q6: {correct: "Correct! NNs learn features automatically from raw pixel data, eliminating manual feature engineering.", wrong: "The key advantage is automatic feature learning — NNs discover relevant features from raw pixels without human guidance."},
+  q7: {correct: "Correct! Each number in the tuple is a separate hidden layer with that many neurons.", wrong: "Each number in the tuple represents one hidden layer. (100, 50, 25) = three hidden layers with 100, 50, and 25 neurons."},
+  q8: {correct: "Correct! The chain rule lets us compute how each weight contributes to the total error, layer by layer.", wrong: "Backpropagation uses the chain rule of calculus to propagate gradients from the output back through each layer."},
+  q9: {correct: "Correct! 10,000 ÷ 250 = 40 iterations per epoch.", wrong: "Iterations = samples ÷ batch size = 10,000 ÷ 250 = 40."},
+  q10: {correct: "Correct! Oscillating loss is the classic sign of a learning rate that's too large. Decreasing it should stabilize training.", wrong: "Oscillating loss usually means the learning rate is too high — the steps are too big and keep overshooting the minimum."},
+  q11: {correct: "Correct! Early stopping monitors a validation set and halts training when performance stops improving, preventing overfitting.", wrong: "Early stopping monitors validation performance and stops training when it plateaus, preventing overfitting."},
+  q12: {correct: "Correct! A large gap between train and test accuracy is overfitting. Early stopping and regularization are the standard remedies.", wrong: "High train accuracy + low test accuracy = overfitting. Use early stopping, regularization, or more data."}
+};
+
+function checkQuiz(qid, correct, el) {
+  const box = el.closest('.quiz-box');
+  const opts = box.querySelectorAll('.quiz-opt');
+  const idx = Array.from(opts).indexOf(el);
+  const letters = ['a','b','c','d'];
+  const chosen = letters[idx];
+  const fb = document.getElementById(qid + '-fb');
+
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if (letters[i] === correct) o.classList.add('correct');
+    else if (o === el && chosen !== correct) o.classList.add('wrong');
+  });
+
+  if (chosen === correct) {
+    fb.textContent = quizFeedback[qid].correct;
+    fb.className = 'quiz-feedback show correct';
+  } else {
+    fb.textContent = quizFeedback[qid].wrong;
+    fb.className = 'quiz-feedback show wrong';
+  }
+}
+
+// ========== ACTIVATION DISPLAY ==========
+const actData = {
+  sigmoid: {
+    formula: 'σ(x) = 1 / (1 + e^(−x))',
+    range: '(0, 1)',
+    desc: 'Squashes any input to a probability between 0 and 1. Historically popular, but causes vanishing gradients in deep networks because its gradient maxes out at 0.25.',
+    use: 'Binary classification output layer',
+    fn: x => 1 / (1 + Math.exp(-x))
+  },
+  tanh: {
+    formula: 'tanh(x) = (e^x − e^(−x)) / (e^x + e^(−x))',
+    range: '(−1, 1)',
+    desc: 'Like sigmoid but zero-centered, so outputs can be negative. Still suffers from vanishing gradients at extreme values.',
+    use: 'Sometimes in hidden layers, RNNs',
+    fn: x => Math.tanh(x)
+  },
+  relu: {
+    formula: 'ReLU(x) = max(0, x)',
+    range: '[0, ∞)',
+    desc: 'Dead simple: if positive, pass through; if negative, output zero. Fast to compute, avoids vanishing gradients for positive values. The default choice for hidden layers.',
+    use: 'Hidden layers (default)',
+    fn: x => Math.max(0, x)
+  },
+  softmax: {
+    formula: 'softmax(xᵢ) = e^(xᵢ) / Σ e^(xⱼ)',
+    range: '(0, 1), sums to 1',
+    desc: 'Converts a vector of raw scores into a probability distribution. Each output represents the probability of a class. Used only at the output layer for multi-class classification.',
+    use: 'Multi-class classification output layer',
+    fn: null
+  }
+};
+
+function showAct(name, el) {
+  document.querySelectorAll('.act-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const a = actData[name];
+  const display = document.getElementById('actDisplay');
+
+  let canvasHTML = '';
+  if (a.fn) {
+    canvasHTML = `<canvas id="actCanvas" width="460" height="160" style="width:100%;max-width:460px;display:block;margin:12px auto;background:#0d1017;border-radius:6px"></canvas>`;
+  }
+
+  display.innerHTML = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--accent);margin-bottom:8px">${a.formula}</div>
+    <p style="font-size:.88rem;color:var(--text2);margin-bottom:4px"><strong style="color:var(--text)">Range:</strong> ${a.range}</p>
+    <p style="font-size:.88rem;color:var(--text2);margin-bottom:4px"><strong style="color:var(--text)">Used for:</strong> ${a.use}</p>
+    <p style="font-size:.9rem;margin-top:8px">${a.desc}</p>
+    ${canvasHTML}
+  `;
+
+  if (a.fn) {
+    requestAnimationFrame(() => drawActGraph(a.fn, name));
+  }
+}
+
+function drawActGraph(fn, name) {
+  const c = document.getElementById('actCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Axes
+  ctx.strokeStyle = '#2a3040';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+  ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h);
+  ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#546e7a';
+  ctx.font = '10px JetBrains Mono';
+  ctx.fillText('-5', 10, h/2 - 4);
+  ctx.fillText('5', w - 20, h/2 - 4);
+  ctx.fillText('1', w/2 + 4, 14);
+  ctx.fillText(name === 'tanh' ? '-1' : '0', w/2 + 4, h - 6);
+
+  // Plot
+  ctx.strokeStyle = '#60a5fa';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let px = 0; px < w; px++) {
+    const x = (px / w) * 10 - 5;
+    const y = fn(x);
+    const yRange = name === 'tanh' ? 2 : (name === 'relu' ? 5 : 1);
+    const yOffset = name === 'tanh' ? 1 : (name === 'relu' ? 0 : 1);
+    const py = h - ((y + (name === 'tanh' ? 1 : 0)) / yRange) * (h - 20) - 10;
+    if (px === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+// ========== NN Calculator ==========
+function calcNN() {
+  const x1 = parseFloat(document.getElementById('cx1').value) || 0;
+  const x2 = parseFloat(document.getElementById('cx2').value) || 0;
+  const w1 = parseFloat(document.getElementById('cw1').value) || 0;
+  const w2 = parseFloat(document.getElementById('cw2').value) || 0;
+  const b1 = parseFloat(document.getElementById('cb1').value) || 0;
+  const w3 = parseFloat(document.getElementById('cw3').value) || 0;
+
+  const z = w1*x1 + w2*x2 + b1;
+  const h = Math.max(0, z);
+  const y = w3 * h;
+
+  document.getElementById('calcResult').innerHTML = `
+    <div style="color:var(--text2)">
+      <strong>Step 1:</strong> z = (${w1}×${x1}) + (${w2}×${x2}) + ${b1} = <span style="color:var(--accent)">${z.toFixed(3)}</span><br>
+      <strong>Step 2:</strong> h = ReLU(${z.toFixed(3)}) = <span style="color:var(--accent2)">${h.toFixed(3)}</span><br>
+      <strong>Step 3:</strong> ŷ = ${w3} × ${h.toFixed(3)} = <span style="color:var(--green);font-size:1.1em;font-weight:600">${y.toFixed(3)}</span>
+    </div>
+  `;
+}
+
+// ========== BATCH SIZE ==========
+function updateBatch(val) {
+  document.getElementById('batchVal').textContent = val;
+  const samples = 1000;
+  const iters = Math.ceil(samples / val);
+  document.getElementById('batchResult').innerHTML = `
+    <span style="color:var(--text2)">1 epoch = </span><span style="color:var(--accent);font-weight:600">${samples}</span>
+    <span style="color:var(--text2)"> samples ÷ </span><span style="color:var(--accent2);font-weight:600">${val}</span>
+    <span style="color:var(--text2)"> batch size = </span><span style="color:var(--green);font-weight:600">${iters} iterations</span>
+    <span style="color:var(--text2)"> per epoch</span>
+  `;
+}
+
+// ========== LEARNING RATE VISUALIZER ==========
+let lrAnimFrame = null;
+let ballX = 50;
+let ballVel = 0;
+
+function lossFunc(x) {
+  return 0.0004 * Math.pow(x - 350, 2) + 30;
+}
+function lossGrad(x) {
+  return 0.0008 * (x - 350);
+}
+
+function updateLR(val) {
+  document.getElementById('lrVal').textContent = (val / 100).toFixed(2);
+}
+
+function drawLRScene() {
+  const c = document.getElementById('lrCanvas');
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Loss curve
+  ctx.strokeStyle = '#2a3040';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let px = 20; px < w - 20; px++) {
+    const y = lossFunc(px);
+    if (px === 20) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+
+  // Min marker
+  ctx.fillStyle = '#34d39944';
+  ctx.beginPath();
+  ctx.arc(350, lossFunc(350), 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#546e7a';
+  ctx.font = '11px JetBrains Mono';
+  ctx.fillText('minimum', 325, lossFunc(350) + 20);
+
+  // Ball
+  const by = lossFunc(ballX);
+  ctx.fillStyle = '#60a5fa';
+  ctx.beginPath();
+  ctx.arc(ballX, by - 8, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '8px JetBrains Mono';
+  ctx.fillText('●', ballX - 3, by - 5);
+}
+
+function animateLR() {
+  if (lrAnimFrame) cancelAnimationFrame(lrAnimFrame);
+  const lr = parseFloat(document.getElementById('lrVal').textContent);
+  let steps = 0;
+  const maxSteps = 80;
+
+  function step() {
+    const grad = lossGrad(ballX);
+    ballX = ballX - lr * grad * 600;
+    ballX = Math.max(30, Math.min(670, ballX));
+    steps++;
+    drawLRScene();
+
+    const fb = document.getElementById('lrFeedback');
+    const dist = Math.abs(ballX - 350);
+    if (dist < 5) {
+      fb.innerHTML = `<span style="color:var(--green)">✓ Converged in ${steps} steps! The ball reached the minimum.</span>`;
+    } else if (steps < maxSteps) {
+      fb.innerHTML = `<span style="color:var(--text2)">Step ${steps} — position: ${ballX.toFixed(0)}, loss: ${lossFunc(ballX).toFixed(1)}</span>`;
+      lrAnimFrame = requestAnimationFrame(step);
+    } else {
+      if (lr > 0.5) {
+        fb.innerHTML = `<span style="color:var(--red)">✗ Diverged! Learning rate too high — the ball kept overshooting.</span>`;
+      } else {
+        fb.innerHTML = `<span style="color:var(--orange)">⚠ Still converging slowly after ${steps} steps. Try a higher learning rate.</span>`;
+      }
+    }
+  }
+  step();
+}
+
+function resetLR() {
+  if (lrAnimFrame) cancelAnimationFrame(lrAnimFrame);
+  ballX = 50;
+  ballVel = 0;
+  drawLRScene();
+  document.getElementById('lrFeedback').innerHTML = '<span style="color:var(--text3)">Press Animate to start the gradient descent.</span>';
+}
+
+// ========== INIT ==========
+buildNav();
+showAct('sigmoid');
+updateBatch(200);
+setTimeout(() => {
+  calcNN();
+  resetLR();
+}, 100);
+</script>
+</body>
+</html>

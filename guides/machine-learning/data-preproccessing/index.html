@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS 270 – ML Data Preprocessing Tutor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Nunito+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181b24;
+  --surface2: #1f2330;
+  --border: #2a2e3b;
+  --text: #e2e4ea;
+  --text-dim: #8b8fa3;
+  --accent: #6ee7b7;
+  --accent-dim: rgba(110,231,183,0.12);
+  --accent-glow: rgba(110,231,183,0.25);
+  --wrong: #f87171;
+  --wrong-dim: rgba(248,113,113,0.12);
+  --gold: #fbbf24;
+  --gold-dim: rgba(251,191,36,0.1);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Ambient glow */
+.glow-orb {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.07;
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-orb.green { background: var(--accent); top: -200px; right: -100px; }
+.glow-orb.blue { background: var(--blue); bottom: -200px; left: -100px; }
+
+/* ===== HEADER ===== */
+header {
+  position: relative;
+  z-index: 1;
+  padding: 48px 32px 36px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+header .tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-bottom: 18px;
+}
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+header h1 em { color: var(--accent); font-style: italic; }
+header p {
+  color: var(--text-dim);
+  max-width: 540px;
+  margin: 0 auto;
+  font-size: 15px;
+}
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15,17,23,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.progress-bar-container .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+  border-radius: 100px;
+  transition: width 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.progress-bar-container .score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+  min-width: 50px;
+  text-align: right;
+}
+
+/* ===== NAV ===== */
+.section-nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  flex-wrap: wrap;
+}
+.section-nav button {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  padding: 10px 20px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+}
+.section-nav button:hover { border-color: var(--accent); color: var(--text); }
+.section-nav button.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.section-nav button .badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+}
+.badge.complete { background: var(--accent); color: var(--bg); }
+.badge.partial { background: var(--gold); color: var(--bg); }
+
+/* ===== MAIN CONTAINER ===== */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ===== CONCEPT CARD ===== */
+.concept-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.concept-card h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.concept-card p, .concept-card li {
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.75;
+}
+.concept-card ul { padding-left: 20px; margin: 10px 0; }
+.concept-card li { margin-bottom: 6px; }
+.concept-card code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+.concept-card .highlight-box {
+  background: var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  padding: 14px 18px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+.concept-card .formula {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  margin: 12px 0;
+  text-align: center;
+  color: var(--blue);
+  overflow-x: auto;
+}
+
+/* ===== QUESTION CARD ===== */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 20px;
+  animation: fadeUp 0.4s ease;
+}
+.question-card .q-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.q-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+.q-difficulty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+.q-difficulty.hard { background: var(--wrong-dim); color: var(--wrong); }
+.q-difficulty.medium { background: var(--gold-dim); color: var(--gold); }
+.q-difficulty.easy { background: var(--blue-dim); color: var(--blue); }
+
+.question-card .q-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.question-card .q-text code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--surface2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: left;
+  transition: all 0.2s;
+  width: 100%;
+}
+.option-btn:hover:not(.disabled) {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.option-btn .letter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--border);
+  color: var(--text-dim);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.option-btn.selected-correct {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.option-btn.selected-correct .letter {
+  background: var(--accent);
+  color: var(--bg);
+}
+.option-btn.selected-wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-dim);
+}
+.option-btn.selected-wrong .letter {
+  background: var(--wrong);
+  color: #fff;
+}
+.option-btn.show-correct {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  opacity: 0.7;
+}
+.option-btn.show-correct .letter {
+  background: var(--accent);
+  color: var(--bg);
+}
+.option-btn.disabled { cursor: default; opacity: 0.6; }
+.option-btn.disabled.selected-correct,
+.option-btn.disabled.selected-wrong,
+.option-btn.disabled.show-correct { opacity: 1; }
+
+/* Explanation */
+.explanation {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  line-height: 1.7;
+  display: none;
+}
+.explanation.correct {
+  background: var(--accent-dim);
+  border: 1px solid rgba(110,231,183,0.2);
+  color: var(--text);
+}
+.explanation.wrong {
+  background: var(--wrong-dim);
+  border: 1px solid rgba(248,113,113,0.2);
+  color: var(--text);
+}
+.explanation .exp-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.explanation.correct .exp-title { color: var(--accent); }
+.explanation.wrong .exp-title { color: var(--wrong); }
+
+/* ===== SECTION SUMMARY ===== */
+.section-summary {
+  text-align: center;
+  padding: 48px 32px;
+  animation: fadeUp 0.4s ease;
+}
+.section-summary .big-score {
+  font-family: 'DM Serif Display', serif;
+  font-size: 64px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.section-summary .big-score.poor { color: var(--wrong); }
+.section-summary .big-score.ok { color: var(--gold); }
+.section-summary p { color: var(--text-dim); font-size: 15px; margin-bottom: 24px; }
+.retry-btn, .next-btn {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin: 6px;
+}
+.retry-btn {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.retry-btn:hover { border-color: var(--accent); }
+.next-btn {
+  background: var(--accent);
+  color: var(--bg);
+}
+.next-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* ===== HIDDEN ===== */
+.hidden { display: none !important; }
+
+/* ===== MODE TOGGLE ===== */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 4px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mode-toggle button {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 8px 24px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.mode-toggle button.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  header { padding: 32px 16px 24px; }
+  .concept-card, .question-card { padding: 20px; }
+  .section-nav { gap: 6px; }
+  .section-nav button { padding: 8px 14px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow-orb green"></div>
+<div class="glow-orb blue"></div>
+
+<header>
+  <div class="tag">CS 270 · BYU</div>
+  <h1>Data Preprocessing <em>Tutor</em></h1>
+  <p>Study concepts, then test yourself with hard multiple-choice questions. Your professor won't know what hit him.</p>
+</header>
+
+<div class="progress-bar-container">
+  <span class="label" id="progressLabel">0 / 0</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="score" id="scoreLabel">0%</span>
+</div>
+
+<nav class="section-nav" id="sectionNav"></nav>
+
+<div class="container" id="mainContainer"></div>
+
+<script>
+// ============================================================
+//  DATA — Concepts + Questions for each section
+// ============================================================
+const SECTIONS = [
+  {
+    id: 'preprocessing',
+    title: 'Data Pre-processing',
+    concepts: [
+      {
+        title: 'Why Pre-process Data?',
+        body: `<p>Real-world data is messy — it may contain missing values, duplicates, inconsistencies, and noise. Pre-processing transforms raw data into a cleaner, more useful form so that ML models can learn effectively.</p>
+        <div class="highlight-box">Without proper pre-processing, a model may learn patterns from noise or be biased by the format of the data rather than its actual signal.</div>
+        <p>Pre-processing improves model accuracy, reduces training time, and makes results more interpretable.</p>`
+      },
+      {
+        title: 'Six Dimensions of Data Quality',
+        body: `<p>Data quality is evaluated across six key dimensions:</p>
+        <ul>
+          <li><strong>Completeness</strong> — Are there missing values? How much of the data is present?</li>
+          <li><strong>Consistency</strong> — Does the data contradict itself across sources or records?</li>
+          <li><strong>Accuracy</strong> — Does the data correctly represent the real-world entity or event?</li>
+          <li><strong>Timeliness</strong> — Is the data up to date for the decision being made?</li>
+          <li><strong>Believability</strong> — Is the data trusted and credible to the users?</li>
+          <li><strong>Interpretability</strong> — Can the data be understood correctly by the users?</li>
+        </ul>
+        <div class="highlight-box">A common exam trick: confusing accuracy and consistency. Data can be consistently wrong (all records agree, but they're all inaccurate).</div>`
+      },
+      {
+        title: 'Types of Missing Data',
+        body: `<p>Missing data falls into three categories based on the <em>mechanism</em> of missingness:</p>
+        <ul>
+          <li><strong>MCAR (Missing Completely At Random)</strong> — The probability of being missing is the same for all observations. Missingness is unrelated to any data. Example: a sensor randomly fails.</li>
+          <li><strong>MAR (Missing At Random)</strong> — Missingness depends on <em>observed</em> data but not on the missing data itself. Example: younger respondents skip income questions (age is observed).</li>
+          <li><strong>MNAR (Missing Not At Random)</strong> — Missingness depends on the <em>unobserved</em> (missing) value itself. Example: people with very high incomes refuse to report income.</li>
+        </ul>
+        <div class="highlight-box">MCAR is the easiest to handle (simple deletion is OK); MNAR is the hardest because the missingness is informative.</div>`
+      },
+      {
+        title: 'Listwise vs. Pairwise Deletion',
+        body: `<p><strong>Listwise deletion</strong> removes an entire row if any value is missing. It's simple but can discard a lot of useful data.</p>
+        <p><strong>Pairwise deletion</strong> uses all available data for each specific computation. For example, when computing the correlation between features A and B, it uses all rows where both A and B are present — even if other features are missing in those rows.</p>
+        <div class="highlight-box">Listwise: same sample for every analysis (consistent but wasteful). Pairwise: different samples for different computations (more data but potentially inconsistent statistics).</div>`
+      },
+      {
+        title: 'When to Remove Features',
+        body: `<p>Feature removal (dropping an entire column) is appropriate when:</p>
+        <ul>
+          <li>A feature has an extremely high percentage of missing values (e.g., &gt;60–80%).</li>
+          <li>The feature is irrelevant or redundant (provides no predictive value).</li>
+          <li>The feature is an identifier (e.g., row ID, name) with no generalizable signal.</li>
+          <li>Keeping the feature would introduce severe data leakage.</li>
+          <li>The feature is highly collinear with another feature already in the model.</li>
+        </ul>`
+      }
+    ],
+    questions: [
+      {
+        text: "A dataset has a column where missingness is correlated with the unobserved values themselves. Which type of missing data is this?",
+        options: ["MCAR", "MAR", "MNAR", "Structural missingness"],
+        correct: 2,
+        difficulty: "medium",
+        explanation: "When missingness depends on the missing value itself, it's MNAR (Missing Not At Random). For example, high-income individuals refusing to report income — the value that is missing (high income) is the reason it's missing."
+      },
+      {
+        text: "You compute the correlation between features X and Y using all 800 rows where both are present, but compute the correlation between X and Z using a different set of 750 rows. Which deletion method are you using?",
+        options: ["Listwise deletion", "Pairwise deletion", "Feature removal", "Mean imputation"],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "Pairwise deletion uses all available data for each specific pair-wise computation, leading to different sample sizes for different calculations. Listwise would have used one common subset of rows for all computations."
+      },
+      {
+        text: "A dataset has perfectly consistent values across all sources, but those values do not reflect reality. Which dimension of data quality is violated?",
+        options: ["Consistency", "Accuracy", "Completeness", "Believability"],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "Consistency means the data agrees across records/sources — this is satisfied. Accuracy means the data correctly represents real-world values — this is violated. Data can be consistently wrong."
+      },
+      {
+        text: "Which of the following is NOT one of the six standard dimensions of data quality?",
+        options: ["Timeliness", "Scalability", "Believability", "Interpretability"],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "The six dimensions are: Completeness, Consistency, Accuracy, Timeliness, Believability, and Interpretability. Scalability is not one of them."
+      },
+      {
+        text: "A sensor malfunctions randomly due to power surges that have nothing to do with what is being measured. This missing data is best classified as:",
+        options: ["MAR", "MNAR", "MCAR", "Structural"],
+        correct: 2,
+        difficulty: "easy",
+        explanation: "The missingness is completely independent of both observed and unobserved data — it's caused by random external events. This is the definition of MCAR."
+      },
+      {
+        text: "In a medical dataset, younger patients tend to skip the 'number of medications' field more often, regardless of how many medications they actually take. This is best classified as:",
+        options: ["MCAR", "MAR", "MNAR", "Not classifiable"],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "Missingness depends on an observed variable (age) rather than on the missing value itself (number of medications). This is MAR — the probability of missing depends on observed data."
+      },
+      {
+        text: "You have a feature with 85% missing values in a 10,000-row dataset. What is the most defensible first action?",
+        options: ["Impute with mean values", "Use pairwise deletion", "Consider removing the feature entirely", "Collect more data to fill the gaps"],
+        correct: 2,
+        difficulty: "medium",
+        explanation: "When a feature has an extremely high proportion of missing values (85%), imputation is unreliable because there's very little real data to base estimates on. Feature removal is the most defensible first consideration."
+      },
+      {
+        text: "A colleague uses listwise deletion and finds a strong relationship. When you use pairwise deletion, the relationship weakens. What is the most likely explanation?",
+        options: [
+          "Pairwise deletion introduced noise by using inconsistent subsets",
+          "Listwise deletion created a biased subsample where the relationship is artificially strong",
+          "Both could be valid — the discrepancy reveals sensitivity to the missing data pattern",
+          "Pairwise deletion is always less reliable"
+        ],
+        correct: 2,
+        difficulty: "hard",
+        explanation: "Both methods have trade-offs. The discrepancy suggests the results are sensitive to which rows are included, which reveals that the missing data pattern matters. Neither method is universally more reliable — this is a warning sign that the analyst should investigate the missing data mechanism."
+      },
+      {
+        text: "Which data quality dimension is most directly concerned with whether users can correctly parse and understand the data's meaning?",
+        options: ["Accuracy", "Believability", "Interpretability", "Completeness"],
+        correct: 2,
+        difficulty: "easy",
+        explanation: "Interpretability is specifically about whether the data can be correctly understood by users. Believability is about trust/credibility. Accuracy is about correctness relative to reality."
+      },
+      {
+        text: "Data leakage from a feature is best addressed by which pre-processing step?",
+        options: ["Standardization", "Imputation", "Feature removal", "Binning"],
+        correct: 2,
+        difficulty: "medium",
+        explanation: "If a feature causes data leakage (it contains information from the target that wouldn't be available at prediction time), the correct action is to remove it entirely. No transformation can fix leakage."
+      }
+    ]
+  },
+  {
+    id: 'transformations',
+    title: 'Feature Transformations',
+    concepts: [
+      {
+        title: 'Where Transformations Fit in the ML Workflow',
+        body: `<p>Feature transformations occur <strong>after</strong> data cleaning/pre-processing and <strong>before</strong> model training. The typical pipeline is:</p>
+        <p>Raw Data → Cleaning → <strong>Feature Transformation</strong> → Train/Test Split (or within a pipeline applied per fold) → Model Training → Evaluation</p>
+        <div class="highlight-box">Important: Fit transformations on the training set only, then apply (transform) to the test set. Fitting on the full dataset before splitting is a form of data leakage.</div>`
+      },
+      {
+        title: 'Standardization vs. Normalization',
+        body: `<p><strong>Standardization (Z-score)</strong> centers data to mean = 0, std = 1:</p>
+        <div class="formula">z = (x − μ) / σ</div>
+        <p>Use when: the algorithm assumes normally distributed features (e.g., SVM, logistic regression), or features have different units. Does <em>not</em> bound data to a specific range.</p>
+        <p><strong>Normalization (Min-Max scaling)</strong> rescales data to a fixed range, typically [0, 1]:</p>
+        <div class="formula">x' = (x − x_min) / (x_max − x_min)</div>
+        <p>Use when: you need bounded values (e.g., neural networks, image pixel inputs), or the distribution is not Gaussian. Sensitive to outliers.</p>
+        <div class="highlight-box">Key contrast: Standardization preserves outlier information (no fixed bounds). Normalization squashes everything into [0, 1], so outliers compress the rest of the data.</div>`
+      },
+      {
+        title: 'Encoding Categorical Variables',
+        body: `<p><strong>Label Encoding</strong> assigns each category an integer (Cat=0, Dog=1, Bird=2). Simple, but implies an ordinal relationship that may not exist. Best for tree-based models or truly ordinal data.</p>
+        <p><strong>One-Hot Encoding</strong> creates a binary column for each category. No ordinal assumption, but creates many columns for high-cardinality features (curse of dimensionality).</p>
+        <p><strong>Binary Encoding</strong> converts the label-encoded integer to binary digits, each digit becoming a column. Fewer columns than one-hot but more than label. Good middle ground for medium-cardinality features.</p>
+        <div class="highlight-box">For a feature with 1000 categories: label encoding → 1 column, one-hot → 1000 columns, binary → ⌈log₂(1000)⌉ = 10 columns.</div>`
+      },
+      {
+        title: 'Nonlinear Transformations',
+        body: `<p>Nonlinear transformations reshape feature distributions:</p>
+        <ul>
+          <li><strong>Log transform</strong> — compresses right-skewed data (e.g., income, prices). Requires positive values.</li>
+          <li><strong>Square root</strong> — milder compression than log, works for count data.</li>
+          <li><strong>Box-Cox</strong> — a family of power transforms parameterized by λ. Automatically finds the best λ to make data more normal. Requires positive values.</li>
+          <li><strong>Yeo-Johnson</strong> — like Box-Cox but works with zero and negative values.</li>
+          <li><strong>Polynomial features</strong> — creates interaction terms and powers (x², x₁·x₂), enabling linear models to learn nonlinear relationships.</li>
+        </ul>`
+      },
+      {
+        title: 'Binning (Discretization)',
+        body: `<p><strong>Equal-width binning</strong> divides the feature's range into N bins of equal size:</p>
+        <div class="formula">bin_width = (max − min) / N</div>
+        <p>Simple, but if data is skewed, some bins may be nearly empty while others are packed.</p>
+        <p><strong>Equal-frequency (quantile) binning</strong> divides data so each bin has approximately the same number of observations. Better for skewed data, but bin widths vary.</p>
+        <div class="highlight-box">Equal-width → consistent bin sizes, uneven counts. Equal-frequency → consistent counts, uneven bin sizes.</div>`
+      },
+      {
+        title: 'scikit-learn Implementations',
+        body: `<p>Key classes to know:</p>
+        <ul>
+          <li><code>StandardScaler</code> — standardization (z-score)</li>
+          <li><code>MinMaxScaler</code> — normalization to [0,1]</li>
+          <li><code>LabelEncoder</code> — label encoding (single column)</li>
+          <li><code>OneHotEncoder</code> — one-hot encoding</li>
+          <li><code>OrdinalEncoder</code> — for ordered categories</li>
+          <li><code>PowerTransformer</code> — Box-Cox / Yeo-Johnson</li>
+          <li><code>PolynomialFeatures</code> — polynomial & interaction terms</li>
+          <li><code>KBinsDiscretizer</code> — binning with strategy='uniform' (equal-width) or 'quantile' (equal-freq)</li>
+        </ul>
+        <div class="highlight-box">Always use <code>fit_transform()</code> on training data and <code>transform()</code> on test data — never refit on the test set.</div>`
+      }
+    ],
+    questions: [
+      {
+        text: "After standardization with StandardScaler, which of the following is guaranteed?",
+        options: [
+          "All values will be in [0, 1]",
+          "The mean will be 0 and standard deviation will be 1",
+          "Outliers will be removed",
+          "The distribution will be Gaussian"
+        ],
+        correct: 1,
+        difficulty: "easy",
+        explanation: "StandardScaler transforms data to have mean = 0 and std = 1. It does NOT bound values to any range, remove outliers, or change the shape of the distribution."
+      },
+      {
+        text: "A feature with 512 unique categories needs encoding. Which method produces exactly 10 new columns?",
+        options: ["Label encoding", "One-hot encoding", "Binary encoding", "Ordinal encoding"],
+        correct: 2,
+        difficulty: "hard",
+        explanation: "Binary encoding converts the integer label to binary representation. ⌈log₂(512)⌉ = 9... but 512 = 2⁹ exactly, so 9 bits. However, since categories start at 1 (not 0), we'd need 10 columns for values up to 512. One-hot would produce 512 columns; label/ordinal produce 1."
+      },
+      {
+        text: "You fit a MinMaxScaler on your training data where the feature's range is [10, 50]. A test observation has a value of 60. What will its scaled value be?",
+        options: ["1.0 (capped)", "1.25", "Undefined / error", "0.75"],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "MinMaxScaler uses the formula (x - min)/(max - min). With min=10, max=50: (60-10)/(50-10) = 50/40 = 1.25. Scikit-learn does NOT clip values — it simply applies the learned parameters, so values can go outside [0,1] on unseen data."
+      },
+      {
+        text: "Which transformation is appropriate for a feature that contains negative values and you want to make it more normally distributed?",
+        options: ["Log transform", "Box-Cox", "Yeo-Johnson", "Square root"],
+        correct: 2,
+        difficulty: "medium",
+        explanation: "Log, Box-Cox, and square root all require positive values. Yeo-Johnson is specifically designed to handle zero and negative values while still making data more Gaussian."
+      },
+      {
+        text: "You have a heavily right-skewed feature (e.g., household income). You apply equal-width binning with 5 bins. What problem will likely occur?",
+        options: [
+          "Bins will have too many categories for the model",
+          "Most observations will fall into the first bin, with the last bins nearly empty",
+          "The transformation will fail on skewed data",
+          "Equal-width binning automatically corrects for skew"
+        ],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "Equal-width binning creates bins of equal range. With right-skewed data, most values cluster at the low end, so the first bin(s) will be packed while the high-end bins capture only a few extreme values. Equal-frequency binning is better for skewed data."
+      },
+      {
+        text: "What is the critical difference between calling <code>fit_transform(X_train)</code> and <code>transform(X_test)</code>?",
+        options: [
+          "fit_transform is faster; transform is more accurate",
+          "fit_transform learns the parameters from the data AND applies them; transform only applies previously learned parameters",
+          "fit_transform is for numerical data; transform is for categorical",
+          "There is no meaningful difference"
+        ],
+        correct: 1,
+        difficulty: "easy",
+        explanation: "fit_transform first learns parameters (e.g., mean, std for StandardScaler) from X_train and then transforms it. transform applies those same learned parameters to new data. Calling fit_transform on X_test would refit, which is data leakage."
+      },
+      {
+        text: "You use one-hot encoding on a feature with categories {Red, Green, Blue}. To avoid the 'dummy variable trap' in linear regression, what should you do?",
+        options: [
+          "Use label encoding instead",
+          "Drop one of the encoded columns",
+          "Standardize the encoded columns",
+          "Nothing — the dummy variable trap is a myth"
+        ],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "With one-hot encoding in linear regression, the columns are perfectly multicollinear (they sum to 1). Dropping one column (the reference category) breaks this multicollinearity. This is the 'drop_first' parameter in scikit-learn's OneHotEncoder."
+      },
+      {
+        text: "Which scikit-learn class would you use to create both x² and x₁·x₂ interaction terms?",
+        options: ["PowerTransformer", "PolynomialFeatures", "FunctionTransformer", "KBinsDiscretizer"],
+        correct: 1,
+        difficulty: "easy",
+        explanation: "PolynomialFeatures generates polynomial and interaction features. PowerTransformer does Box-Cox/Yeo-Johnson. KBinsDiscretizer does binning. FunctionTransformer applies an arbitrary function."
+      },
+      {
+        text: "A feature has values ranging from 0 to 1,000,000 with a few extreme outliers at 10,000,000. Which scaling method will cause the MOST distortion of the non-outlier data?",
+        options: ["StandardScaler", "MinMaxScaler", "RobustScaler", "No scaling"],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "MinMaxScaler uses min and max to define the range. The extreme outlier at 10M makes max = 10M, compressing all values 0–1M into the range [0, 0.1]. StandardScaler is less affected because outliers shift the mean/std but don't create the same compression. RobustScaler uses median/IQR and is specifically designed to handle outliers."
+      },
+      {
+        text: "For the <code>KBinsDiscretizer</code> in scikit-learn, which strategy parameter produces equal-frequency bins?",
+        options: ["strategy='uniform'", "strategy='quantile'", "strategy='kmeans'", "strategy='frequency'"],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "In KBinsDiscretizer: 'uniform' = equal-width bins, 'quantile' = equal-frequency bins (same number of samples per bin), 'kmeans' = bins based on k-means clustering. There is no 'frequency' option."
+      }
+    ]
+  },
+  {
+    id: 'imputation',
+    title: 'Imputation Techniques',
+    concepts: [
+      {
+        title: 'Univariate vs. Multivariate Imputation',
+        body: `<p><strong>Univariate imputation</strong> fills in missing values using only the information from that same feature (column). Examples: mean, median, mode of the column.</p>
+        <p><strong>Multivariate imputation</strong> uses information from <em>other features</em> to estimate the missing value. It treats the feature with missing values as a dependent variable and the other features as predictors.</p>
+        <div class="highlight-box">Univariate is simpler and faster but ignores relationships between features. Multivariate preserves inter-feature correlations but is more computationally expensive and complex.</div>`
+      },
+      {
+        title: 'Mean, Median, and Mode Imputation',
+        body: `<p>These are the simplest univariate approaches:</p>
+        <ul>
+          <li><strong>Mean</strong> — Best for roughly symmetric, continuous data. Sensitive to outliers.</li>
+          <li><strong>Median</strong> — Better for skewed continuous data. Robust to outliers.</li>
+          <li><strong>Mode</strong> — Used for categorical data (most frequent value). Can also be used for discrete numerical data.</li>
+        </ul>
+        <div class="highlight-box">All three reduce variance in the imputed feature and weaken correlations with other features. They assume the data is MCAR — if data is MAR or MNAR, these methods can introduce bias.</div>
+        <p>In scikit-learn: <code>SimpleImputer(strategy='mean')</code>, <code>SimpleImputer(strategy='median')</code>, <code>SimpleImputer(strategy='most_frequent')</code>.</p>`
+      },
+      {
+        title: 'KNN Imputation',
+        body: `<p><strong>K-Nearest Neighbors imputation</strong> fills a missing value by finding the k most similar complete rows (neighbors), then using the mean (or weighted mean) of their values for the missing feature.</p>
+        <p>Steps:</p>
+        <ul>
+          <li>For a row with a missing value in feature F, compute distances to all complete rows using non-missing features.</li>
+          <li>Select the k nearest neighbors.</li>
+          <li>Impute the missing value as the mean (or weighted mean) of feature F from those k neighbors.</li>
+        </ul>
+        <div class="highlight-box">KNN imputation is a form of multivariate imputation because it uses multiple features to determine nearest neighbors. It preserves local structure but is computationally expensive for large datasets (O(n²) distance calculations).</div>
+        <p>In scikit-learn: <code>KNNImputer(n_neighbors=5)</code></p>`
+      },
+      {
+        title: 'Multivariate Imputation (MICE / Iterative)',
+        body: `<p><strong>MICE</strong> (Multiple Imputation by Chained Equations), also called <strong>iterative imputation</strong>, works in rounds:</p>
+        <ul>
+          <li><strong>Step 1:</strong> Fill all missing values with initial estimates (e.g., mean).</li>
+          <li><strong>Step 2:</strong> For each feature with missing values, treat it as a target variable and the other features as predictors. Train a model and predict the missing values.</li>
+          <li><strong>Step 3:</strong> Repeat Step 2 for all features with missing values (one round/iteration).</li>
+          <li><strong>Step 4:</strong> Repeat rounds until values converge (stabilize).</li>
+        </ul>
+        <div class="highlight-box">MICE is the most flexible imputation method — it can model complex relationships between features. However, it's the most computationally expensive and results can depend on the order of feature imputation and the choice of estimator.</div>
+        <p>In scikit-learn: <code>IterativeImputer(max_iter=10, estimator=BayesianRidge())</code></p>`
+      }
+    ],
+    questions: [
+      {
+        text: "A dataset has two correlated features: 'hours_studied' and 'practice_problems_completed'. 'hours_studied' has missing values. Which approach best preserves the correlation between these features?",
+        options: [
+          "Mean imputation on hours_studied",
+          "Median imputation on hours_studied",
+          "KNN imputation using practice_problems_completed (and other features) as neighbors",
+          "Mode imputation on hours_studied"
+        ],
+        correct: 2,
+        difficulty: "medium",
+        explanation: "KNN imputation uses other features (including practice_problems_completed) to find similar rows, so the imputed values will reflect the correlation structure. Mean/median/mode imputation ignores all other features and weakens the correlation."
+      },
+      {
+        text: "Mean imputation on a feature will always:",
+        options: [
+          "Increase the variance of that feature",
+          "Decrease the variance of that feature",
+          "Leave the variance unchanged",
+          "Change the variance unpredictably"
+        ],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "Replacing missing values with the mean adds values exactly at the center of the distribution. This pulls values toward the mean, reducing the spread. The variance of the feature will always decrease (or stay the same if there are no missing values)."
+      },
+      {
+        text: "In the iterative imputation (MICE) process, what happens in each round after the initialization?",
+        options: [
+          "All missing values are filled simultaneously using a single multivariate model",
+          "Each feature with missing values is treated as a target, predicted from the other features, one feature at a time",
+          "K-nearest neighbors is applied to each feature independently",
+          "Missing values are randomly sampled from the observed distribution"
+        ],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "In each MICE round, the algorithm goes through each feature with missing values one at a time, treats it as the target variable, uses the other features as predictors, and updates the imputed values. This is repeated for multiple rounds until convergence."
+      },
+      {
+        text: "You have a dataset with 50,000 rows and 5% missing values scattered across features. A colleague suggests KNN imputation. What is the biggest practical concern?",
+        options: [
+          "KNN imputation cannot handle more than 1% missing values",
+          "The O(n²) distance computation will be very slow on 50,000 rows",
+          "KNN imputation only works for categorical features",
+          "KNN always requires exactly k=5"
+        ],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "KNN imputation requires computing distances between all pairs of observations, which is O(n²). With 50,000 rows, this is 2.5 billion distance calculations — computationally expensive. KNN works on any feature type and any k value."
+      },
+      {
+        text: "When is mode imputation preferred over mean imputation?",
+        options: [
+          "When the feature is continuous and normally distributed",
+          "When the feature is categorical",
+          "When there are very few missing values",
+          "When the data is MNAR"
+        ],
+        correct: 1,
+        difficulty: "easy",
+        explanation: "Mode imputation replaces missing values with the most frequent value. This is the appropriate choice for categorical data where mean and median are undefined. Mean is for continuous data."
+      },
+      {
+        text: "Which statement about <code>IterativeImputer</code> in scikit-learn is TRUE?",
+        options: [
+          "It always converges in exactly 10 iterations",
+          "It can only use linear regression as the internal estimator",
+          "The results can depend on the order in which features are imputed",
+          "It is faster than SimpleImputer for large datasets"
+        ],
+        correct: 2,
+        difficulty: "hard",
+        explanation: "IterativeImputer processes features in a specific order each round, and the results can change depending on that order. It supports many estimators (BayesianRidge, RandomForest, etc.), may converge in fewer or more than 10 iterations, and is slower than SimpleImputer."
+      },
+      {
+        text: "A dataset has feature A (no missing values) and feature B (30% missing). Feature B is continuous and heavily right-skewed. Which univariate imputation strategy is most appropriate for B?",
+        options: ["Mean", "Median", "Mode", "Constant value of 0"],
+        correct: 1,
+        difficulty: "medium",
+        explanation: "For heavily skewed continuous data, the median is more robust than the mean because the mean is pulled toward the long tail. Mode is for categorical data. A constant 0 is arbitrary and not based on the data."
+      },
+      {
+        text: "What fundamentally distinguishes KNN imputation from SimpleImputer with strategy='mean'?",
+        options: [
+          "KNN is faster for large datasets",
+          "KNN uses information from other features to determine which values to impute",
+          "SimpleImputer always produces better results for MCAR data",
+          "KNN only works for integer features"
+        ],
+        correct: 1,
+        difficulty: "easy",
+        explanation: "The fundamental difference is that KNN imputation is multivariate — it uses other features to find similar rows, while SimpleImputer(strategy='mean') is univariate — it only uses the single feature's observed values. This is the core distinction between univariate and multivariate imputation."
+      },
+      {
+        text: "In MICE, the initial fill of missing values with the mean serves what purpose?",
+        options: [
+          "It's the final imputation — MICE only refines from there",
+          "It provides a starting point so regression models can be trained on complete data in the first iteration",
+          "It's required to make the data MCAR",
+          "It determines the convergence criterion"
+        ],
+        correct: 1,
+        difficulty: "hard",
+        explanation: "The initial mean fill is just a starting point — it makes the dataset complete so that in the first iteration, regression models can be trained on all rows. The iterative process then refines these rough estimates over multiple rounds until convergence."
+      },
+      {
+        text: "You impute missing values in feature X using <code>KNNImputer(n_neighbors=3)</code>. For a given missing row, the 3 nearest neighbors have values [10, 20, 30] for feature X. What value is imputed?",
+        options: ["10", "20", "30", "20 (the mean of the neighbors)"],
+        correct: 3,
+        difficulty: "easy",
+        explanation: "KNNImputer with uniform weights computes the mean of the k neighbors' values: (10 + 20 + 30) / 3 = 20. This is the default behavior."
+      }
+    ]
+  }
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let currentSectionIdx = 0;
+let mode = 'study'; // 'study' or 'quiz'
+let answers = {}; // { 'sectionIdx-qIdx': selectedOption }
+let sectionScores = {}; // { sectionIdx: {correct, total} }
+
+// ============================================================
+//  RENDER
+// ============================================================
+function init() {
+  renderNav();
+  renderContent();
+  updateProgress();
+}
+
+function renderNav() {
+  const nav = document.getElementById('sectionNav');
+  nav.innerHTML = SECTIONS.map((s, i) => {
+    const score = sectionScores[i];
+    let badgeHTML = '';
+    if (score) {
+      const pct = Math.round((score.correct / score.total) * 100);
+      if (pct === 100) badgeHTML = `<span class="badge complete">✓</span>`;
+      else badgeHTML = `<span class="badge partial">${pct}%</span>`;
+    }
+    return `<button class="${i === currentSectionIdx ? 'active' : ''}" onclick="switchSection(${i})">${s.title}${badgeHTML}</button>`;
+  }).join('');
+}
+
+function renderContent() {
+  const container = document.getElementById('mainContainer');
+  const section = SECTIONS[currentSectionIdx];
+
+  let html = `
+    <div class="mode-toggle">
+      <button class="${mode === 'study' ? 'active' : ''}" onclick="switchMode('study')">📖 Study</button>
+      <button class="${mode === 'quiz' ? 'active' : ''}" onclick="switchMode('quiz')">🧠 Quiz</button>
+    </div>
+  `;
+
+  if (mode === 'study') {
+    html += section.concepts.map(c => `
+      <div class="concept-card">
+        <h3>${c.title}</h3>
+        ${c.body}
+      </div>
+    `).join('');
+    html += `<div style="text-align:center;margin-top:24px;">
+      <button class="next-btn" onclick="switchMode('quiz')">Ready to Quiz Yourself →</button>
+    </div>`;
+  } else {
+    // Check if all answered
+    const allAnswered = section.questions.every((_, qi) => answers[`${currentSectionIdx}-${qi}`] !== undefined);
+
+    html += section.questions.map((q, qi) => {
+      const key = `${currentSectionIdx}-${qi}`;
+      const selected = answers[key];
+      const answered = selected !== undefined;
+
+      return `
+        <div class="question-card">
+          <div class="q-header">
+            <span class="q-number">Q${qi + 1}</span>
+            <span class="q-difficulty ${q.difficulty}">${q.difficulty}</span>
+          </div>
+          <div class="q-text">${q.text}</div>
+          <div class="options">
+            ${q.options.map((opt, oi) => {
+              const letters = 'ABCD';
+              let cls = 'option-btn';
+              if (answered) {
+                cls += ' disabled';
+                if (oi === selected && oi === q.correct) cls += ' selected-correct';
+                else if (oi === selected && oi !== q.correct) cls += ' selected-wrong';
+                else if (oi === q.correct) cls += ' show-correct';
+              }
+              return `<button class="${cls}" ${answered ? 'disabled' : ''} onclick="selectAnswer(${qi}, ${oi})">
+                <span class="letter">${letters[oi]}</span>
+                <span>${opt}</span>
+              </button>`;
+            }).join('')}
+          </div>
+          ${answered ? `
+            <div class="explanation ${selected === q.correct ? 'correct' : 'wrong'}" style="display:block">
+              <div class="exp-title">${selected === q.correct ? '✓ Correct!' : '✗ Incorrect'}</div>
+              ${q.explanation}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+
+    if (allAnswered) {
+      const correct = section.questions.reduce((sum, q, qi) => {
+        return sum + (answers[`${currentSectionIdx}-${qi}`] === q.correct ? 1 : 0);
+      }, 0);
+      const total = section.questions.length;
+      const pct = Math.round((correct / total) * 100);
+      sectionScores[currentSectionIdx] = { correct, total };
+
+      let scoreClass = '';
+      if (pct < 60) scoreClass = 'poor';
+      else if (pct < 80) scoreClass = 'ok';
+
+      const nextIdx = currentSectionIdx + 1;
+      const hasNext = nextIdx < SECTIONS.length;
+
+      html += `
+        <div class="section-summary">
+          <div class="big-score ${scoreClass}">${pct}%</div>
+          <p>${correct} of ${total} correct${pct === 100 ? ' — perfect!' : pct >= 80 ? ' — solid work!' : pct >= 60 ? ' — review the concepts and try again.' : ' — go back to Study mode and review carefully.'}</p>
+          <button class="retry-btn" onclick="retrySection()">↻ Retry Section</button>
+          ${hasNext ? `<button class="next-btn" onclick="switchSection(${nextIdx})">Next: ${SECTIONS[nextIdx].title} →</button>` : ''}
+        </div>
+      `;
+      renderNav();
+    }
+  }
+
+  container.innerHTML = html;
+  updateProgress();
+}
+
+function switchSection(idx) {
+  currentSectionIdx = idx;
+  mode = 'study';
+  renderNav();
+  renderContent();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function switchMode(m) {
+  mode = m;
+  renderContent();
+}
+
+function selectAnswer(qi, oi) {
+  const key = `${currentSectionIdx}-${qi}`;
+  if (answers[key] !== undefined) return;
+  answers[key] = oi;
+  renderContent();
+  // Scroll to the explanation
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.question-card');
+    if (cards[qi]) {
+      const exp = cards[qi].querySelector('.explanation');
+      if (exp) exp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 50);
+}
+
+function retrySection() {
+  const section = SECTIONS[currentSectionIdx];
+  section.questions.forEach((_, qi) => {
+    delete answers[`${currentSectionIdx}-${qi}`];
+  });
+  delete sectionScores[currentSectionIdx];
+  renderNav();
+  renderContent();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+  const totalQ = SECTIONS.reduce((s, sec) => s + sec.questions.length, 0);
+  const answeredQ = Object.keys(answers).length;
+  const correctQ = Object.keys(answers).reduce((sum, key) => {
+    const [si, qi] = key.split('-').map(Number);
+    return sum + (answers[key] === SECTIONS[si].questions[qi].correct ? 1 : 0);
+  }, 0);
+
+  document.getElementById('progressLabel').textContent = `${answeredQ} / ${totalQ}`;
+  document.getElementById('progressFill').style.width = `${(answeredQ / totalQ) * 100}%`;
+  document.getElementById('scoreLabel').textContent = answeredQ > 0 ? `${Math.round((correctQ / answeredQ) * 100)}%` : '—';
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+init();
+</script>
+</body>
+</html>

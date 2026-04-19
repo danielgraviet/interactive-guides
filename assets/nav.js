@@ -78,6 +78,31 @@ const CATEGORIES = {
         path: './guides/machine-learning/clustering/',
         meta: 'Interactive · Unsupervised learning, similarity, and grouping',
       },
+      {
+        title: 'Dimensionality Reduction Mastery',
+        path: './guides/machine-learning/dimensionality-reduction/',
+        meta: 'Interactive · Feature selection, PCA, t-SNE, ICA',
+      },
+      {
+        title: 'Data Preprocessing Tutor',
+        path: './guides/machine-learning/data-preproccessing/',
+        meta: 'Interactive · Cleaning, encoding, scaling, and pipelines',
+      },
+      {
+        title: 'Backpropagation',
+        path: './guides/machine-learning/backprop-math/',
+        meta: 'Interactive · Chain rule, gradients, and weight updates',
+      },
+      {
+        title: 'Ensemble Methods',
+        path: './guides/machine-learning/ensemble/',
+        meta: 'Interactive · Bagging, boosting, AdaBoost, gradient boosting',
+      },
+      {
+        title: 'Clustering: A Field Guide',
+        path: './guides/machine-learning/final-clustering/',
+        meta: 'Interactive · K-means, HAC, DBSCAN, silhouette score',
+      },
     ],
   },
   'computer-science': {
@@ -137,6 +162,16 @@ const CATEGORIES = {
         title: 'Logistic Regression Tutor',
         path: './guides/data-science/logistic-regression/',
         meta: 'Interactive · Sigmoid, odds, decision boundary, scikit-learn',
+      },
+      {
+        title: 'Neural Networks Tutor',
+        path: './guides/data-science/neural-nets/',
+        meta: 'Interactive · Neural networks, activations, backpropagation',
+      },
+      {
+        title: 'Ethics in Data Science',
+        path: './guides/data-science/ethics/',
+        meta: 'Interactive · Privacy, bias, consent, misleading statistics',
       },
     ],
   },

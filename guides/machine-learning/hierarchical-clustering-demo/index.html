@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hierarchical Clustering — Linkage Types</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #3d3d3a; padding: 2rem; max-width: 720px; margin: 0 auto; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1a1a18; color: #c2c0b6; }
+    .tab { background: #2a2a28; border-color: #444441; color: #888780; }
+    .tab.active { background: #0c447c22; color: #85B7EB; border-color: transparent; }
+    .info-card { background: #2a2a28; }
+  }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; }
+  .tabs { display:flex; gap:8px; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .tab { padding:6px 16px; border:0.5px solid #b4b2a9; border-radius:8px; background:#fff; color:#888780; cursor:pointer; font-size:13px; font-family:inherit; }
+  .tab.active { background:#e6f1fb; color:#185fa5; border-color:transparent; font-weight:500; }
+  .info-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:1rem; }
+  .info-card { background:#f1efe8; border-radius:8px; padding:0.6rem 0.8rem; }
+  .info-label { font-size:11px; color:#888780; margin-bottom:3px; }
+  .info-val { font-size:13px; font-weight:500; }
+  canvas { width:100%; border-radius:8px; display:block; }
+</style>
+</head>
+<body>
+<h1>Hierarchical clustering — linkage types</h1>
+
+<div class="tabs">
+  <button class="tab active" onclick="setMode('single')">Single linkage</button>
+  <button class="tab" onclick="setMode('complete')">Complete linkage</button>
+  <button class="tab" onclick="setMode('average')">Average linkage</button>
+  <button class="tab" onclick="setMode('ward')">Ward's method</button>
+</div>
+
+<canvas id="c" height="300"></canvas>
+
+<div class="info-row">
+  <div class="info-card"><div class="info-label">Measures</div><div class="info-val" id="i-measures">—</div></div>
+  <div class="info-card"><div class="info-label">Tends to produce</div><div class="info-val" id="i-shape">—</div></div>
+  <div class="info-card"><div class="info-label">Weakness</div><div class="info-val" id="i-weakness">—</div></div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+
+function resize() {
+  const W = canvas.parentElement.clientWidth;
+  canvas.width = W * DPR;
+  canvas.height = 300 * DPR;
+  canvas.style.width = W + 'px';
+  canvas.style.height = '300px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  draw();
+}
+
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+const COL = {
+  purple: isDark ? '#AFA9EC' : '#534AB7',
+  teal:   isDark ? '#5DCAA5' : '#0F6E56',
+  line:   isDark ? '#EF9F27' : '#BA7517',
+  dim:    isDark ? 'rgba(200,200,200,0.12)' : 'rgba(0,0,0,0.07)',
+  text:   isDark ? '#c2c0b6' : '#3d3d3a',
+  sub:    isDark ? '#888780' : '#888780',
+};
+
+const clusterA = [{x:120,y:100},{x:150,y:130},{x:130,y:155},{x:165,y:115},{x:145,y:160}];
+const clusterB = [{x:310,y:90},{x:340,y:120},{x:360,y:100},{x:330,y:150},{x:355,y:145}];
+
+function dist(a,b){ return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2); }
+function centroid(pts){ return {x:pts.reduce((s,p)=>s+p.x,0)/pts.length, y:pts.reduce((s,p)=>s+p.y,0)/pts.length}; }
+
+let mode = 'single';
+const info = {
+  single:   { measures:'Closest pair of points', shape:'Long, chained clusters', weakness:'Chaining effect — noise links unrelated clusters' },
+  complete: { measures:'Farthest pair of points', shape:'Compact, spherical clusters', weakness:'Sensitive to outliers stretching the diameter' },
+  average:  { measures:'Avg distance, all pairs', shape:'Balanced, moderate size', weakness:'Less interpretable than single/complete' },
+  ward:     { measures:'Increase in total variance', shape:'Equal-size, compact clusters', weakness:'Biased toward equal cluster sizes' },
+};
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', ['single','complete','average','ward'][i]===m));
+  const d = info[m];
+  document.getElementById('i-measures').textContent = d.measures;
+  document.getElementById('i-shape').textContent = d.shape;
+  document.getElementById('i-weakness').textContent = d.weakness;
+  draw();
+}
+
+function draw() {
+  const W = canvas.width / DPR, H = canvas.height / DPR;
+  ctx.clearRect(0,0,W,H);
+  const cA = centroid(clusterA), cB = centroid(clusterB);
+
+  ctx.beginPath(); ctx.arc(cA.x, cA.y, 62, 0, Math.PI*2);
+  ctx.fillStyle = isDark ? 'rgba(83,74,183,0.13)' : 'rgba(83,74,183,0.09)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cB.x, cB.y, 62, 0, Math.PI*2);
+  ctx.fillStyle = isDark ? 'rgba(15,110,86,0.15)' : 'rgba(15,110,86,0.09)'; ctx.fill();
+
+  if (mode !== 'ward') {
+    clusterA.forEach(a => clusterB.forEach(b => {
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+      ctx.strokeStyle = COL.dim; ctx.lineWidth = 0.8; ctx.setLineDash([]); ctx.stroke();
+    }));
+  }
+
+  if (mode === 'single') {
+    let best = null, bd = Infinity;
+    clusterA.forEach(a => clusterB.forEach(b => { const d=dist(a,b); if(d<bd){bd=d;best={a,b};} }));
+    ctx.beginPath(); ctx.moveTo(best.a.x,best.a.y); ctx.lineTo(best.b.x,best.b.y);
+    ctx.strokeStyle = COL.line; ctx.lineWidth = 2.5; ctx.setLineDash([]); ctx.stroke();
+    drawDot(best.a, COL.line); drawDot(best.b, COL.line);
+    midLabel(best.a, best.b, 'min dist');
+  } else if (mode === 'complete') {
+    let worst = null, wd = 0;
+    clusterA.forEach(a => clusterB.forEach(b => { const d=dist(a,b); if(d>wd){wd=d;worst={a,b};} }));
+    ctx.beginPath(); ctx.moveTo(worst.a.x,worst.a.y); ctx.lineTo(worst.b.x,worst.b.y);
+    ctx.strokeStyle = COL.line; ctx.lineWidth = 2.5; ctx.setLineDash([]); ctx.stroke();
+    drawDot(worst.a, COL.line); drawDot(worst.b, COL.line);
+    midLabel(worst.a, worst.b, 'max dist');
+  } else if (mode === 'average') {
+    let total=0, count=0;
+    clusterA.forEach(a => clusterB.forEach(b => { total+=dist(a,b); count++; }));
+    const avg = total/count;
+    ctx.beginPath(); ctx.moveTo(cA.x,cA.y); ctx.lineTo(cB.x,cB.y);
+    ctx.strokeStyle = COL.line; ctx.lineWidth = 2.5; ctx.setLineDash([6,4]); ctx.stroke();
+    ctx.setLineDash([]);
+    drawDot(cA, COL.line); drawDot(cB, COL.line);
+    midLabel(cA, cB, 'avg dist ≈ ' + Math.round(avg));
+  } else if (mode === 'ward') {
+    [cA, cB].forEach((c, i) => {
+      const pts = i===0?clusterA:clusterB;
+      const col = i===0?COL.purple:COL.teal;
+      ctx.beginPath(); ctx.arc(c.x,c.y,4,0,Math.PI*2);
+      ctx.fillStyle = col; ctx.fill();
+      const avgR = pts.reduce((s,p)=>s+dist(p,c),0)/pts.length;
+      ctx.beginPath(); ctx.arc(c.x,c.y,avgR,0,Math.PI*2);
+      ctx.strokeStyle = col; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+    const allPts = [...clusterA,...clusterB];
+    const cM = centroid(allPts);
+    ctx.beginPath(); ctx.arc(cM.x,cM.y,5,0,Math.PI*2);
+    ctx.fillStyle = COL.line; ctx.fill();
+    const mergedR = allPts.reduce((s,p)=>s+dist(p,cM),0)/allPts.length;
+    ctx.beginPath(); ctx.arc(cM.x,cM.y,mergedR,0,Math.PI*2);
+    ctx.strokeStyle = COL.line; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '12px -apple-system, sans-serif';
+    ctx.fillStyle = COL.line; ctx.textAlign='center';
+    ctx.fillText('merged centroid', cM.x, cM.y - mergedR - 8);
+    ctx.fillStyle = COL.sub;
+    ctx.fillText('cost = variance increase', cM.x, cM.y - mergedR - 24);
+  }
+
+  clusterA.forEach(p => drawDot(p, COL.purple));
+  clusterB.forEach(p => drawDot(p, COL.teal));
+
+  ctx.font = '500 13px -apple-system, sans-serif';
+  ctx.fillStyle = COL.purple; ctx.textAlign='center';
+  ctx.fillText('Cluster A', cA.x, cA.y + 80);
+  ctx.fillStyle = COL.teal;
+  ctx.fillText('Cluster B', cB.x, cB.y + 80);
+}
+
+function drawDot(p, col, r=5) {
+  ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+  ctx.fillStyle = col; ctx.fill();
+}
+
+function midLabel(a, b, txt) {
+  const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.fillStyle = COL.line; ctx.textAlign='center';
+  ctx.fillText(txt, mx, my-10);
+}
+
+setMode('single');
+window.addEventListener('resize', resize);
+resize();
+</script>
+</body>
+</html>
